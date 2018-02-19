@@ -1,0 +1,38 @@
+{
+    "namespace": "all-types.test",
+     "type": "record",
+     "name": "data",
+     "fields":[               
+         {  "name": "anyOption",   "type": ["string", "null"]                    },
+         {  "name": "seqAny",      "type": { "type": "array", "items": "string"} },
+         {  "name": "mapAny",      "type": { "type": "map",   "values": "long"}  },
+         {  "name": "setAny",      "type": { "type": "array", "items": "string"} },       
+         {  "name": "string",      "type": "string"                              },
+         {  "name": "timestamp",   "type": {"type": "long", "logicalType": "timestamp-millis"}},
+         {  "name": "date",        "type": {"type": "long", "logicalType": "date"}},
+         {  "name": "bigDecimal",  "type": {"type": "string", "logicalType": "decimal", "precision": 4, "scale": 20}},
+         {  "name": "bigInteger",  "type": {"type": "string", "logicalType": "decimal", "precision": 4, "scale": 20}}, 		 
+ 		 {  "name": "int",         "type": "int"                                 },
+ 		 {  "name": "double",      "type": "double"                              },
+ 		 {  "name": "float",       "type": "float"                               },
+ 		 {  "name": "short",       "type": "int"                                 },
+ 		 {  "name": "byte",        "type": "int"                                 },        
+         {  "name": "boolean",     "type": "boolean"                             },
+         {  "name": "nested",      "type": {
+         								"type":  "record",
+         								"name":  "nestedStruct", 
+         								"fields": [
+         									{"name":"nestedKey",   "type":"string"},
+         									{"name":"nestedValue", "type": {
+         																		"type": "record", 
+         																		"name": "oneMore",
+         																		"fields": [
+         																					{"name":"lastNest", "type":"long"}         																					
+         																		          ]
+         									                               }
+         									}
+                                        ]
+                                    }
+         }
+     ]
+}
