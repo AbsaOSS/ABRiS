@@ -13,7 +13,7 @@ import org.apache.spark.sql.Row
  * 
  * This class extends Avro's GenericRow to perform the conversion at read time.  
  */
-class ScalaRecord(schema: Schema) extends GenericRecord with Comparable[ScalaRecord] {
+class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[ScalaAvroRecord] {
 
   private var values: Array[Object] = _
 
@@ -35,10 +35,10 @@ class ScalaRecord(schema: Schema) extends GenericRecord with Comparable[ScalaRec
 
   override def put(i: Int, v: Object): Unit = {    
     values(i) =
-      if (!v.isInstanceOf[ScalaRecord]) {
+      if (!v.isInstanceOf[ScalaAvroRecord]) {
         v
       } else {
-        getRow(v.asInstanceOf[ScalaRecord].values)
+        getRow(v.asInstanceOf[ScalaAvroRecord].values)
       }
   }
 
@@ -67,10 +67,10 @@ class ScalaRecord(schema: Schema) extends GenericRecord with Comparable[ScalaRec
     if (o == this) {
       true // identical object
     }
-    if (!(o.isInstanceOf[ScalaRecord])) {
+    if (!(o.isInstanceOf[ScalaAvroRecord])) {
       false // not a record
     }
-    val that: ScalaRecord = o.asInstanceOf[ScalaRecord]
+    val that: ScalaAvroRecord = o.asInstanceOf[ScalaAvroRecord]
     if (!this.schema.equals(that.getSchema()))
       return false; // not the same schema
     GenericData.get().compare(this, that, schema) == 0
@@ -80,7 +80,7 @@ class ScalaRecord(schema: Schema) extends GenericRecord with Comparable[ScalaRec
     GenericData.get().hashCode(this, schema)
   }
 
-  override def compareTo(that: ScalaRecord): Int = {
+  override def compareTo(that: ScalaAvroRecord): Int = {
     GenericData.get().compare(this, that, schema)
   }
 
