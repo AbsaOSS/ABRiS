@@ -7,12 +7,11 @@ import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.io.DecoderFactory
 import org.apache.avro.io.EncoderFactory
 import za.co.absa.avro.dataframes.parsing.ScalaDatumReader
-import za.co.absa.avro.dataframes.avro.CustomDatumWriter
+import za.co.absa.avro.dataframes.utils.avro.CustomDatumWriter
 import za.co.absa.avro.dataframes.parsing.ScalaRecord
 
 object AvroParsingTestUtils {
 
-  // MAPEAR PARA CUSTOM
   def mapToGenericRecord(data: Map[String, Any], schema: String): GenericRecord = {
     val avroRecordBuilder = getRecordBuilder(schema)
     for (entry <- data.iterator) {
@@ -45,7 +44,6 @@ object AvroParsingTestUtils {
   }
 
   private def recordToBytes(record: GenericRecord): Array[Byte] = {
-    //	  val writer = new GenericDatumWriter[GenericRecord](record.getSchema);
     val writer = new CustomDatumWriter[GenericRecord](record.getSchema);
     val outStream = new ByteArrayOutputStream()
     try {
@@ -63,47 +61,4 @@ object AvroParsingTestUtils {
     val decoder = DecoderFactory.get().binaryDecoder(avroBytes, null)
     reader.read(null, decoder)
   }
-
-  val PLAIN_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
-     "type": "record",
-     "name": "testdata",
-     "fields":[                  
-         {"name": "string",      "type": "string"                                                                 },     
-         {"name": "int",         "type": "int"                                                                    },
-         {"name": "long",        "type": "long"                                                                   },
- 		     {"name": "double",      "type": "double"                                                                 },
- 		     {"name": "float",       "type": "float"                                                                  },
- 		     {"name": "short",       "type": "int"                                                                    },
- 		     {"name": "byte",        "type": "int"                                                                    },    
-         {"name": "anyOption",   "type": ["string", "null"]                                                       },
-         {"name": "seqAny",      "type": {"type": "array", "items": "string"}                                     },
-         {"name": "mapAny",      "type": {"type": "map",   "values": "long" }                                     },
-         {"name": "setAny",      "type": {"type": "array", "items": "string"}                                     },
-         {"name": "date",        "type": {"type": "int", "logicalType": "date"}                                   },                
-         {"name": "timestamp",   "type": {"type": "long", "logicalType": "timestamp-millis"}                      },         
-         {"name": "bigDecimal",  "type": {"type": "string", "logicalType": "decimal", "precision": 4, "scale": 20}},
-         {"name": "bigInteger",  "type": {"type": "string", "logicalType": "decimal", "precision": 4, "scale": 20}}	 
-     ]
-  }"""
-
-  val COMPLEX_SCHEMA_SPEC = """{    
-     "name": "person",
-     "type": "record",
-     "fields": [
-        {"name": "firstname", "type": "string"},
-        {"name": "lastname",  "type": "string"},
-        {"name": "addressRecord", "type":
-                                  {
-                                    "type":   "record",
-                                    "name":   "address",
-                                    "fields": [
-                                        {"name": "streetaddress",     "type": "string"},
-                                        {"name": "city",              "type": "string"},
-                                        {"name": "previousAddresses", "type": {"type": "array", "items": "string"}}                                    
-                                              ]
-                                  }
-        }
-     ]
-  }"""
 }
