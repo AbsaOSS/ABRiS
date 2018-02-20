@@ -1,4 +1,4 @@
-package za.co.absa.avro.dataframes.avro
+package za.co.absa.avro.dataframes.utils.avro
 
 import org.apache.avro.generic.IndexedRecord
 import za.co.absa.avro.dataframes.parsing.ScalaSpecificData
