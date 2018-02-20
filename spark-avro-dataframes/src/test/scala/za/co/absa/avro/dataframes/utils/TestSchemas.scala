@@ -43,6 +43,78 @@ object TestSchemas {
      ]
   }"""     
   
+  val FIXED_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "fixed", "type": {"type": "fixed", "size": 13, "name": "fixed"}}
+     ]
+  }"""  
+  
+  val DECIMAL_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "decimal", "type": {"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2}}
+     ]
+  }"""    
+  
+  val DATE_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "date", "type": {"type": "int", "logicalType": "date"}}
+     ]
+  }"""   
+  
+  val MILLISECOND_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "millisecond", "type": {"type": "int", "logicalType": "time-millis"}}
+     ]
+  }"""    
+  
+  val MICROSECOND_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "microsecond", "type": {"type": "long", "logicalType": "time-micros"}}
+     ]
+  }"""     
+  
+  val TIMESTAMP_MILLIS_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "timestampMillis", "type": {"type": "long", "logicalType": "timestamp-millis"}}
+     ]
+  }"""   
+  
+  val TIMESTAMP_MICROS_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "timestampMicros", "type": {"type": "long", "logicalType": "timestamp-micros"}}
+     ]
+  }"""   
+  
+  val DURATION_MICROS_SCHEMA_SPEC = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "testdata",
+     "fields":[                  
+ 		     {"name": "duration", "type": {"type": "fixed", "size": 12, "name": "name", "logicalType": "duration"}}
+     ]
+  }"""     
+  
   val COMPLEX_SCHEMA_SPEC = """{	
 	"type":"record",
 	"name":"State",

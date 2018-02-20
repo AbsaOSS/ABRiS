@@ -8,7 +8,7 @@ import org.apache.avro.io.DecoderFactory
 import org.apache.avro.io.EncoderFactory
 import za.co.absa.avro.dataframes.parsing.ScalaDatumReader
 import za.co.absa.avro.dataframes.utils.avro.CustomDatumWriter
-import za.co.absa.avro.dataframes.parsing.ScalaRecord
+import za.co.absa.avro.dataframes.parsing.ScalaAvroRecord
 
 object AvroParsingTestUtils {
 
@@ -22,7 +22,7 @@ object AvroParsingTestUtils {
   }
 
   def mapToCustomRecord(data: Map[String, Object], schema: String): GenericRecord = {    
-    val avroRecord = new ScalaRecord(parseSchema(schema))        
+    val avroRecord = new ScalaAvroRecord(parseSchema(schema))        
     for (entry <- data.iterator) {
       avroRecord.put(entry._1, entry._2)
     }    

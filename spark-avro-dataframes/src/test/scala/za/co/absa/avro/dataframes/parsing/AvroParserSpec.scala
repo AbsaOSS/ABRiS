@@ -19,6 +19,9 @@ import za.co.absa.avro.dataframes.utils.TestSchemas
 import java.util.Arrays
 import java.nio.ByteBuffer
 import org.apache.avro.generic.GenericRecord
+import org.apache.avro.generic.GenericFixed
+import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
+import za.co.absa.avro.dataframes.utils.avro.fixed.FixedLong
 
 class AvroParserSpec extends FlatSpec {
 
@@ -100,20 +103,116 @@ class AvroParserSpec extends FlatSpec {
     }
   }
 
+  it should "support fixed types" in {    
+    val testData = Map[String, Object](
+      "fixed" -> new FixedString("ASimpleString"))
+
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.FIXED_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }    
+  }
+  
+  it should "support decimal types" in {
+    val testData = Map[String, Object](
+      "decimal" -> ByteBuffer.wrap(new Array[Byte](8)).putDouble(100.123456))
+         
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DECIMAL_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }        
+  }
+  
+  it should "support date types" in {
+    val testData = Map[String, Any](
+      "date" -> Integer.MAX_VALUE)
+         
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DATE_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }        
+  }  
+
+  it should "support millisecond types" in {
+    val testData = Map[String, Any](
+      "millisecond" -> Integer.MAX_VALUE)
+         
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MILLISECOND_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }        
+  }    
+  
+  it should "support microsecond types" in {
+    val testData = Map[String, Any](
+      "microsecond" -> Long.MAX_VALUE)
+         
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MICROSECOND_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }        
+  }      
+  
+  it should "support timestamp millis types" in {
+    val testData = Map[String, Any](
+      "timestampMillis" -> Long.MAX_VALUE)
+         
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MILLIS_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }        
+  }        
+
+  it should "support timestamp micros types" in {
+    val testData = Map[String, Any](
+      "timestampMicros" -> Long.MAX_VALUE)
+         
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MICROS_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }        
+  }     
+  
+  it should "support duration types" in {
+    val testData = Map[String, Any](
+      "duration" -> new FixedString("111111111111"))
+         
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DURATION_MICROS_SCHEMA_SPEC)
+    val resultRow = avroParser.parse(avroRecord)
+
+    for (entry <- testData) {
+      assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
+    }        
+  }    
+  
   it should "convert Avro's GenericRecord to Row using informed NESTED Schema" in {
     case class Street(name: String, zip: String)
     case class Neighborhood(name: String, streets: List[Street])
     case class City(name: String, neighborhoods: Array[Neighborhood])
     case class State(name: String, regions: Map[String, List[City]])
 
-    val street1 = Map("name" -> "first street name", "zip" -> "140 000-00")
-    val street2 = Map("name" -> "second street name", "zip" -> "240 100-00")
-    val street3 = Map("name" -> "third street name", "zip" -> "340 000-00")
-    val street4 = Map("name" -> "fourth street name", "zip" -> "480 100-00")
-    val street5 = Map("name" -> "fifth street name", "zip" -> "580 100-00")
-    val street6 = Map("name" -> "sixth street name", "zip" -> "680 100-00")
+    val street1 = Map("name" -> "first street name",   "zip" -> "140 000-00")
+    val street2 = Map("name" -> "second street name",  "zip" -> "240 100-00")
+    val street3 = Map("name" -> "third street name",   "zip" -> "340 000-00")
+    val street4 = Map("name" -> "fourth street name",  "zip" -> "480 100-00")
+    val street5 = Map("name" -> "fifth street name",   "zip" -> "580 100-00")
+    val street6 = Map("name" -> "sixth street name",   "zip" -> "680 100-00")
     val street7 = Map("name" -> "seventh street name", "zip" -> "780 100-00")
-    val street8 = Map("name" -> "eigth street name", "zip" -> "880 100-00")
+    val street8 = Map("name" -> "eigth street name",   "zip" -> "880 100-00")
 
     val neighborhood1 = Map(
       "name" -> "A neighborhood",
@@ -173,14 +272,19 @@ class AvroParserSpec extends FlatSpec {
       assert(cityList.get(i).toString() == record.toString())
     }
   }
-
+  
   private def assertEquals(original: Any, retrieved: Any) = {
-    original.getClass().getName match {
-      case "java.util.ArrayList" => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.ArrayList[Any]].toList
-      case "java.util.HashSet"   => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.Set[Any]].toList
-      case "java.util.HashMap"   => retrieved.asInstanceOf[mutable.HashMap[Any, Any]] == original.asInstanceOf[java.util.HashMap[Any, Any]].toMap
-      case "za.co.absa.avro.dataframes.parsing.CustomRecord" => {
-        val originalRecord = original.asInstanceOf[ScalaRecord]
+    original match {
+      case value: java.util.ArrayList[Object] => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.ArrayList[Any]].toList
+      case value: java.util.HashSet[Object]   => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.Set[Any]].toList
+      case value: java.util.HashMap[String,Object]   => retrieved.asInstanceOf[mutable.HashMap[Any, Any]] == original.asInstanceOf[java.util.HashMap[Any, Any]].toMap
+      case value: FixedString => {
+        val str1 = new String(original.asInstanceOf[FixedString].bytes())
+        val str2 = new String(retrieved.asInstanceOf[org.apache.avro.generic.GenericData.Fixed].bytes())        
+        str1 == str2
+      }
+      case value: ScalaAvroRecord => {
+        val originalRecord = original.asInstanceOf[ScalaAvroRecord]
         val retrievedRecord = retrieved.asInstanceOf[GenericRow]
         for (i <- 0 until originalRecord.getValues().length) {
           if (originalRecord.get(i) != retrievedRecord.get(i)) {
@@ -191,6 +295,5 @@ class AvroParserSpec extends FlatSpec {
       }
       case _ => original == retrieved
     }
-
-  }
+  }  
 }

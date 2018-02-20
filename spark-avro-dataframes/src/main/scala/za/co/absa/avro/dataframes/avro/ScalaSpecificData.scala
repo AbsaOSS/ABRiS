@@ -16,6 +16,6 @@ object ScalaSpecificData {
 class ScalaSpecificData extends SpecificData {  
   
   override def newRecord(old: Object, schema: Schema): Object = {
-    new ScalaRecord(schema)
+    new ScalaAvroRecord(schema)
   }    
 }
