@@ -1,8 +1,10 @@
 package za.co.absa.avro.dataframes.utils.avro
 
 import java.util.Collection
+
 import scala.collection.Iterable
 import scala.collection.JavaConversions.asJavaIterator
+
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificDatumWriter
 

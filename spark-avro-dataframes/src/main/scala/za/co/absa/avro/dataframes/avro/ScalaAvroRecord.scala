@@ -1,4 +1,4 @@
-package za.co.absa.avro.dataframes.parsing
+package za.co.absa.avro.dataframes.avro
 
 import org.apache.avro.AvroRuntimeException
 import org.apache.avro.Schema
@@ -7,11 +7,12 @@ import org.apache.avro.Schema.Type
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.Row
+import org.apache.avro.generic.GenericData.Fixed
 
 /**
- * In order to support Spark-compliant queryable nested structures, nested Avro records need to be converted into Spark Rows. 
- * 
- * This class extends Avro's GenericRow to perform the conversion at read time.  
+ * In order to support Spark-compliant queryable nested structures, nested Avro records need to be converted into Spark Rows.
+ *
+ * This class extends Avro's GenericRow to perform the conversion at read time.
  */
 class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[ScalaAvroRecord] {
 
@@ -33,24 +34,23 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
     put(field.pos(), value)
   }
 
-  override def put(i: Int, v: Object): Unit = {    
-    values(i) =
-      if (!v.isInstanceOf[ScalaAvroRecord]) {
-        v
-      } else {
-        getRow(v.asInstanceOf[ScalaAvroRecord].values)
-      }
+  override def put(position: Int, value: Object): Unit = {
+    values(position) = value match {
+      case v: ScalaAvroRecord     => toRow(value.asInstanceOf[ScalaAvroRecord].values)
+      case v: java.nio.ByteBuffer => v.array()
+      case v: Fixed               => v.bytes()
+      case default                => default
+    }
   }
 
-  private def getRow(values: Array[Object]) = {
+  private def toRow(values: Array[Object]) = {
     if (values.length == 1) {
       Row(values(0))
-    }
-    else {      
+    } else {
       Row.fromSeq(values.toSeq)
     }
-   }
-  
+  }
+
   override def get(key: String): Object = {
     val field: Field = schema.getField(key)
     if (field != null) {
@@ -65,7 +65,7 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
 
   override def equals(o: Any): Boolean = {
     if (o == this) {
-      true // identical object
+      true
     }
     if (!(o.isInstanceOf[ScalaAvroRecord])) {
       false // not a record

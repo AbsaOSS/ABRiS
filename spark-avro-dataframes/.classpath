@@ -35,16 +35,5 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-compiler"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-guava-dependencies"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-ipc"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-mapred"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-maven-plugin"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-protobuf"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-thrift"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/avro-tools"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/spark-cobol"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/trevni-avro"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/trevni-core"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

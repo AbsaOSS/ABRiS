@@ -3,6 +3,7 @@ package za.co.absa.avro.dataframes.parsing
 import java.lang.Double
 import java.lang.Float
 import java.lang.Long
+import java.lang.Boolean
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -21,7 +22,7 @@ import java.nio.ByteBuffer
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericFixed
 import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
-import za.co.absa.avro.dataframes.utils.avro.fixed.FixedLong
+import za.co.absa.avro.dataframes.avro.ScalaAvroRecord
 
 class AvroParserSpec extends FlatSpec {
 
@@ -30,13 +31,13 @@ class AvroParserSpec extends FlatSpec {
   behavior of "AvroParser"
 
   it should "support native types" in {
-    val testData = Map[String, Any](
-      "string" -> "A Test String",
-      "float" -> Float.MAX_VALUE,
-      "int" -> Integer.MAX_VALUE,
-      "long" -> Long.MAX_VALUE,
-      "double" -> Double.MAX_VALUE,
-      "boolean" -> true)
+    val testData = Map[String, Object](
+      "string" ->  "A Test String",
+      "float" ->   new Float(Float.MAX_VALUE),
+      "int" ->     new Integer(Integer.MAX_VALUE),
+      "long" ->    new Long(Long.MAX_VALUE),
+      "double" ->  new Double(Double.MAX_VALUE),
+      "boolean" -> new Boolean(true))
 
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
@@ -47,12 +48,12 @@ class AvroParserSpec extends FlatSpec {
   }
 
   it should "support union with NULL in native types" in {
-    val testData = Map[String, Any](
-      "string" -> null,
-      "float" -> null,
-      "int" -> null,
-      "long" -> null,
-      "double" -> null,
+    val testData = Map[String, Object](
+      "string"  -> null,
+      "float"   -> null,
+      "int"     -> null,
+      "long"    -> null,
+      "double"  -> null,
       "boolean" -> null)
 
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
@@ -63,11 +64,11 @@ class AvroParserSpec extends FlatSpec {
     }
   }
 
-  it should "support array types" in {
+  it should "support array type" in {
     val testData = Map[String, Object](
       "array" -> new ArrayList(Arrays.asList("elem1", "elem2")))
 
-    val avroRecord = AvroParsingTestUtils.mapToCustomRecord(testData, TestSchemas.ARRAY_SCHEMA_SPEC)
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.ARRAY_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -75,7 +76,7 @@ class AvroParserSpec extends FlatSpec {
     }
   }
 
-  it should "support map types" in {
+  it should "support map type" in {
     val map = new HashMap[String, java.util.ArrayList[Long]]()
     map.put("entry1", new ArrayList(java.util.Arrays.asList(new Long(1), new Long(2))))
     map.put("entry2", new ArrayList(java.util.Arrays.asList(new Long(3), new Long(4))))
@@ -83,7 +84,7 @@ class AvroParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "array" -> new ArrayList(Arrays.asList("elem1", "elem2")))
 
-    val avroRecord = AvroParsingTestUtils.mapToCustomRecord(testData, TestSchemas.ARRAY_SCHEMA_SPEC)
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.ARRAY_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -91,11 +92,11 @@ class AvroParserSpec extends FlatSpec {
     }
   }
 
-  it should "support bytes types" in {
+  it should "support bytes type" in {
     val testData = Map[String, Object](
       "bytes" -> ByteBuffer.wrap("ASimpleString".getBytes))
 
-    val avroRecord = AvroParsingTestUtils.mapToCustomRecord(testData, TestSchemas.BYTES_SCHEMA_SPEC)
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.BYTES_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -103,7 +104,7 @@ class AvroParserSpec extends FlatSpec {
     }
   }
 
-  it should "support fixed types" in {    
+  it should "support fixed type" in {    
     val testData = Map[String, Object](
       "fixed" -> new FixedString("ASimpleString"))
 
@@ -115,19 +116,19 @@ class AvroParserSpec extends FlatSpec {
     }    
   }
   
-  it should "support decimal types" in {
+  it should "support decimal type" in {    
     val testData = Map[String, Object](
-      "decimal" -> ByteBuffer.wrap(new Array[Byte](8)).putDouble(100.123456))
-         
+      "decimal" -> ByteBuffer.wrap("1".getBytes))
+
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DECIMAL_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
-
+    
     for (entry <- testData) {
       assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
-    }        
+    }       
   }
   
-  it should "support date types" in {
+  it should "support date type" in {
     val testData = Map[String, Any](
       "date" -> Integer.MAX_VALUE)
          
@@ -139,7 +140,7 @@ class AvroParserSpec extends FlatSpec {
     }        
   }  
 
-  it should "support millisecond types" in {
+  it should "support millisecond type" in {
     val testData = Map[String, Any](
       "millisecond" -> Integer.MAX_VALUE)
          
@@ -151,7 +152,7 @@ class AvroParserSpec extends FlatSpec {
     }        
   }    
   
-  it should "support microsecond types" in {
+  it should "support microsecond type" in {
     val testData = Map[String, Any](
       "microsecond" -> Long.MAX_VALUE)
          
@@ -163,7 +164,7 @@ class AvroParserSpec extends FlatSpec {
     }        
   }      
   
-  it should "support timestamp millis types" in {
+  it should "support timestamp millis type" in {
     val testData = Map[String, Any](
       "timestampMillis" -> Long.MAX_VALUE)
          
@@ -175,7 +176,7 @@ class AvroParserSpec extends FlatSpec {
     }        
   }        
 
-  it should "support timestamp micros types" in {
+  it should "support timestamp micros type" in {
     val testData = Map[String, Any](
       "timestampMicros" -> Long.MAX_VALUE)
          
@@ -187,7 +188,7 @@ class AvroParserSpec extends FlatSpec {
     }        
   }     
   
-  it should "support duration types" in {
+  it should "support duration type" in {
     val testData = Map[String, Any](
       "duration" -> new FixedString("111111111111"))
          
@@ -216,44 +217,44 @@ class AvroParserSpec extends FlatSpec {
 
     val neighborhood1 = Map(
       "name" -> "A neighborhood",
-      "streets" -> List(
+      "streets" -> new ArrayList(java.util.Arrays.asList(
         AvroParsingTestUtils.mapToGenericRecord(street1, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street2, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC)))
+        AvroParsingTestUtils.mapToGenericRecord(street2, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val neighborhood2 = Map(
       "name" -> "B neighborhood",
-      "streets" -> List(
+      "streets" -> new ArrayList(java.util.Arrays.asList(
         AvroParsingTestUtils.mapToGenericRecord(street3, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street4, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC)))
+        AvroParsingTestUtils.mapToGenericRecord(street4, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val neighborhood3 = Map(
       "name" -> "C neighborhood",
-      "streets" -> List(
+      "streets" -> new ArrayList(java.util.Arrays.asList(
         AvroParsingTestUtils.mapToGenericRecord(street5, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street6, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC)))
+        AvroParsingTestUtils.mapToGenericRecord(street6, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val neighborhood4 = Map(
       "name" -> "D neighborhood",
-      "streets" -> List(
+      "streets" -> new ArrayList(java.util.Arrays.asList(
         AvroParsingTestUtils.mapToGenericRecord(street7, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street8, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC)))
+        AvroParsingTestUtils.mapToGenericRecord(street8, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val city1 = Map(
       "name" -> "first city",
-      "neighborhoods" -> List(
+      "neighborhoods" -> new ArrayList(java.util.Arrays.asList(
         AvroParsingTestUtils.mapToGenericRecord(neighborhood1, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(neighborhood2, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC)))
+        AvroParsingTestUtils.mapToGenericRecord(neighborhood2, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC))))
 
     val city2 = Map(
       "name" -> "second city",
-      "neighborhoods" -> List(
+      "neighborhoods" -> new ArrayList(java.util.Arrays.asList(
         AvroParsingTestUtils.mapToGenericRecord(neighborhood3, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(neighborhood4, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC)))
+        AvroParsingTestUtils.mapToGenericRecord(neighborhood4, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC))))
 
-    val cityList = List(
+    val cityList = new ArrayList(java.util.Arrays.asList(
         AvroParsingTestUtils.mapToGenericRecord(city1, TestSchemas.COMPLEX_SCHEMA_CITY_SPEC),
         AvroParsingTestUtils.mapToGenericRecord(city2, TestSchemas.COMPLEX_SCHEMA_CITY_SPEC)
-                       )
+                       ))
         
     val cities = new HashMap[String, Object]()
     cities.put("cities", cityList)
@@ -262,7 +263,7 @@ class AvroParserSpec extends FlatSpec {
       "name" -> "A State",
       "regions" -> cities)
 
-    val avroRecord = AvroParsingTestUtils.mapToCustomRecord(state, TestSchemas.COMPLEX_SCHEMA_SPEC)
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(state, TestSchemas.COMPLEX_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     val cityMap: scala.collection.mutable.HashMap[String,Object] = resultRow.getAs("regions")
@@ -271,16 +272,16 @@ class AvroParserSpec extends FlatSpec {
       val record = cityMap.get("cities").get.asInstanceOf[scala.collection.mutable.ListBuffer[GenericRecord]].get(i)
       assert(cityList.get(i).toString() == record.toString())
     }
-  }
+  }  
   
   private def assertEquals(original: Any, retrieved: Any) = {
     original match {
       case value: java.util.ArrayList[Object] => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.ArrayList[Any]].toList
       case value: java.util.HashSet[Object]   => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.Set[Any]].toList
       case value: java.util.HashMap[String,Object]   => retrieved.asInstanceOf[mutable.HashMap[Any, Any]] == original.asInstanceOf[java.util.HashMap[Any, Any]].toMap
-      case value: FixedString => {
+      case value: FixedString => {        
         val str1 = new String(original.asInstanceOf[FixedString].bytes())
-        val str2 = new String(retrieved.asInstanceOf[org.apache.avro.generic.GenericData.Fixed].bytes())        
+        val str2 = new String(retrieved.asInstanceOf[Array[Byte]])          
         str1 == str2
       }
       case value: ScalaAvroRecord => {
@@ -292,6 +293,11 @@ class AvroParserSpec extends FlatSpec {
           }
         }
         true
+      }
+      case value: ByteBuffer => {                
+        val str1 = new String(original.asInstanceOf[ByteBuffer].array())
+        val str2 = new String(retrieved.asInstanceOf[Array[Byte]])        
+        str1 == str2
       }
       case _ => original == retrieved
     }
