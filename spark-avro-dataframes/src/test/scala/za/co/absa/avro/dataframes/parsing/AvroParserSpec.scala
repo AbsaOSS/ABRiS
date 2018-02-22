@@ -9,6 +9,7 @@ import java.util.HashMap
 
 import scala.collection._
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
 
 import org.apache.spark.sql.catalyst.expressions.GenericRow
@@ -82,9 +83,9 @@ class AvroParserSpec extends FlatSpec {
     map.put("entry2", new ArrayList(java.util.Arrays.asList(new Long(3), new Long(4))))
 
     val testData = Map[String, Object](
-      "array" -> new ArrayList(Arrays.asList("elem1", "elem2")))
+      "map" -> map)
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.ARRAY_SCHEMA_SPEC)
+    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MAP_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -129,8 +130,8 @@ class AvroParserSpec extends FlatSpec {
   }
   
   it should "support date type" in {
-    val testData = Map[String, Any](
-      "date" -> Integer.MAX_VALUE)
+    val testData = Map[String, Object](
+      "date" -> new Integer(Integer.MAX_VALUE))
          
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DATE_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
@@ -141,8 +142,8 @@ class AvroParserSpec extends FlatSpec {
   }  
 
   it should "support millisecond type" in {
-    val testData = Map[String, Any](
-      "millisecond" -> Integer.MAX_VALUE)
+    val testData = Map[String, Object](
+      "millisecond" -> new Integer(Integer.MAX_VALUE))
          
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MILLISECOND_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
@@ -153,8 +154,8 @@ class AvroParserSpec extends FlatSpec {
   }    
   
   it should "support microsecond type" in {
-    val testData = Map[String, Any](
-      "microsecond" -> Long.MAX_VALUE)
+    val testData = Map[String, Object](
+      "microsecond" -> new Long(Long.MAX_VALUE))
          
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MICROSECOND_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
@@ -165,8 +166,8 @@ class AvroParserSpec extends FlatSpec {
   }      
   
   it should "support timestamp millis type" in {
-    val testData = Map[String, Any](
-      "timestampMillis" -> Long.MAX_VALUE)
+    val testData = Map[String, Object](
+      "timestampMillis" -> new Long(Long.MAX_VALUE))
          
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MILLIS_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
@@ -177,8 +178,8 @@ class AvroParserSpec extends FlatSpec {
   }        
 
   it should "support timestamp micros type" in {
-    val testData = Map[String, Any](
-      "timestampMicros" -> Long.MAX_VALUE)
+    val testData = Map[String, Object](
+      "timestampMicros" -> new Long(Long.MAX_VALUE))
          
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MICROS_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
@@ -189,7 +190,7 @@ class AvroParserSpec extends FlatSpec {
   }     
   
   it should "support duration type" in {
-    val testData = Map[String, Any](
+    val testData = Map[String, Object](
       "duration" -> new FixedString("111111111111"))
          
     val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DURATION_MICROS_SCHEMA_SPEC)
@@ -278,7 +279,19 @@ class AvroParserSpec extends FlatSpec {
     original match {
       case value: java.util.ArrayList[Object] => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.ArrayList[Any]].toList
       case value: java.util.HashSet[Object]   => retrieved.asInstanceOf[mutable.ListBuffer[Any]].toList == original.asInstanceOf[java.util.Set[Any]].toList
-      case value: java.util.HashMap[String,Object]   => retrieved.asInstanceOf[mutable.HashMap[Any, Any]] == original.asInstanceOf[java.util.HashMap[Any, Any]].toMap
+      case value: java.util.HashMap[String,Object]   => {
+        val retrievedMap = retrieved.asInstanceOf[mutable.HashMap[Any, Any]]
+        val scalaMap = original.asInstanceOf[java.util.HashMap[Any, java.util.ArrayList[Any]]].asScala
+        
+        for ((key,value) <- scalaMap.iterator) {
+          val seq1 = retrievedMap.get(key).get.asInstanceOf[Seq[Any]].toArray
+          val seq2 = value.toArray()
+          if (seq1 != seq2) {            
+            false
+          }
+        }
+        true
+      }
       case value: FixedString => {        
         val str1 = new String(original.asInstanceOf[FixedString].bytes())
         val str2 = new String(retrieved.asInstanceOf[Array[Byte]])          

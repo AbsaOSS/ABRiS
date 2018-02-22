@@ -30,7 +30,7 @@ object TestSchemas {
      "type": "record",
      "name": "testdata",
      "fields":[                  
- 		     { name": "map", type": {{ "type": {"type": "array", "items": "long"}} },
+ 		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
      ]
   }"""      
   

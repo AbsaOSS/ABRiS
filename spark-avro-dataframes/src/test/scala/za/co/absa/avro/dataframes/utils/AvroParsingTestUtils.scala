@@ -13,22 +13,17 @@ import za.co.absa.avro.dataframes.avro.ScalaDatumReader
 
 object AvroParsingTestUtils {
 
-  def mapToGenericRecord(data: Map[String, Any], schema: String): GenericRecord = {
+  def mapToGenericRecordDirectly(data: Map[String, Object], schema: String): GenericRecord = {
     val avroRecordBuilder = getRecordBuilder(schema)
     for (entry <- data.iterator) {     
       avroRecordBuilder.set(entry._1, entry._2)
     }
-    val avroRecord = avroRecordBuilder.build()
-    passRecordThroughAvroApi(avroRecord) // so that we have the proper data types added to each record field
-  }
-
-  def mapToCustomRecord(data: Map[String, Object], schema: String): GenericRecord = {    
-    val avroRecord = new ScalaAvroRecord(parseSchema(schema))        
-    for (entry <- data.iterator) {
-      avroRecord.put(entry._1, entry._2)
-    }    
-    passRecordThroughAvroApi(avroRecord) // so that we have the proper data types added to each record field
+    avroRecordBuilder.build()    
   }  
+    
+  def mapToGenericRecord(data: Map[String, Object], schema: String): GenericRecord = {
+    passRecordThroughAvroApi(mapToGenericRecordDirectly(data, schema)) // so that we have the proper data types added to each record field
+  }
   
   def getRecordBuilder(schema: String): GenericRecordBuilder = {
     val parsedSchema = parseSchema(schema)
@@ -44,7 +39,7 @@ object AvroParsingTestUtils {
     bytesToRecord(recordBytes, avroRecord.getSchema)
   }
 
-  private def recordToBytes(record: GenericRecord): Array[Byte] = {
+  def recordToBytes(record: GenericRecord): Array[Byte] = {
     val writer = new CustomDatumWriter[GenericRecord](record.getSchema);
     val outStream = new ByteArrayOutputStream()
     try {
@@ -57,7 +52,7 @@ object AvroParsingTestUtils {
     }
   }
 
-  private def bytesToRecord(avroBytes: Array[Byte], schema: Schema): GenericRecord = {
+  def bytesToRecord(avroBytes: Array[Byte], schema: Schema): GenericRecord = {
     val reader: ScalaDatumReader[GenericRecord] = new ScalaDatumReader[GenericRecord](schema)
     val decoder = DecoderFactory.get().binaryDecoder(avroBytes, null)
     reader.read(null, decoder)
