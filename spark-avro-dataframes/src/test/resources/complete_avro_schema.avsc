@@ -10,7 +10,7 @@
          {  "name": "setAny",      "type": { "type": "array", "items": "string"} },       
          {  "name": "string",      "type": "string"                              },
          {  "name": "timestamp",   "type": {"type": "long", "logicalType": "timestamp-millis"}},
-         {  "name": "date",        "type": {"type": "long", "logicalType": "date"}},
+         {  "name": "date",        "type": {"type": "int",  "logicalType": "date"}},
          {  "name": "bigDecimal",  "type": {"type": "bytes","logicalType": "decimal", "precision": 4, "scale": 4}},
          {  "name": "bigInteger",  "type": {"type": "bytes","logicalType": "decimal", "precision": 4, "scale": 4}}, 		 
  		 {  "name": "int",         "type": "int"                                 },

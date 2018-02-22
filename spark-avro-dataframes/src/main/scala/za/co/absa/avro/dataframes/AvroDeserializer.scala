@@ -9,7 +9,7 @@ import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.avro.dataframes.parsing.AvroParser
-import za.co.absa.avro.dataframes.parsing.ScalaDatumReader
+import za.co.absa.avro.dataframes.avro.ScalaDatumReader
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.hadoop.fs.FileSystem
@@ -26,7 +26,7 @@ object AvroDeserializer {
 
   private val avroParser = new AvroParser()
   private var reader: ScalaDatumReader[GenericRecord] = _
-  private var decoder: BinaryDecoder = _
+  private var decoder: BinaryDecoder = _ // allows for object reuse
   
   /**
    * Method responsible for receiving binary Avro records and converting them into Spark Rows.
@@ -57,7 +57,7 @@ object AvroDeserializer {
     new Schema.Parser().parse(schema)    
   }
   
-  private def createEncoder(schema: Schema) = {
+  private def createRowEncoder(schema: Schema) = {
     RowEncoder(avroParser.getSqlTypeForSchema(schema))
   }
 
@@ -74,13 +74,13 @@ object AvroDeserializer {
     
       createAvroReader(schema)
       
-      val encoder = createEncoder(reader.getSchema)         
+      val rowEncoder = createRowEncoder(reader.getSchema)         
       
       val data = dsReader.load.select("value").as(Encoders.BINARY)
 
       val rows = data.map(avroRecord => {
         decodeAvro(avroRecord)
-      })(encoder)
+      })(rowEncoder)
 
       rows
     }

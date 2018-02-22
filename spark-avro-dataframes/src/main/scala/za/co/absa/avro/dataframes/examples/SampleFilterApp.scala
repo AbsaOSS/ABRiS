@@ -7,7 +7,7 @@ import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConversions._
 
-object SampleApp {
+object SampleFilterApp {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
@@ -36,6 +36,8 @@ object SampleApp {
       .master(properties.getProperty(PARAM_JOB_MASTER))
       .getOrCreate()
 
+    spark.sparkContext.setLogLevel("INFO")
+      
     import za.co.absa.avro.dataframes.AvroDeserializer._
 
     val stream = spark

@@ -1,0 +1,11 @@
+{
+    "namespace": "kakfa-avro.test",
+     "type": "record",
+     "name": "user",
+     "fields":[
+         {  "name": "id", "type": "int"},
+         {  "name": "name",  "type": "string"},
+         {  "name": "email", "type": ["string", "null"]},
+         {  "name": "previousAddresses", "type": { "type": "array", "items": "string"}}
+     ]
+}

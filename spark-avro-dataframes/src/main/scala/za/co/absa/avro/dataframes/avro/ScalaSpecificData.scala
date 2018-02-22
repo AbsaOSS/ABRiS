@@ -1,4 +1,4 @@
-package za.co.absa.avro.dataframes.parsing
+package za.co.absa.avro.dataframes.avro
 
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificData
