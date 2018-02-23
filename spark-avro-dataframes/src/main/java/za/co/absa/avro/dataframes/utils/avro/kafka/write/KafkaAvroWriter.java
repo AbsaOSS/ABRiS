@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.avro.Schema;
@@ -26,7 +25,7 @@ public class KafkaAvroWriter<T> {
 	private final static String PROP_ACKS = "acks";
 	private final static String PROP_KEY_SERIALIZERS = "key.serializer";
 	private final static String PROP_VALUE_SERIALIZER = "value.serializer";	
-	
+
 	private final KafkaProducer<String, byte[]> kafkaSender;
 	private final AvroPayloadConverter avroConverter;
 
@@ -67,7 +66,7 @@ public class KafkaAvroWriter<T> {
 	 * Writes a list data beans into Kafka. The data MUST be in a Java beans-compliant format.
 	 * Throws if list is empty.
 	 */
-	public final int write(List<T> data, String topics, long timeoutSecs) {
+	public final int write(List<T> data, String[] topics, long timeoutSecs) {
 		if (data.isEmpty()) {
 			throw new IllegalArgumentException("Empty data list.");
 		}
@@ -83,28 +82,32 @@ public class KafkaAvroWriter<T> {
 		}
 
 		this.waitFor(timeoutSecs);
-		
+
 		System.out.println("Sent "+sent+" of "+data.size()+" entries to '"+topics+"'.");
 		return sent;
 	}
 
-	private final boolean write(Object o, List<Field> fields, String topics) {
-		try {
-			byte[] payload = this.avroConverter.toAvroPayload(o, fields);
-			this.send(payload, topics);
-			return true;
+	private final boolean write(Object o, List<Field> fields, String[] topics) {
+
+		for (String topic : topics) {
+			try {
+				byte[] payload = this.avroConverter.toAvroPayload(o, fields);
+				this.send(payload, topic);	
+				System.out.println("Message sent to topic: "+topic);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
 		}
-		catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+		return true;
 	}
 
 	private final void send(byte[] payload, String topics) throws InterruptedException, ExecutionException, TimeoutException {
 		ProducerRecord<String, byte[]> record = new ProducerRecord<String, byte[]>(topics, payload);                
 		this.kafkaSender.send(record);				
 	}		
-	
+
 	private final void waitFor(long secs) {
 		try {
 			Thread.sleep(secs * 1000);

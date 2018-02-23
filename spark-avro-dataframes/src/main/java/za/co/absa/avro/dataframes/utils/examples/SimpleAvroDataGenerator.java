@@ -54,16 +54,16 @@ public class SimpleAvroDataGenerator {
 	
 	public static void main(String[] args) throws Exception {
 		Properties config = getConfig();
-		Schema schema = getSchemaFor(TestBean.class);
+		Schema schema = getSchemaFor(TestBean.class);		
 		System.out.println("Using schema: "+schema);
 		KafkaAvroWriter<TestBean> writer = new KafkaAvroWriter<TestBean>(config, schema);
 		
-		List<TestBean> list = getTestData();
+		List<TestBean> list = getTestData();		
+		for (int i = 0 ; i < 2 ; i++)
 		writer.write(list, Settings.TOPICS, 2l);
 	}	
 
 	private final static class TestBean {
-
 		private int anInt;
 		private float aFloat;
 		private long aLong;
@@ -71,7 +71,7 @@ public class SimpleAvroDataGenerator {
 		private String aString;
 		private List<Long> aList;
 		private Set<Long> aSet;
-		private Map<String,Integer> aMap;		
+		private Map<String,Integer> mapAny;		
 		public TestBean(int anInt, float aFloat, long aLong, double aDouble, String aString, List<Long> aList,
 				Set<Long> aSet, Map<String, Integer> aMap) {			
 			this.anInt = anInt;
@@ -81,7 +81,7 @@ public class SimpleAvroDataGenerator {
 			this.aString = aString;
 			this.aList = aList;
 			this.aSet = aSet;
-			this.aMap = aMap;			
+			this.mapAny = aMap;			
 		}	
 	}	
 }

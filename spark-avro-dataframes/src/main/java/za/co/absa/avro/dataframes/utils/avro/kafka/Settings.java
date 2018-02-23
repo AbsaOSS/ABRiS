@@ -13,7 +13,5 @@ public class Settings {
 	  public final static String CONSUMER_TIME_MS = "120000";
 	  public final static String AUTO_COMMIT_INTERVAL_MS = "10000";
 	  
-//	  public final static String SHARED_TOPICS = "demo-topic-different-stuff-sdf";
-//	  public final static String SHARED_TOPICS = "felipe-avro-dataframes";
-	  public final static String TOPICS = "avro-dataframes-topic";
+	  public final static String[] TOPICS = {"avro-dataframes-topic"};
 }
