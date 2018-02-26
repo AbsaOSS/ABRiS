@@ -40,7 +40,10 @@ public class TestDataGenerator {
 	}
 	
 	private final static ComplexNested createRandomComplex(int count, Random random) {		
-		return new ComplexNested(random.nextLong(), new SimpleData(random.nextInt(), UUID.randomUUID().toString()));
+		return new ComplexNested(random.nextLong(), 
+				new SimpleData(random.nextInt(), 
+						UUID.randomUUID().toString(), 
+						createRandomList(random.nextInt(10), random)));
 	}
 	
 	private final static Map<String,Integer> createRandomMap(int entries, Random random) {
@@ -105,10 +108,12 @@ public class TestDataGenerator {
 	public final static class SimpleData implements NestedAvroData {
 		private int id;
 		private String name;		
+		private List<Long> values;
 		
-		public SimpleData(int id, String name) {		
+		public SimpleData(int id, String name, List<Long> values) {		
 			this.id = id;
 			this.name = name;
+			this.values = values;
 		}		
 	}	
 	
