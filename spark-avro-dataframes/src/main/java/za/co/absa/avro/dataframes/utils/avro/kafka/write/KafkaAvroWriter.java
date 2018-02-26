@@ -1,21 +1,16 @@
 package za.co.absa.avro.dataframes.utils.avro.kafka.write;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.avro.Schema;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import za.co.absa.avro.dataframes.utils.ReflectionUtils;
 import za.co.absa.avro.dataframes.utils.avro.AvroPayloadConverter;
+import za.co.absa.avro.dataframes.utils.avro.data.ContainerAvroData;
 
 public class KafkaAvroWriter<T> {
 
@@ -29,20 +24,13 @@ public class KafkaAvroWriter<T> {
 	private final KafkaProducer<String, byte[]> kafkaSender;
 	private final AvroPayloadConverter avroConverter;
 
-	public KafkaAvroWriter(Properties connectionProps, String schema) {
-		this(connectionProps, new Schema.Parser().parse(schema));
-	}
-
-	public KafkaAvroWriter(Properties connectionProps, Path schema) throws IOException {
-		this(connectionProps, new String(Files.readAllBytes(schema)));
-	}
-
-	public KafkaAvroWriter(Properties connectionProps, Schema schema) {
+	public KafkaAvroWriter(Properties connectionProps) {
 		if (!validate(connectionProps)) {
 			throw new IllegalArgumentException("Missing Kafka connection parameters.");
 		}		
-		this.kafkaSender = new KafkaProducer<String, byte[]>(connectionProps);
-		this.avroConverter = new AvroPayloadConverter(schema);
+		
+		this.kafkaSender = new KafkaProducer<String, byte[]>(connectionProps);	
+		this.avroConverter = new AvroPayloadConverter();
 	}
 
 	private final boolean validate(Properties properties) {
@@ -70,13 +58,14 @@ public class KafkaAvroWriter<T> {
 		if (data.isEmpty()) {
 			throw new IllegalArgumentException("Empty data list.");
 		}
-		Objects.requireNonNull(topics, "Empty list of topics.");
-
-		List<Field> fields = ReflectionUtils.getAccessibleFields(data.get(0).getClass());		
-
+		Objects.requireNonNull(topics, "Empty list of topics.");		
+		if (!(data.get(0) instanceof ContainerAvroData)) {
+			throw new IllegalArgumentException(data.get(0).getClass().getName()+" does not implement "+ContainerAvroData.class.getName());
+		}
+		
 		int sent = 0;
 		for (T t : data) {
-			if (this.write(t, fields, topics)) {
+			if (this.write(t, topics)) {
 				sent++;
 			}
 		}
@@ -87,11 +76,11 @@ public class KafkaAvroWriter<T> {
 		return sent;
 	}
 
-	private final boolean write(Object o, List<Field> fields, String[] topics) {
+	private final boolean write(Object o, String[] topics) {
 
 		for (String topic : topics) {
 			try {
-				byte[] payload = this.avroConverter.toAvroPayload(o, fields);
+				byte[] payload = this.avroConverter.toAvroPayload(o);
 				this.send(payload, topic);	
 				System.out.println("Message sent to topic: "+topic);
 			}

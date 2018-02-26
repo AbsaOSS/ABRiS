@@ -21,15 +21,15 @@ public final class AvroSchemaGenerator {
 	 * 
 	 * @return Optional<Path> if operation was successful or Optional<empty> otherwise.
 	 */
-	public final Optional<Path> storeSchemaForClass(Class<?> clazz, Path destination) {		
+	public final static Optional<Path> storeSchemaForClass(Class<?> clazz, Path destination) {		
 		Objects.requireNonNull(destination, "Null schema destination.");
 		if (!Files.exists(destination.getParent())) {
 			System.out.println("Inexistent destination directory: "+destination.getParent().getFileName());
 			return Optional.empty();
 		}
 		
-		Schema schema = this.parseSchema(clazz);
-		if (!this.storeSchema(schema.toString(), destination)) {
+		Schema schema = parseSchema(clazz);
+		if (!storeSchema(schema.toString(), destination)) {
 			Optional.empty();
 		}
 		
@@ -37,12 +37,12 @@ public final class AvroSchemaGenerator {
 		return Optional.of(destination);
 	}
 
-	public final Schema parseSchema(Class<?> clazz) {		
+	public final static Schema parseSchema(Class<?> clazz) {		
 		Objects.requireNonNull(clazz, "Null template class.");		
 		return ReflectData.get().getSchema(clazz);
 	}
 	
-	private final boolean storeSchema(String schema, Path destination) {
+	private final static boolean storeSchema(String schema, Path destination) {
 		
 		try (BufferedWriter writer = Files.newBufferedWriter(destination)) {
 			writer.write(schema);
