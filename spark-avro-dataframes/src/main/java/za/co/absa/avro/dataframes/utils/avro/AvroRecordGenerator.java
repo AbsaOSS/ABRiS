@@ -1,6 +1,7 @@
 package za.co.absa.avro.dataframes.utils.avro;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +18,7 @@ import za.co.absa.avro.dataframes.utils.avro.data.NestedAvroData;
 public class AvroRecordGenerator {
 
 	public final static Optional<IndexedRecord> convert(Object data) {
-		Schema dataSchema = getSchema(data);				
+		Schema dataSchema = AvroSchemaGenerator.parseSchema(data.getClass());		
 		List<Field> dataFields = ReflectionUtils.getAccessibleFields(data.getClass());
 		
 		try {
@@ -29,17 +30,16 @@ public class AvroRecordGenerator {
 		}
 	}
 	
-	private final static Schema getSchema(Object o) {
-		return new AvroSchemaGenerator().parseSchema(o.getClass());
-	}
-	
 	private final static IndexedRecord generate(Schema dataSchema, Object data, List<Field> dataFields) throws IllegalArgumentException, IllegalAccessException {
-		GenericRecordBuilder recordBuilder = new GenericRecordBuilder(dataSchema);		
+		GenericRecordBuilder recordBuilder = new GenericRecordBuilder(dataSchema);
+		
 		for (Field field : dataFields) {
+
 			Object fieldValue = field.get(data);
 			if (fieldValue instanceof NestedAvroData) {
-				fieldValue = convert(fieldValue).get();
+				fieldValue = convert(fieldValue).get(); // convert the class into an Avro's IndexedRecord
 			}
+			
 			recordBuilder.set(field.getName(), fieldValue);
 		}		
 		return recordBuilder.build();		
