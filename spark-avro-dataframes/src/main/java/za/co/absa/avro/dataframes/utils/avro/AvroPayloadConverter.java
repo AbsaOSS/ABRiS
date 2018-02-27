@@ -26,8 +26,7 @@ public class AvroPayloadConverter {
 		}
 	}
 
-	private final byte[] recordToByteArray(IndexedRecord datum) throws IOException {
-		
+	private final byte[] recordToByteArray(IndexedRecord datum) throws IOException {		
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()){
 			DatumWriter<IndexedRecord> writer = new GenericDatumWriter<IndexedRecord>(datum.getSchema());
 			Encoder encoder = EncoderFactory.get().binaryEncoder(outStream, null);			
@@ -36,9 +35,8 @@ public class AvroPayloadConverter {
 			byte[] byteData = outStream.toByteArray();
 			return byteData;
 		} 
-		catch (IOException e) {
-			System.out.println("Are you using nested classes? If yes, did you marked them as "+NestedAvroData.class.getName());
-			throw e;
+		catch (IOException e) {			
+			throw new IOException("Are you using nested classes? If yes, did you mark them as "+NestedAvroData.class.getName(), e);
 		}
 	}
 }

@@ -115,6 +115,5 @@ public class TestDataGenerator {
 			this.name = name;
 			this.values = values;
 		}		
-	}	
-	
+	}		
 }

@@ -42,8 +42,7 @@ public final class AvroSchemaGenerator {
 		return ReflectData.get().getSchema(clazz);
 	}
 	
-	private final static boolean storeSchema(String schema, Path destination) {
-		
+	private final static boolean storeSchema(String schema, Path destination) {		
 		try (BufferedWriter writer = Files.newBufferedWriter(destination)) {
 			writer.write(schema);			
 			return true;
