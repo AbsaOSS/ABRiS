@@ -6,6 +6,7 @@ import java.util.Properties
 import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConversions._
+import java.io.File
 
 object SampleFilterApp {
 
@@ -21,8 +22,8 @@ object SampleFilterApp {
     if (args.length != 1) {
       println("No properties file specified.")
       System.exit(1)
-    }
-
+    }    
+    
     println("Loading properties from: " + args(0))
     val properties = loadProperties(args(0))
     
@@ -51,7 +52,13 @@ object SampleFilterApp {
     println("Going to run filter: " + filter)
 
     stream.printSchema()
-    stream.filter(filter).writeStream.format("console").start().awaitTermination()
+    
+    stream
+      .filter(filter)
+      .writeStream
+      .format("console")
+      .start()
+      .awaitTermination()
   }
 
   private def loadProperties(path: String): Properties = {

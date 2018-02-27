@@ -14,7 +14,7 @@ import scala.collection._
 class ScalaDatumReader[T](schema: Schema) extends SpecificDatumReader[T](schema, schema, ScalaSpecificData.get()) with Serializable {
   
   /**
-   * This method was overriden to force all Strings to be forced as Scala strings
+   * This method was overriden to force all Strings to be read as Scala strings
    * instead of Avro's org.apache.avro.util.Utf8.
    */
   override def readString(old: Object, expected: Schema, in: Decoder) = {
@@ -34,7 +34,7 @@ class ScalaDatumReader[T](schema: Schema) extends SpecificDatumReader[T](schema,
 	} 
 	
 	/**
-	 * This method was overriden simple Avro's original implementation relies on Java HashMaps, which
+	 * This method was overriden since Avro's original implementation relies on Java HashMaps, which
 	 * are not directly translatable to Spark MapType.
 	 */
   override def newMap(old: Object, size: Int): Object = {

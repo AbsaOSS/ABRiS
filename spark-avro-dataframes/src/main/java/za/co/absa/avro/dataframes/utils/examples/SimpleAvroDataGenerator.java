@@ -1,20 +1,15 @@
 package za.co.absa.avro.dataframes.utils.examples;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
 
-import org.apache.avro.Schema;
-
 import za.co.absa.avro.dataframes.utils.avro.AvroSchemaGenerator;
+import za.co.absa.avro.dataframes.utils.avro.data.ContainerAvroData;
 import za.co.absa.avro.dataframes.utils.avro.kafka.Settings;
 import za.co.absa.avro.dataframes.utils.avro.kafka.write.KafkaAvroWriter;
+import za.co.absa.avro.dataframes.utils.examples.utils.TestDataGenerator;
 
 /**
  * Writes Avro data to Kafka using the utilities API.
@@ -34,54 +29,23 @@ public class SimpleAvroDataGenerator {
 		return properties;
 	}
 
-	private final static Schema getSchemaFor(Class<?> clazz) {
-		return new AvroSchemaGenerator().parseSchema(clazz);
+	private final static void storeSchemaForReader(String destination, Class<?> example) {
+		AvroSchemaGenerator.storeSchemaForClass(example, Paths.get(destination));
 	}
 
-	private final static List<TestBean> getTestData() {
-		Map<String,Integer> map = new HashMap<String,Integer>();
-		map.put("k1", 2);
-		map.put("k2", 1);
-				
-		List<TestBean> testBeans = new ArrayList<TestBean>();
-		testBeans.add(new TestBean(1, 2f, 3l, 4d, "s5", 
-				Arrays.asList(8l, 9l), 
-				new HashSet<Long>(Arrays.asList(10l, 11l)),  
-				map));
-		
-		return testBeans;
-	}
-	
 	public static void main(String[] args) throws Exception {
-		Properties config = getConfig();
-		Schema schema = getSchemaFor(TestBean.class);
-		System.out.println("Using schema: "+schema);
-		KafkaAvroWriter<TestBean> writer = new KafkaAvroWriter<TestBean>(config, schema);
-		
-		List<TestBean> list = getTestData();
-		writer.write(list, Settings.TOPICS, 2l);
-	}	
 
-	private final static class TestBean {
+		String schemaDestination = "src\\test\\resources\\automatically_generated_schema.avsc";
+		storeSchemaForReader(schemaDestination, TestDataGenerator.getContainerClass());
 
-		private int anInt;
-		private float aFloat;
-		private long aLong;
-		private double aDouble;
-		private String aString;
-		private List<Long> aList;
-		private Set<Long> aSet;
-		private Map<String,Integer> aMap;		
-		public TestBean(int anInt, float aFloat, long aLong, double aDouble, String aString, List<Long> aList,
-				Set<Long> aSet, Map<String, Integer> aMap) {			
-			this.anInt = anInt;
-			this.aFloat = aFloat;
-			this.aLong = aLong;
-			this.aDouble = aDouble;
-			this.aString = aString;
-			this.aList = aList;
-			this.aSet = aSet;
-			this.aMap = aMap;			
-		}	
+		Properties config = getConfig();	
+		KafkaAvroWriter<ContainerAvroData> writer = new KafkaAvroWriter<ContainerAvroData>(config);	
+
+		while (true) {
+			List<ContainerAvroData> testData = TestDataGenerator.generate(10);						
+			writer.write(testData, Settings.TOPICS, 1l);
+			Thread.sleep(3000);
+		}
+
 	}	
 }

@@ -27,7 +27,7 @@ object AvroDeserializer {
   private val avroParser = new AvroParser()
   private var reader: ScalaDatumReader[GenericRecord] = _
   private var decoder: BinaryDecoder = _ // allows for object reuse
-  
+
   /**
    * Method responsible for receiving binary Avro records and converting them into Spark Rows.
    */
@@ -38,45 +38,45 @@ object AvroDeserializer {
     avroParser.parse(decodedAvroData)
   }
 
-  private def createAvroReader(schema: String) = {    
+  private def createAvroReader(schema: String) = {
     reader = new ScalaDatumReader[GenericRecord](loadSchema(schema))
   }
 
-  private def loadSchema(schemaPath: String) = {    
+  private def loadSchema(schemaPath: String) = {
     val loadedSchemaStr = loadFromHdfs(schemaPath)
-    new Schema.Parser().parse(loadedSchemaStr)    
+    new Schema.Parser().parse(loadedSchemaStr)
   }
-  
+
   private def loadFromHdfs(path: String): String = {
     val hdfs = FileSystem.get(new Configuration())
     val stream = hdfs.open(new Path(path))
-    try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()    
+    try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()
   }
-  
-  private def parseSchema(schema: String) = {    
-    new Schema.Parser().parse(schema)    
+
+  private def parseSchema(schema: String) = {
+    new Schema.Parser().parse(schema)
   }
-  
+
   private def createRowEncoder(schema: Schema) = {
     RowEncoder(avroParser.getSqlTypeForSchema(schema))
   }
 
   /**
    * This class provides the method that performs the Kafka/Avro/Spark connection.
-   * 
-   * It loads binary data from a stream and feed them into an Avro/Spark decoder, returning the resultin rows.
-   * 
+   *
+   * It loads binary data from a stream and feed them into an Avro/Spark decoder, returning the resulting rows.
+   *
    * It requires the path to the Avro schema which defines the records to be read.
    */
   implicit class Deserializer(dsReader: DataStreamReader) extends Serializable {
-    
+
     def avro(schema: String) = {
-    
+
       createAvroReader(schema)
-      
-      val rowEncoder = createRowEncoder(reader.getSchema)         
-      
-      val data = dsReader.load.select("value").as(Encoders.BINARY)
+
+      val rowEncoder = createRowEncoder(reader.getSchema)
+
+      val data = dsReader.load.select("value").as(Encoders.BINARY)      
 
       val rows = data.map(avroRecord => {
         decodeAvro(avroRecord)
