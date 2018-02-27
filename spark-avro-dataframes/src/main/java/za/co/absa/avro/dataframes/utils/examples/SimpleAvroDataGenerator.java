@@ -44,7 +44,7 @@ public class SimpleAvroDataGenerator {
 		while (true) {
 			List<ContainerAvroData> testData = TestDataGenerator.generate(10);						
 			writer.write(testData, Settings.TOPICS, 1l);
-//			Thread.sleep(3000);
+			Thread.sleep(3000);
 		}
 
 	}	

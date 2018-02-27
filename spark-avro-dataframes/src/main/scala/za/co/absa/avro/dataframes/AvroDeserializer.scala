@@ -64,7 +64,7 @@ object AvroDeserializer {
   /**
    * This class provides the method that performs the Kafka/Avro/Spark connection.
    *
-   * It loads binary data from a stream and feed them into an Avro/Spark decoder, returning the resultin rows.
+   * It loads binary data from a stream and feed them into an Avro/Spark decoder, returning the resulting rows.
    *
    * It requires the path to the Avro schema which defines the records to be read.
    */
