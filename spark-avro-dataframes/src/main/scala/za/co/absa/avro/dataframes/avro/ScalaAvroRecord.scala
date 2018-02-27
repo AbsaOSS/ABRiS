@@ -23,14 +23,14 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
   }
   values = new Array[Object](schema.getFields().size())
 
-  override def getSchema(): Schema = {
+  override def getSchema: Schema = {
     schema
   }
 
   override def put(key: String, value: Object): Unit = {
-    val field: Schema.Field = schema.getField(key);
+    val field: Schema.Field = schema.getField(key)
     if (field == null) {
-      throw new AvroRuntimeException("Not a valid schema field: " + key);
+      throw new AvroRuntimeException("Not a valid schema field: " + key)
     }
     put(field.pos(), value)
   }
@@ -68,7 +68,7 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
     if (o == this) {
       true
     }
-    if (!(o.isInstanceOf[ScalaAvroRecord])) {
+    if (!o.isInstanceOf[ScalaAvroRecord]) {
       false // not a record
     }    
     if (this.schema == null) {
@@ -78,11 +78,11 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
     val that: ScalaAvroRecord = o.asInstanceOf[ScalaAvroRecord]
     
     if (that == null || that.getSchema() == null) {
-      false;
+      false
     }
     
     if (!this.schema.equals(that.getSchema())) {
-      return false; // not the same schema
+      return false // not the same schema
     }    
     GenericData.get().compare(this, that, schema) == 0
   }
