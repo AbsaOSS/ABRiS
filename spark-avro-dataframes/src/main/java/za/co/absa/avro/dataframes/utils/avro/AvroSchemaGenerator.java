@@ -23,14 +23,14 @@ public final class AvroSchemaGenerator {
 	 */
 	public final static Optional<Path> storeSchemaForClass(Class<?> clazz, Path destination) {		
 		Objects.requireNonNull(destination, "Null schema destination.");
-		if (!Files.exists(destination.getParent())) {
+		if (!Files.exists(destination.getParent())) {			
 			System.out.println("Inexistent destination directory: "+destination.getParent().getFileName());
 			return Optional.empty();
 		}
 		
 		Schema schema = parseSchema(clazz);
 		if (!storeSchema(schema.toString(), destination)) {
-			Optional.empty();
+			return Optional.empty();
 		}
 		
 		System.out.println("Schema for "+clazz.getName()+" stored in "+destination);
@@ -45,8 +45,7 @@ public final class AvroSchemaGenerator {
 	private final static boolean storeSchema(String schema, Path destination) {
 		
 		try (BufferedWriter writer = Files.newBufferedWriter(destination)) {
-			writer.write(schema);
-			writer.flush();
+			writer.write(schema);			
 			return true;
 		}
 		catch (Exception e) {	

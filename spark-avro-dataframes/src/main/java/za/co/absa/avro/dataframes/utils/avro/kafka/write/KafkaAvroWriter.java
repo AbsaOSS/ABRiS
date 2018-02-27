@@ -72,10 +72,18 @@ public class KafkaAvroWriter<T> {
 
 		this.waitFor(timeoutSecs);
 
-		System.out.println("Sent "+sent+" of "+data.size()+" entries to '"+topics+"'.");
+		System.out.println("Sent "+sent+" of "+data.size()+" entries to '"+this.toString(topics)+"'.");
 		return sent;
 	}
 
+	private final String toString(String[] topics) {
+		StringBuilder allTopics = new StringBuilder();
+		for (String topic : topics) {
+			allTopics.append(topic).append(", ");
+		}
+		return allTopics.toString();
+	}
+	
 	private final boolean write(Object o, String[] topics) {
 
 		for (String topic : topics) {
