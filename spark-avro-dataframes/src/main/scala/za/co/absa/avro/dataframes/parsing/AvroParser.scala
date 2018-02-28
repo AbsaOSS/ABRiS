@@ -25,7 +25,6 @@ class AvroParser extends Serializable {
   def parse(avroRecord: GenericRecord): GenericRowWithSchema = {    
     val structType = getSqlTypeForSchema(avroRecord.getSchema)    
     val avroDataArray: Array[Any] = new Array(avroRecord.getSchema.getFields.size())
-    
     for (field <- avroRecord.getSchema.getFields.asScala) {      
       avroDataArray(field.pos()) = avroRecord.get(field.pos())
     }    
