@@ -66,19 +66,19 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
 
   override def equals(o: Any): Boolean = {
     if (o == this) {
-      true
+      return true
     }
     if (!o.isInstanceOf[ScalaAvroRecord]) {
-      false // not a record
+      return false // not a record
     }    
     if (this.schema == null) {
-      false
+      return false
     }
     
     val that: ScalaAvroRecord = o.asInstanceOf[ScalaAvroRecord]
     
     if (that == null || that.getSchema() == null) {
-      false
+      return false
     }
     
     if (!this.schema.equals(that.getSchema())) {
