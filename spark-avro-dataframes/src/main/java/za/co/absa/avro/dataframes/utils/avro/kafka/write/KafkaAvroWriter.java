@@ -10,7 +10,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import za.co.absa.avro.dataframes.utils.avro.AvroPayloadConverter;
-import za.co.absa.avro.dataframes.utils.avro.data.ContainerAvroData;
 
 public class KafkaAvroWriter<T> {
 
@@ -59,9 +58,6 @@ public class KafkaAvroWriter<T> {
 			throw new IllegalArgumentException("Empty data list.");
 		}
 		Objects.requireNonNull(topics, "Empty list of topics.");		
-		if (!(data.get(0) instanceof ContainerAvroData)) {
-			throw new IllegalArgumentException(data.get(0).getClass().getName()+" does not implement "+ContainerAvroData.class.getName());
-		}
 		
 		int sent = 0;
 		for (T t : data) {

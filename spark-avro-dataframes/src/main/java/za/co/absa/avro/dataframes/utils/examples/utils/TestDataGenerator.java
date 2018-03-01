@@ -9,8 +9,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
-import za.co.absa.avro.dataframes.utils.avro.data.ContainerAvroData;
-import za.co.absa.avro.dataframes.utils.avro.data.NestedAvroData;
+import za.co.absa.avro.dataframes.utils.avro.data.annotations.NestedAvroData;
 
 @SuppressWarnings("unused")
 public class TestDataGenerator {
@@ -19,10 +18,10 @@ public class TestDataGenerator {
 		return TestData.class;
 	}
 	
-	public final static List<ContainerAvroData> generate(int batchSize) {
+	public final static List<TestData> generate(int batchSize) {
 		
 		Random random = new Random();
-		List<ContainerAvroData> testData = new ArrayList<ContainerAvroData>();
+		List<TestData> testData = new ArrayList<TestData>();
 		
 		for (int i = 0 ; i < batchSize ; i++) {
 			testData.add(new TestData(random.nextInt(), 
@@ -69,8 +68,8 @@ public class TestDataGenerator {
 		}
 		return randomSet;
 	}	
-	
-	public final static class TestData implements ContainerAvroData {
+		
+	public final static class TestData {
 		private int anInt;
 		private float aFloat;
 		private long aLong;
@@ -94,7 +93,8 @@ public class TestDataGenerator {
 		}			
 	}	
 	
-	public final static class ComplexNested implements NestedAvroData {
+	@NestedAvroData
+	public final static class ComplexNested {
 		
 		private long whateverLong;
 		private SimpleData nested;
@@ -105,7 +105,8 @@ public class TestDataGenerator {
 		}		
 	}
 	
-	public final static class SimpleData implements NestedAvroData {
+	@NestedAvroData
+	public final static class SimpleData {
 		private int id;
 		private String name;		
 		private List<Long> values;

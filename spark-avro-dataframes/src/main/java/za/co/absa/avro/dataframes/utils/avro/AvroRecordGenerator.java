@@ -9,7 +9,7 @@ import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.generic.IndexedRecord;
 
 import za.co.absa.avro.dataframes.utils.ReflectionUtils;
-import za.co.absa.avro.dataframes.utils.avro.data.NestedAvroData;
+import za.co.absa.avro.dataframes.utils.avro.data.annotations.NestedAvroData;
 
 /**
  * Converts objects into Avro IndexedRecords.
@@ -35,7 +35,7 @@ public class AvroRecordGenerator {
 		for (Field field : dataFields) {
 
 			Object fieldValue = field.get(data);
-			if (fieldValue instanceof NestedAvroData) {
+			if (fieldValue.getClass().isAnnotationPresent(NestedAvroData.class)) {
 				fieldValue = convert(fieldValue).get(); // convert the class into an Avro's IndexedRecord
 			}
 			
