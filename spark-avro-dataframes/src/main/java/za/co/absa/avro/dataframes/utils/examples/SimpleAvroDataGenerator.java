@@ -6,10 +6,10 @@ import java.util.Properties;
 import java.util.UUID;
 
 import za.co.absa.avro.dataframes.utils.avro.AvroSchemaGenerator;
-import za.co.absa.avro.dataframes.utils.avro.data.ContainerAvroData;
 import za.co.absa.avro.dataframes.utils.avro.kafka.Settings;
 import za.co.absa.avro.dataframes.utils.avro.kafka.write.KafkaAvroWriter;
 import za.co.absa.avro.dataframes.utils.examples.utils.TestDataGenerator;
+import za.co.absa.avro.dataframes.utils.examples.utils.TestDataGenerator.TestData;
 
 /**
  * Writes Avro data to Kafka using the utilities API.
@@ -36,13 +36,13 @@ public class SimpleAvroDataGenerator {
 	public static void main(String[] args) throws Exception {
 
 		String schemaDestination = "src\\test\\resources\\automatically_generated_schema.avsc";
-		storeSchemaForReader(schemaDestination, TestDataGenerator.getContainerClass());
+		storeSchemaForReader(schemaDestination, TestDataGenerator.getContainerClass()); // automatically write the schema so that an Avro reader can pick it
 
-		Properties config = getConfig();	
-		KafkaAvroWriter<ContainerAvroData> writer = new KafkaAvroWriter<ContainerAvroData>(config);	
+		Properties config = getConfig(); // configure metadata for Kafka connection
+		KafkaAvroWriter<TestData> writer = new KafkaAvroWriter<TestData>(config); // Writer for a user-defined class
 
 		while (true) {
-			List<ContainerAvroData> testData = TestDataGenerator.generate(10);						
+			List<TestData> testData = TestDataGenerator.generate(10);						
 			writer.write(testData, Settings.TOPICS, 1l);
 			Thread.sleep(3000);
 		}

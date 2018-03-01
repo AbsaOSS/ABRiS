@@ -10,7 +10,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 
-import za.co.absa.avro.dataframes.utils.avro.data.NestedAvroData;
+import za.co.absa.avro.dataframes.utils.avro.data.annotations.NestedAvroData;
 
 public class AvroPayloadConverter {
 	
@@ -28,7 +28,7 @@ public class AvroPayloadConverter {
 
 	private final byte[] recordToByteArray(IndexedRecord datum) throws IOException {		
 		try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()){
-			DatumWriter<IndexedRecord> writer = new GenericDatumWriter<IndexedRecord>(datum.getSchema());
+			DatumWriter<IndexedRecord> writer = new GenericDatumWriter<IndexedRecord>(datum.getSchema());			
 			Encoder encoder = EncoderFactory.get().binaryEncoder(outStream, null);			
 			writer.write(datum, encoder);
 			encoder.flush();
