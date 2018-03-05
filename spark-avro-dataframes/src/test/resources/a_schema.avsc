@@ -1,0 +1,8 @@
+{
+    "namespace": "kakfa-avro.test",
+     "type": "record",
+     "name": "Test",
+     "fields":[
+         {  "name": "a", "type": "int"},
+         {  "name": "b",  "type": "long"}
+      ]}

@@ -1,4 +1,4 @@
-package za.co.absa.avro.dataframes.avro
+package za.co.absa.avro.dataframes.avro.format
 
 import org.apache.avro.AvroRuntimeException
 import org.apache.avro.Schema

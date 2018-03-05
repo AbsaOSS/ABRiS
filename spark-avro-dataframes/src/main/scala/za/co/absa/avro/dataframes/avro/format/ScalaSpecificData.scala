@@ -1,8 +1,8 @@
-package za.co.absa.avro.dataframes.avro
+package za.co.absa.avro.dataframes.avro.format
 
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificData
-import org.apache.avro.generic.IndexedRecord
+
 
 object ScalaSpecificData {
   private val INSTANCE = new ScalaSpecificData()

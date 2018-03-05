@@ -1,16 +1,11 @@
-package za.co.absa.avro.dataframes.parsing        
+package za.co.absa.avro.dataframes.avro.parsing
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.util.Utf8
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.types.StructType
-
 import com.databricks.spark.avro.SchemaConverters
-import org.apache.spark.sql.Row
-import scala.math.BigInt
 
 /**
  * This class provides methods to convert Avro's GenericRecords to Spark's GenericRowWithSchemas.

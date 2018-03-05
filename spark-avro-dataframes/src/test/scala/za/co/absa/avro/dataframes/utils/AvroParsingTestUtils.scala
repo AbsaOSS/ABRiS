@@ -6,10 +6,9 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.io.DecoderFactory
 import org.apache.avro.io.EncoderFactory
-import za.co.absa.avro.dataframes.avro.ScalaDatumReader
+import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
 import za.co.absa.avro.dataframes.utils.avro.CustomDatumWriter
-import za.co.absa.avro.dataframes.avro.ScalaAvroRecord
-import za.co.absa.avro.dataframes.avro.ScalaDatumReader
+
 
 object AvroParsingTestUtils {
 

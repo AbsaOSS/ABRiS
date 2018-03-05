@@ -23,7 +23,8 @@ import java.nio.ByteBuffer
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericFixed
 import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
-import za.co.absa.avro.dataframes.avro.ScalaAvroRecord
+import za.co.absa.avro.dataframes.avro.format.ScalaAvroRecord
+import za.co.absa.avro.dataframes.avro.parsing.AvroParser
 
 class AvroParserSpec extends FlatSpec {
 

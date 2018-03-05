@@ -1,15 +1,13 @@
-package za.co.absa.avro.dataframes
+package za.co.absa.avro.dataframes.avro
 
 import scala.reflect.ClassTag
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.io.Decoder
 import org.apache.avro.io.DecoderFactory
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.avro.dataframes.parsing.AvroParser
-import za.co.absa.avro.dataframes.avro.ScalaDatumReader
+import za.co.absa.avro.dataframes.avro.parsing.AvroParser
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.hadoop.fs.FileSystem
@@ -18,11 +16,15 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import scala.collection.JavaConverters._
 import org.apache.avro.io.BinaryDecoder
+import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
+import za.co.absa.avro.dataframes.avro.parsing.AvroSchemaUtils
+import org.apache.spark.sql.Dataset
+import za.co.absa.avro.dataframes.avro.format.SparkAvroConversions
 
 /**
  * This object provides the main point of integration between applications and this library.
  */
-object AvroDeserializer {
+object AvroSerDe {
 
   private val avroParser = new AvroParser()
   private var reader: ScalaDatumReader[GenericRecord] = _
@@ -39,18 +41,7 @@ object AvroDeserializer {
   }
 
   private def createAvroReader(schema: String) = {
-    reader = new ScalaDatumReader[GenericRecord](loadSchema(schema))
-  }
-
-  private def loadSchema(schemaPath: String) = {
-    val loadedSchemaStr = loadFromHdfs(schemaPath)
-    new Schema.Parser().parse(loadedSchemaStr)
-  }
-
-  private def loadFromHdfs(path: String): String = {
-    val hdfs = FileSystem.get(new Configuration())
-    val stream = hdfs.open(new Path(path))
-    try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()
+    reader = new ScalaDatumReader[GenericRecord](AvroSchemaUtils.load(schema))
   }
 
   private def parseSchema(schema: String) = {
@@ -85,4 +76,21 @@ object AvroDeserializer {
       rows
     }
   }
+  
+  implicit class Serializer(dataframe: Dataset[Row]) {
+    
+    implicit val recEncoder = Encoders.BINARY
+    
+    def avro(schemaPath: String): Dataset[Array[Byte]] = {      
+      
+      val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)      
+      
+      dataframe.mapPartitions(partition => {
+        
+        val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
+        partition.map(row => SparkAvroConversions.rowToBinaryAvro(avroSchema, row))
+        
+      })
+    }
+  }  
 }

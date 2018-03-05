@@ -1,10 +1,10 @@
-package za.co.absa.avro.dataframes.avro
+package za.co.absa.avro.dataframes.avro.read
 
 import org.apache.avro.specific.SpecificDatumReader
-import org.apache.avro.specific.SpecificData
 import org.apache.avro.Schema
-import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Decoder
 import scala.collection._
+import za.co.absa.avro.dataframes.avro.format.ScalaSpecificData
 
 /**
  * Avro uses its own representations of Strings and Arrays, as well as a Java HashMap to back map records.
