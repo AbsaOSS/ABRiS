@@ -6,7 +6,7 @@ import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.avro.dataframes.utils.TestSchemas
 
 class ScalaSpecificDataSpec extends FlatSpec {
-  
+    
   private val specificData = new ScalaSpecificData
   
   behavior of "ScalaSpecificData"
