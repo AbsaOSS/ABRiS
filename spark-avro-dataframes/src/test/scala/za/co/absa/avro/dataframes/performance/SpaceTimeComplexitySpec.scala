@@ -19,7 +19,7 @@ import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.SaveMode
 import org.slf4j.LoggerFactory
 
-class SpaceComplexitySpec extends FlatSpec with BeforeAndAfterAll {
+class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
   
@@ -42,13 +42,12 @@ class SpaceComplexitySpec extends FlatSpec with BeforeAndAfterAll {
 
   behavior of "Library"
 
-  it should "be more space-efficient than Kryo when serializing records" in {
-    
+  it should "be more space-efficient than Kryo when serializing records" in {    
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedSchema)
     val sparkSchema: StructType = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]    
     
     val numRecords = 20000
-    val data = ComplexRecordsGenerator.generate(numRecords)
+    val data = ComplexRecordsGenerator.generateRows(numRecords)
         
     val avroResult = writeAvro(data, sparkSchema)     
     val kryoResult = writeKryo(data)
@@ -62,6 +61,15 @@ class SpaceComplexitySpec extends FlatSpec with BeforeAndAfterAll {
     println(s"******* Avro was ${spaceSaving}% more space-efficient than Kryo while writing ${numRecords} rows.")
   }
 
+  it should "process at least 100k rows/second/core" in {        
+    val records = ComplexRecordsGenerator.generateRecords(100000)
+    val init = System.nanoTime()
+    val rows = ComplexRecordsGenerator.convert(records)
+    val elapsed = System.nanoTime() - init
+    println(s"******* AvroSparkParser processed ${rows.size} records in ${elapsed} ns.")
+    assert(elapsed < 1e+9)    
+  }
+  
   private def writeKryo(data: List[Row]): File = {
     import spark.implicits._
     implicit val encoderAvro = Encoders.kryo[Row]

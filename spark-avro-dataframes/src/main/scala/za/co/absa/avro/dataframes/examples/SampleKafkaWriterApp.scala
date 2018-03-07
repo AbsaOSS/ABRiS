@@ -41,7 +41,7 @@ object SampleKafkaWriterApp {
     import za.co.absa.avro.dataframes.avro.AvroSerDe._
     
     //val l2 = l3.avro(schemaPath)
-    val l2 = l3.avro("teste1", "teste2")
+    val l2 = l3.avro("teste1", "teste2")    
     
     l2.write
     .format("kafka")    
