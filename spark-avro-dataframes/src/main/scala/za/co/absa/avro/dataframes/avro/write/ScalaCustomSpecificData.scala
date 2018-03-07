@@ -11,6 +11,7 @@ object ScalaCustomSpecificData {
 }
 
 class ScalaCustomSpecificData extends za.co.absa.avro.dataframes.avro.format.ScalaSpecificData {
+  
   override def getField(record: Object, name: String, position: Int): Object = {
     try {
       record.asInstanceOf[IndexedRecord].get(position)

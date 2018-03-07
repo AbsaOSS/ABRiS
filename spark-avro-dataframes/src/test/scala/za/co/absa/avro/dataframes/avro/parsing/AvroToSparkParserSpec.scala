@@ -30,7 +30,7 @@ class AvroToSparkParserSpec extends FlatSpec {
 
   private val avroParser = new AvroToSparkParser()
 
-  behavior of "AvroParser"
+  behavior of "AvroToSparkParser"
 
   it should "support native types" in {
     val testData = Map[String, Object](

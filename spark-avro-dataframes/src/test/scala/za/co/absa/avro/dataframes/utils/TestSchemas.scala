@@ -2,6 +2,54 @@ package za.co.absa.avro.dataframes.utils
 
 object TestSchemas {
   
+  val NATIVE_SIMPLE_OUTER_SCHEMA = """{
+    "type":"record",
+    "name":"outer_nested",
+    "namespace":"all-types.test",
+    "fields":
+    [
+	    {"name":"name",  "type":"string"},
+	    {"name":"nested","type":
+		    {
+			    "type":"record","name":"nested","fields":
+				  [
+					  {"name":"int", "type":"int"},
+					  {"name":"long","type":"long"}
+				  ]
+		    }
+	    }
+	  ]
+  }"""    
+  
+  val NATIVE_SIMPLE_NESTED_SCHEMA = """{
+     "namespace": "all-types.test",
+     "type":"record",  
+      "name":"nested", 
+      "fields":
+				  [
+					  {"name":"int", "type":"int"},
+					  {"name":"long","type":"long"}
+					]				 				     
+  }"""  
+  
+  val NATIVE_COMPLETE_SCHEMA = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "native_complete",
+     "fields":[                  
+         {"name": "bytes", "type": "bytes" },
+         { "name": "string",      "type": ["string", "null"] },     
+         { "name": "int",         "type": ["int",    "null"] },
+         { "name": "long",        "type": ["long",   "null"] },
+ 		     { "name": "double",      "type": ["double", "null"] },
+ 		     { "name": "float",       "type": ["float",  "null"] },
+ 		     { "name": "boolean",     "type": ["boolean","null"] }, 		      		     
+ 		     { "name": "array", "type": {"type": "array", "items": "string"} },
+ 		     {"name": "fixed", "type": {"type": "fixed", "size": 13, "name": "fixed"}},
+ 		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
+     ]
+  }""" 
+  
   val NATIVE_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",

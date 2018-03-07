@@ -23,17 +23,7 @@ class ScalaSpecificData extends SpecificData {
   
   override def isArray(datum: Object): Boolean = {    
     if (datum.isInstanceOf[Collection[Any]]) true
-    if (datum.isInstanceOf[Iterable[Any]]) true
-    couldBeArrayType(datum)
-  }
-  
-  private def couldBeArrayType(datum: Object): Boolean = {
-    try {
-      datum.asInstanceOf[Array[Object]]
-      true
-    }
-    catch {
-      case _: Throwable => false
-    }
+    else if (datum.isInstanceOf[Iterable[Any]] && !datum.isInstanceOf[Map[Any,Any]]) true // does not make sense for a map to be an array, check unnecessary for Java since Map is not a Collection
+    else datum.isInstanceOf[Array[Object]]    
   }
 }
