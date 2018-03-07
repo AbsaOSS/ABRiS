@@ -5,7 +5,7 @@ object TestSchemas {
   val NATIVE_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "native",
      "fields":[                  
          { "name": "string",      "type": ["string", "null"] },     
          { "name": "int",         "type": ["int",    "null"] },
@@ -19,7 +19,7 @@ object TestSchemas {
   val ARRAY_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "array",
      "fields":[                  
  		     { "name": "array", "type": {"type": "array", "items": "string"} }
      ]
@@ -28,7 +28,7 @@ object TestSchemas {
   val MAP_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "map",
      "fields":[                  
  		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
      ]
@@ -37,7 +37,7 @@ object TestSchemas {
   val BYTES_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "bytes",
      "fields":[                  
  		     {"name": "bytes", "type": "bytes" }
      ]
@@ -46,7 +46,7 @@ object TestSchemas {
   val FIXED_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "fixed_name",
      "fields":[                  
  		     {"name": "fixed", "type": {"type": "fixed", "size": 13, "name": "fixed"}}
      ]
@@ -55,7 +55,7 @@ object TestSchemas {
   val DECIMAL_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "decimal",
      "fields":[                  
  		     {"name": "decimal", "type": {"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2}}
      ]
@@ -64,7 +64,7 @@ object TestSchemas {
   val DATE_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "date",
      "fields":[                  
  		     {"name": "date", "type": {"type": "int", "logicalType": "date"}}
      ]
@@ -73,7 +73,7 @@ object TestSchemas {
   val MILLISECOND_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "millisecond",
      "fields":[                  
  		     {"name": "millisecond", "type": {"type": "int", "logicalType": "time-millis"}}
      ]
@@ -82,7 +82,7 @@ object TestSchemas {
   val MICROSECOND_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "microsecond",
      "fields":[                  
  		     {"name": "microsecond", "type": {"type": "long", "logicalType": "time-micros"}}
      ]
@@ -91,7 +91,7 @@ object TestSchemas {
   val TIMESTAMP_MILLIS_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "timestamp_millis",
      "fields":[                  
  		     {"name": "timestampMillis", "type": {"type": "long", "logicalType": "timestamp-millis"}}
      ]
@@ -100,7 +100,7 @@ object TestSchemas {
   val TIMESTAMP_MICROS_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "timestamp_micros",
      "fields":[                  
  		     {"name": "timestampMicros", "type": {"type": "long", "logicalType": "timestamp-micros"}}
      ]
@@ -109,7 +109,7 @@ object TestSchemas {
   val DURATION_MICROS_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
-     "name": "testdata",
+     "name": "duration_micros",
      "fields":[                  
  		     {"name": "duration", "type": {"type": "fixed", "size": 12, "name": "name", "logicalType": "duration"}}
      ]
@@ -117,8 +117,8 @@ object TestSchemas {
   
   val COMPLEX_SCHEMA_SPEC = """{	
 	"type":"record",
-	"name":"State",
-	"namespace":"za.co.absa.avro.dataframes.parsing.generation",
+	"name":"complex",
+	"namespace":"all-types.test",
 	"fields":
 	[
 		{"name":"name","type":"string"},

@@ -7,7 +7,7 @@ import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.io.DecoderFactory
 import org.apache.avro.io.EncoderFactory
 import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
-import za.co.absa.avro.dataframes.utils.avro.CustomDatumWriter
+import za.co.absa.avro.dataframes.avro.write.ScalaCustomDatumWriter
 
 
 object AvroParsingTestUtils {
@@ -39,7 +39,8 @@ object AvroParsingTestUtils {
   }
 
   def recordToBytes(record: GenericRecord): Array[Byte] = {
-    val writer = new CustomDatumWriter[GenericRecord](record.getSchema);
+    val writer = new ScalaCustomDatumWriter[GenericRecord]()
+    writer.setSchema(record.getSchema)
     val outStream = new ByteArrayOutputStream()
     try {
       val encoder = EncoderFactory.get().binaryEncoder(outStream, null);

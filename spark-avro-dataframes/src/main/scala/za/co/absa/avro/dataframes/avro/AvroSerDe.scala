@@ -1,32 +1,29 @@
 package za.co.absa.avro.dataframes.avro
 
 import scala.reflect.ClassTag
+
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
+import org.apache.avro.io.BinaryDecoder
 import org.apache.avro.io.DecoderFactory
+import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.avro.dataframes.avro.parsing.AvroParser
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.hadoop.fs.FileSystem
-import org.apache.commons.io.IOUtils
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
-import scala.collection.JavaConverters._
-import org.apache.avro.io.BinaryDecoder
-import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
-import za.co.absa.avro.dataframes.avro.parsing.AvroSchemaUtils
-import org.apache.spark.sql.Dataset
+
 import za.co.absa.avro.dataframes.avro.format.SparkAvroConversions
+import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
+import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
+import java.security.InvalidParameterException
 
 /**
  * This object provides the main point of integration between applications and this library.
  */
 object AvroSerDe {
 
-  private val avroParser = new AvroParser()
+  private val avroParser = new AvroToSparkParser()
   private var reader: ScalaDatumReader[GenericRecord] = _
   private var decoder: BinaryDecoder = _ // allows for object reuse
 
@@ -44,12 +41,8 @@ object AvroSerDe {
     reader = new ScalaDatumReader[GenericRecord](AvroSchemaUtils.load(schema))
   }
 
-  private def parseSchema(schema: String) = {
-    new Schema.Parser().parse(schema)
-  }
-
   private def createRowEncoder(schema: Schema) = {
-    RowEncoder(avroParser.getSqlTypeForSchema(schema))
+    RowEncoder(SparkAvroConversions.toSqlType(schema))
   }
 
   /**
@@ -81,16 +74,31 @@ object AvroSerDe {
     
     implicit val recEncoder = Encoders.BINARY
     
+    // keeping API since spark changes nullability of schemas when applying encoders, which leads to different avro schemas which leads to unread columns
+    // SPARK-14139
     def avro(schemaPath: String): Dataset[Array[Byte]] = {      
       
-      val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)      
+      val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)            
       
-      dataframe.mapPartitions(partition => {
-        
+      dataframe.mapPartitions(partition => {        
         val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
-        partition.map(row => SparkAvroConversions.rowToBinaryAvro(avroSchema, row))
-        
+        partition.map(row => SparkAvroConversions.rowToBinaryAvro(avroSchema, row))        
       })
     }
-  }  
+    
+    def avro(schemaName: String, schemaNamespace: String): Dataset[Array[Byte]] = {      
+
+      if (dataframe.schema == null || dataframe.schema.isEmpty) {
+        throw new InvalidParameterException("Dataframe does not have a schema.")
+      }
+      
+      val plainAvroSchema = SparkAvroConversions.toAvroSchema(dataframe.schema, schemaName, schemaNamespace).toString()         
+      println(plainAvroSchema)
+      
+      dataframe.mapPartitions(partition => {        
+        val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
+        partition.map(row => SparkAvroConversions.rowToBinaryAvro(avroSchema, row))        
+      })
+    }    
+  }    
 }

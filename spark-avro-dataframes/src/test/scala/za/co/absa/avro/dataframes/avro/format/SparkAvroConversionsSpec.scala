@@ -1,0 +1,137 @@
+package za.co.absa.avro.dataframes.avro.format
+
+import java.lang.Boolean
+import java.lang.Double
+import java.lang.Float
+import java.lang.Long
+
+import scala.collection.JavaConverters._
+
+import org.apache.avro.Schema
+import org.apache.avro.generic.GenericDatumReader
+import org.apache.avro.generic.IndexedRecord
+import org.apache.avro.io.DecoderFactory
+import org.scalatest.FlatSpec
+
+import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.avro.dataframes.utils.AvroParsingTestUtils
+import za.co.absa.avro.dataframes.utils.TestSchemas
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.DoubleType
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.FloatType
+import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql.types.ArrayType
+import org.apache.avro.Schema.Type
+import org.apache.spark.sql.types.MapType
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.avro.generic.GenericRecord
+import scala.collection._
+import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
+import org.apache.avro.Schema.Field
+
+class SparkAvroConversionsSpec extends FlatSpec {
+  
+    private val structType = StructType(
+      Seq(
+        StructField("int1", IntegerType, false),
+        StructField("long1", LongType, false),
+        StructField("map1", new MapType(StringType, IntegerType, false), false),
+        StructField("array1", new ArrayType(LongType, false), false),
+        StructField("struct2", StructType(
+          Seq(
+            StructField("string2", StringType, true),
+            StructField("string3", StringType, false)
+          )
+        ), false),
+        StructField("double1", DoubleType, false),
+        StructField("struct3", StructType(
+          Seq(
+            StructField("int2", IntegerType, false),
+            StructField("float1", FloatType, false)
+          )
+        ), false)
+      )
+    )   
+  
+  behavior of "SparkAvroConversions"
+     
+  it should "convert records into byte[]" in {
+    val testData = immutable.Map[String, Object](
+      "string" ->  "A Test String",
+      "float" ->   new Float(Float.MAX_VALUE),
+      "int" ->     new Integer(Integer.MAX_VALUE),
+      "long" ->    new Long(Long.MAX_VALUE),
+      "double" ->  new Double(Double.MAX_VALUE),
+      "boolean" -> new Boolean(true))
+
+    val record = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
+    val schema = AvroSchemaUtils.parse(TestSchemas.NATIVE_SCHEMA_SPEC)    
+    val bytes = SparkAvroConversions.toByteArray(record, schema)
+    val parsedRecord = parse(bytes, schema)
+    
+    assert(parsedRecord.toString() == record.toString())
+  }     
+  
+  it should "convert Rows to Avro binary records" in {
+    val map = Map("key" -> 3)
+    val array: mutable.ListBuffer[Any] = new mutable.ListBuffer()
+    array.append(4l)
+    array.append(5l)
+    
+    val data: Array[Any] = Array(1, 2l, map, array, Row("st1", "st2"), 6d, Row(7, 8f))    
+    val row = new GenericRowWithSchema(data, structType)
+    val schema = SparkAvroConversions.toAvroSchema(structType, "name", "namespace")    
+    val rowBytes = SparkAvroConversions.rowToBinaryAvro(schema, row)
+    val record: GenericRecord = parse(rowBytes, schema).asInstanceOf[GenericRecord]
+    for (i <- 0 until data.length) assert(record.get(i) == data(i)) 
+  }
+    
+  it should "convert Avro schemas to SQL types" in {
+    val schema = AvroSchemaUtils.parse(TestSchemas.COMPLEX_SCHEMA_SPEC)
+    val sql = SparkAvroConversions.toSqlType(schema)    
+    val schemaFromSql = SparkAvroConversions.toAvroSchema(sql, schema.getName, schema.getNamespace)
+    
+    schema.getFields.asScala.foreach(field => assert(schema.getField(field.name).toString == schemaFromSql.getField(field.name).toString))
+  }
+  
+  it should "convert SQL types to Avro schemas" in {    
+    val schemaName = "teste_name"
+    val schemaNamespace = "teste_namespace"
+    
+    val schema = SparkAvroConversions.toAvroSchema(structType, schemaName, schemaNamespace)
+    
+    assert(schema.getName == schemaName)
+    assert(schema.getNamespace == schemaNamespace)
+    assert(schema.getField("int1").schema().getType == Type.INT)
+    assert(schema.getField("long1").schema().getType == Type.LONG)
+    assert(schema.getField("map1").schema().getType == Type.MAP)
+    assert(schema.getField("array1").schema().getType == Type.ARRAY)
+    assert(schema.getField("struct2").schema().getType == Type.RECORD)
+    assert(schema.getField("double1").schema().getType == Type.DOUBLE)
+    assert(schema.getField("struct3").schema().getType == Type.RECORD)
+    
+    val map1 = schema.getField("map1").schema()
+    assert(map1.getValueType.getType == Type.INT)
+    
+    val array1 = schema.getField("array1").schema()
+    assert(array1.getElementType.getType == Type.LONG)
+    
+    val struct2 = schema.getField("struct2").schema()
+    assert(struct2.getField("string2").schema().getType == Type.UNION) // nullable fields are "unioned" with null
+    assert(struct2.getField("string3").schema().getType == Type.STRING)
+    
+    val struct3 = schema.getField("struct3").schema()
+    assert(struct3.getField("int2").schema().getType == Type.INT)
+    assert(struct3.getField("float1").schema().getType == Type.FLOAT)
+  }
+  
+  private def parse(bytes: Array[Byte], schema: Schema): IndexedRecord = {
+    val decoder = DecoderFactory.get().binaryDecoder(bytes, null)    
+    val reader = new ScalaDatumReader[IndexedRecord](schema)
+    reader.read(null, decoder)    
+  }
+}

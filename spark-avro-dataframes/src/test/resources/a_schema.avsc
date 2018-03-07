@@ -3,6 +3,9 @@
      "type": "record",
      "name": "Test",
      "fields":[
-         {  "name": "a", "type": "int"},
-         {  "name": "b",  "type": "long"}
+         {  "name": "int", "type": "int"},
+         {  "name": "long",  "type": "long"},
+         {  "name": "float",  "type": "float"},
+         {  "name": "double",  "type": "double"},
+         {  "name": "string",  "type": "string"}
       ]}

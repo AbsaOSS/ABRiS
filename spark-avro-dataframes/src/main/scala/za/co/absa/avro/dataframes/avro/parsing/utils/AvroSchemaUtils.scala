@@ -1,4 +1,4 @@
-package za.co.absa.avro.dataframes.avro.parsing
+package za.co.absa.avro.dataframes.avro.parsing.utils
 
 import org.apache.avro.Schema
 import org.apache.hadoop.fs.FileSystem
@@ -6,6 +6,10 @@ import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import scala.collection.JavaConverters.asScalaBufferConverter
+import org.apache.avro.SchemaBuilder
+import org.apache.spark.sql.types.StructType
+import com.databricks.spark.avro.SchemaConverters
+import com.databricks.spark.avro.DatabricksAdapter
 
 object AvroSchemaUtils {
   
@@ -17,7 +21,7 @@ object AvroSchemaUtils {
   
   def loadPlain(path: String) = {
     loadFromHdfs(path)
-  }
+  }  
   
   private def loadFromHdfs(path: String): String = {
     val hdfs = FileSystem.get(new Configuration())

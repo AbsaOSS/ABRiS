@@ -2,40 +2,23 @@ package za.co.absa.avro.dataframes.examples
 
 
 
-import java.io.ByteArrayOutputStream
+import java.io.File
 
-
-
-import org.apache.avro.Schema
-import org.apache.avro.generic.GenericRecord
-import org.apache.avro.io.EncoderFactory
-import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.types._
 import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.types.ArrayType
 
-import com.databricks.spark.avro.AvroOutputWriter
-import com.databricks.spark.avro.SchemaConverters
-
-import za.co.absa.avro.dataframes.utils.avro.AvroPayloadConverter
-import org.apache.avro.generic.GenericDatumWriter
-import org.apache.avro.generic.IndexedRecord
 
 
 case class Test(a: Int, b: Long)
 
 object SampleKafkaWriterApp {
-    
-  val ss = """{
-    "namespace": "kakfa-avro.test",
-     "type": "record",
-     "name": "Test",
-     "fields":[
-         {  "name": "a", "type": "int"},
-         {  "name": "b",  "type": "long"}
-      ]}"""
   
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -43,31 +26,22 @@ object SampleKafkaWriterApp {
       .appName("writer")
       .master("local[2]")
       .getOrCreate()  
-              
-    //import spark.implicits._  s
+            
+    val sparkSchema = new StructType(Array(new StructField("int",IntegerType, false), new StructField("string",StringType,false), new StructField("array1", new ArrayType(LongType, false), false)))    
     
-   val schemaPath = "C:\\Users\\melofeli\\eclipse-workspace\\spark-avro-dataframes\\spark-avro-dataframes\\src\\test\\resources\\a_schema.avsc"
-      
-    val avroSchema =  new Schema.Parser().parse(ss)          
-    val sparkSchema: StructType = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]
-    
-//    implicit val testEncoder = Encoders.kryo[Test]
     implicit val encoder = RowEncoder.apply(sparkSchema)
-//    implicit val recEncoder = Encoders.kryo[GenericRecord]
     
     import spark.implicits._
     
-    val l = spark.sparkContext.parallelize(List(Row.fromTuple((1,2l)), Row.fromTuple((3,4l))), 2) 
+    val l = spark.sparkContext.parallelize(List(Row.fromTuple((1, "the string 5", Seq(1l, 2l))), Row.fromTuple((11, "the string 55", Seq(3l, 4l)))), 2) 
     val l3 = l.toDF()
+           
+    // STORE THE SCHEMA HERE
     
-//    val l2 = l3.mapPartitions(partition => {      
-//      val avroLocalSchema =  new Schema.Parser().parse(ss)      
-//      partition.map(row => rowToAvro(sparkSchema, avroLocalSchema, row))
-//    })
-       
     import za.co.absa.avro.dataframes.avro.AvroSerDe._
     
-    val l2 = l3.avro(schemaPath)
+    //val l2 = l3.avro(schemaPath)
+    val l2 = l3.avro("teste1", "teste2")
     
     l2.write
     .format("kafka")    
@@ -75,5 +49,10 @@ object SampleKafkaWriterApp {
     .option("topic", "avro-dataframes-topic")
     .save()
 
+    l2.foreach(f => {
+      f.foreach(print)
+      println
+    })
+    
   }  
 }

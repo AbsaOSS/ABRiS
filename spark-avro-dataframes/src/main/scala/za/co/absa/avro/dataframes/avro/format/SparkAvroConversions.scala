@@ -25,7 +25,7 @@ import java.sql.Timestamp
 import java.sql.Date
 import org.apache.avro.Schema
 import org.apache.spark.sql.types.MapType
-import com.databricks.spark.avro.DatabricksBridge
+import com.databricks.spark.avro.DatabricksAdapter
 import com.databricks.spark.avro.SchemaConverters.SchemaType
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.EncoderFactory
@@ -33,23 +33,54 @@ import org.apache.avro.generic.GenericDatumWriter
 import java.io.ByteArrayOutputStream
 import org.apache.avro.generic.IndexedRecord
 import scalaz.std.effect.writer
-import za.co.absa.avro.dataframes.avro.write.AvroWriter
+import za.co.absa.avro.dataframes.avro.write.AvroWriterHolder
 
 object SparkAvroConversions {
 
-  private def avroWriter = new AvroWriter()
+  private def avroWriterHolder = new AvroWriterHolder()
+  
+  def toByteArray(record: IndexedRecord, schema: Schema): Array[Byte] = {    
+    val outStream = new ByteArrayOutputStream()
+    val encoder = avroWriterHolder.getEncoder(outStream)
+    try {                 
+      avroWriterHolder.getWriter(schema).write(record, encoder)
+      encoder.flush()
+      outStream.flush()
+      outStream.toByteArray()
+    } finally {      
+      outStream.close()
+    }    
+  }  
+  
+  def toAvroSchema(
+      structType: StructType,
+      schemaName: String,
+      schemaNamespace: String): Schema = {
+    val build = SchemaBuilder.record(schemaName).namespace(schemaNamespace)    
+    DatabricksAdapter.convertStructToAvro(structType, build, schemaNamespace)
+  }
   
   def rowToBinaryAvro(schema: Schema, row: Row) = {
     val record = rowToGenericRecord(schema, row)    
-    avroWriter.toByteArray(record, schema)
+    toByteArray(record, schema)
   }
 
   private def rowToGenericRecord(schema: Schema, row: Row) = {
-    val sparkSchema = SparkAvroConversions.toSparkSchema(schema).get
+    val sparkSchema = toSqlType(schema)
     val converter = SparkAvroConversions.createConverterToAvro(sparkSchema, schema.getName, schema.getNamespace)    
     converter(row).asInstanceOf[GenericRecord]
   }
   
+  /**
+   * Translates an Avro Schema into a Spark's StructType.
+   * 
+   * Relies on Databricks Spark-Avro library to do the job.
+   */
+  def toSqlType(schema: Schema): StructType = {
+    DatabricksAdapter.toSqlType(schema).dataType.asInstanceOf[StructType]
+  }   
+  
+  // copied from Databricks as this is a very convenient method which is encapsulated by one of their classes
   private def createConverterToAvro(
     dataType:        DataType,
     structName:      String,
@@ -70,7 +101,7 @@ object SparkAvroConversions {
         val elementConverter = createConverterToAvro(
           elementType,
           structName,
-          DatabricksBridge.getNewRecordNamespace(elementType, recordNamespace, structName))
+          DatabricksAdapter.getNewRecordNamespace(elementType, recordNamespace, structName))
         (item: Any) => {
           if (item == null) {
             null
@@ -90,7 +121,7 @@ object SparkAvroConversions {
         val valueConverter = createConverterToAvro(
           valueType,
           structName,
-          DatabricksBridge.getNewRecordNamespace(valueType, recordNamespace, structName))
+          DatabricksAdapter.getNewRecordNamespace(valueType, recordNamespace, structName))
         (item: Any) => {
           if (item == null) {
             null
@@ -111,7 +142,7 @@ object SparkAvroConversions {
           createConverterToAvro(
             field.dataType,
             field.name,
-            DatabricksBridge.getNewRecordNamespace(field.dataType, recordNamespace, field.name)))
+            DatabricksAdapter.getNewRecordNamespace(field.dataType, recordNamespace, field.name)))
         (item: Any) => {
           if (item == null) {
             null
@@ -122,23 +153,12 @@ object SparkAvroConversions {
             val rowIterator = item.asInstanceOf[Row].toSeq.iterator
 
             while (convertersIterator.hasNext) {
-              val converter = convertersIterator.next()
+              val converter = convertersIterator.next()              
               record.put(fieldNamesIterator.next(), converter(rowIterator.next()))
             }
             record
           }
         }
     }
-  }
-    
-  def toSparkSchema(avroSchema: Schema): Option[StructType] = {
-    DatabricksBridge.toSqlType(avroSchema).dataType match {
-      case t: StructType => Some(t)
-      case _ => throw new RuntimeException(
-        s"""Avro schema cannot be converted to a Spark SQL StructType:
-           |
-           |${avroSchema.toString(true)}
-           |""".stripMargin)
-    }
-  }    
+  }  
 }

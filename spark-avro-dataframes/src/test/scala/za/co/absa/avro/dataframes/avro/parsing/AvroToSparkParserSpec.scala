@@ -24,11 +24,11 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericFixed
 import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
 import za.co.absa.avro.dataframes.avro.format.ScalaAvroRecord
-import za.co.absa.avro.dataframes.avro.parsing.AvroParser
+import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
 
-class AvroParserSpec extends FlatSpec {
+class AvroToSparkParserSpec extends FlatSpec {
 
-  private val avroParser = new AvroParser()
+  private val avroParser = new AvroToSparkParser()
 
   behavior of "AvroParser"
 
