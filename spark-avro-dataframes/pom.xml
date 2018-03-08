@@ -16,11 +16,13 @@
 		<scalatest.maven.version>1.0</scalatest.maven.version>		
 
 		<spark.version>2.2.1</spark.version>
+		<kafka.spark.version>0-10</kafka.spark.version>
 
 		<scala.version>2.11.8</scala.version>
 		<scala.compat.version>2.11</scala.compat.version>
-		<specs.version>2.4.16</specs.version>
-
+		<specs.version>2.4.16</specs.version>		
+		<scalatest.version>3.0.1</scalatest.version>
+	
 		<databricks.spark.avro>4.0.0</databricks.spark.avro>
 
 		<avro.version>1.8.2</avro.version>
@@ -62,29 +64,29 @@
 		<!-- Spark -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql_2.11</artifactId>
+			<artifactId>spark-sql_${scala.compat.version}</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_2.11</artifactId>
+			<artifactId>spark-core_${scala.compat.version}</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming_2.11</artifactId>
+			<artifactId>spark-streaming_${scala.compat.version}</artifactId>
 			<scope>provided</scope>
 		</dependency>
 	
 		<!-- Spark Kafka -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql-kafka-0-10_2.11</artifactId>
+			<artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
+			<artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
@@ -100,7 +102,7 @@
 			<!-- Provides Avro schema to Spark StructType conversion -->
 			<dependency>
 				<groupId>com.databricks</groupId>
-				<artifactId>spark-avro_2.11</artifactId>
+				<artifactId>spark-avro_${scala.compat.version}</artifactId>
 				<version>${databricks.spark.avro}</version>
 			</dependency>
 
@@ -108,20 +110,17 @@
 			<dependency>
 				<groupId>org.scalatest</groupId>
 				<artifactId>scalatest_${scala.compat.version}</artifactId>
-				<version>3.0.1</version>
-				<scope>test</scope>
+				<version>${scalatest.version}</version>				
 			</dependency>
 			<dependency>
 				<groupId>org.specs2</groupId>
 				<artifactId>specs2-core_${scala.compat.version}</artifactId>
-				<version>${specs.version}</version>
-				<scope>test</scope>
+				<version>${specs.version}</version>				
 			</dependency>
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-core</artifactId>
-				<version>${mockito.version}</version>
-				<scope>test</scope>
+				<version>${mockito.version}</version>				
 			</dependency>
 
 			<!-- Avro -->
@@ -134,27 +133,27 @@
 			<!-- Spark -->
 			<dependency>
 				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-sql_2.11</artifactId>
+				<artifactId>spark-sql_${scala.compat.version}</artifactId>
 				<version>${spark.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-sql-kafka-0-10_2.11</artifactId>
+				<artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
 				<version>${spark.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
+				<artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
 				<version>${spark.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-core_2.11</artifactId>
+				<artifactId>spark-core_${scala.compat.version}</artifactId>
 				<version>${spark.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-streaming_2.11</artifactId>
+				<artifactId>spark-streaming_${scala.compat.version}</artifactId>
 				<version>${spark.version}</version>
 			</dependency>
 
