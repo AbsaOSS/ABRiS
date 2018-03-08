@@ -34,9 +34,13 @@ import java.io.ByteArrayOutputStream
 import org.apache.avro.generic.IndexedRecord
 import scalaz.std.effect.writer
 import za.co.absa.avro.dataframes.avro.write.AvroWriterHolder
+import scala.collection._
 
 object SparkAvroConversions {
 
+  private case class ConverterKey(sparkSchema: DataType, recordName: String, recordNamespace: String) 
+  private val converterCache = new mutable.HashMap[ConverterKey, Any => Any]()
+  
   private def avroWriterHolder = new AvroWriterHolder()
   
   def toByteArray(record: IndexedRecord, schema: Schema): Array[Byte] = {    
@@ -60,15 +64,19 @@ object SparkAvroConversions {
     DatabricksAdapter.convertStructToAvro(structType, build, schemaNamespace)
   }
   
-  def rowToBinaryAvro(schema: Schema, row: Row) = {
-    val record = rowToGenericRecord(schema, row)    
-    toByteArray(record, schema)
+  def rowToBinaryAvro(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
+    val record = rowToGenericRecord(row, sparkSchema, avroSchema)    
+    toByteArray(record, avroSchema)
   }
 
-  private def rowToGenericRecord(schema: Schema, row: Row) = {
-    val sparkSchema = toSqlType(schema)
-    val converter = SparkAvroConversions.createConverterToAvro(sparkSchema, schema.getName, schema.getNamespace)    
+  private def rowToGenericRecord(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
+    //val converter = SparkAvroConversions.createConverterToAvro(sparkSchema, avroSchema.getName, avroSchema.getNamespace)
+    val converter = getConverter(sparkSchema, avroSchema.getName, avroSchema.getNamespace)
     converter(row).asInstanceOf[GenericRecord]
+  }
+  
+  private def getConverter(dataType: DataType, name: String, namespace: String): Any => Any = {
+    converterCache.getOrElseUpdate(new ConverterKey(dataType, name, namespace), SparkAvroConversions.createConverterToAvro(dataType, name, namespace)) 
   }
   
   /**
@@ -153,7 +161,7 @@ object SparkAvroConversions {
             val rowIterator = item.asInstanceOf[Row].toSeq.iterator
 
             while (convertersIterator.hasNext) {
-              val converter = convertersIterator.next()              
+              val converter = convertersIterator.next() 
               record.put(fieldNamesIterator.next(), converter(rowIterator.next()))
             }
             record

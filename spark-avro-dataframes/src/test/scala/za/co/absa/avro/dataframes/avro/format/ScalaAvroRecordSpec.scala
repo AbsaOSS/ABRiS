@@ -32,13 +32,14 @@ class ScalaAvroRecordSpec extends FlatSpec {
     data.put(4, new Double(Double.MAX_VALUE))
     data.put(5, new Float(Float.MAX_VALUE))
     data.put(6, Boolean.TRUE)
-    data.put(7, new ArrayList(Arrays.asList("elem1", "elem2")))
-    data.put(8, new FixedString("ASimpleString"))
+    data.put(7, new ArrayList(Arrays.asList("elem1", "elem2")))    
     
     val map = new HashMap[String, java.util.ArrayList[Long]]()
     map.put("entry1", new ArrayList(java.util.Arrays.asList(new Long(1), new Long(2))))
     map.put("entry2", new ArrayList(java.util.Arrays.asList(new Long(3), new Long(4))))    
     data.put(9, map)
+    
+    data.put(8, new FixedString("ASimpleString"))
     
     val schema = AvroSchemaUtils.parse(TestSchemas.NATIVE_COMPLETE_SCHEMA)
     val record = new ScalaAvroRecord(schema)
@@ -57,13 +58,14 @@ class ScalaAvroRecordSpec extends FlatSpec {
     data.put("double", new Double(Double.MAX_VALUE))
     data.put("float", new Float(Float.MAX_VALUE))
     data.put("boolean", Boolean.TRUE)
-    data.put("array", new ArrayList(Arrays.asList("elem1", "elem2")))
-    data.put("fixed", new FixedString("ASimpleString"))
+    data.put("array", new ArrayList(Arrays.asList("elem1", "elem2")))    
     
     val map = new HashMap[String, java.util.ArrayList[Long]]()
     map.put("entry1", new ArrayList(java.util.Arrays.asList(new Long(1), new Long(2))))
     map.put("entry2", new ArrayList(java.util.Arrays.asList(new Long(3), new Long(4))))    
     data.put("map", map)
+    
+    data.put("fixed", new FixedString("ASimpleString"))
     
     val schema = AvroSchemaUtils.parse(TestSchemas.NATIVE_COMPLETE_SCHEMA)
     val record = new ScalaAvroRecord(schema)

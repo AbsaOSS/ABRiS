@@ -6,6 +6,9 @@ import scala.collection.JavaConversions.asJavaIterator
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificDatumWriter
 import java.util.Arrays
+import org.apache.avro.generic.GenericFixed
+import org.apache.avro.io.Encoder
+import java.nio.ByteBuffer
 
 class ScalaCustomDatumWriter[T] extends SpecificDatumWriter[T](ScalaCustomSpecificData.get()) {
   
@@ -43,5 +46,14 @@ class ScalaCustomDatumWriter[T] extends SpecificDatumWriter[T](ScalaCustomSpecif
         case _: Throwable => array.asInstanceOf[Array[Object]].iterator
       }
     }    
+  }  
+  
+  override def writeFixed(schema: Schema, datum: Object, out: Encoder) = {    
+    try {
+      out.writeFixed(datum.asInstanceOf[GenericFixed].bytes(), 0, schema.getFixedSize())
+    }
+    catch {
+      case _: Throwable => out.writeFixed(datum.asInstanceOf[ByteBuffer].array(), 0, schema.getFixedSize());      
+    }
   }  
 }

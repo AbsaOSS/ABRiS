@@ -79,11 +79,7 @@ object AvroSerDe {
     def avro(schemaPath: String): Dataset[Array[Byte]] = {      
       
       val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)            
-      
-      dataframe.mapPartitions(partition => {        
-        val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
-        partition.map(row => SparkAvroConversions.rowToBinaryAvro(avroSchema, row))        
-      })
+      toAvro(dataframe, plainAvroSchema)
     }
     
     def avro(schemaName: String, schemaNamespace: String): Dataset[Array[Byte]] = {      
@@ -92,13 +88,16 @@ object AvroSerDe {
         throw new InvalidParameterException("Dataframe does not have a schema.")
       }
       
-      val plainAvroSchema = SparkAvroConversions.toAvroSchema(dataframe.schema, schemaName, schemaNamespace).toString()         
-      println(plainAvroSchema)
-      
-      dataframe.mapPartitions(partition => {        
+      val plainAvroSchema = SparkAvroConversions.toAvroSchema(dataframe.schema, schemaName, schemaNamespace).toString()                     
+      toAvro(dataframe, plainAvroSchema)
+    }   
+    
+    private def toAvro(rows: Dataset[Row], plainAvroSchema: String) = {
+      rows.mapPartitions(partition => {        
         val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
-        partition.map(row => SparkAvroConversions.rowToBinaryAvro(avroSchema, row))        
-      })
-    }    
+        val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
+        partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema))        
+      })      
+    }
   }    
 }

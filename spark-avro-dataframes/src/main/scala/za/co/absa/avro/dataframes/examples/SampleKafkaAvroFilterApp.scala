@@ -7,7 +7,7 @@ import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConversions._
 
-object SampleFilterApp {
+object SampleKafkaAvroFilterApp {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"

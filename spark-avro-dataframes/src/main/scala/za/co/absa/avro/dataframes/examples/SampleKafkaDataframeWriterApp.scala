@@ -1,7 +1,5 @@
 package za.co.absa.avro.dataframes.examples
 
-
-
 import java.io.File
 
 import org.apache.spark.sql.Row
@@ -14,11 +12,9 @@ import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.types.LongType
 import org.apache.spark.sql.types.ArrayType
 
-
-
 case class Test(a: Int, b: Long)
 
-object SampleKafkaWriterApp {
+object SampleKafkaDataframeWriterApp {
   
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -34,8 +30,8 @@ object SampleKafkaWriterApp {
     import spark.implicits._
     
     val l = spark.sparkContext.parallelize(List(Row.fromTuple((1, "the string 5", Seq(1l, 2l))), Row.fromTuple((11, "the string 55", Seq(3l, 4l)))), 2) 
-    val l3 = l.toDF()
-           
+    val l3 = l.toDF()    
+    
     // STORE THE SCHEMA HERE
     
     import za.co.absa.avro.dataframes.avro.AvroSerDe._

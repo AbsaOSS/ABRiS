@@ -84,9 +84,10 @@ class SparkAvroConversionsSpec extends FlatSpec {
     
     val data: Array[Any] = Array(1, 2l, map, array, Row("st1", "st2"), 6d, Row(7, 8f))    
     val row = new GenericRowWithSchema(data, structType)
-    val schema = SparkAvroConversions.toAvroSchema(structType, "name", "namespace")    
-    val rowBytes = SparkAvroConversions.rowToBinaryAvro(schema, row)
-    val record: GenericRecord = parse(rowBytes, schema).asInstanceOf[GenericRecord]
+    val avroSchema = SparkAvroConversions.toAvroSchema(structType, "name", "namespace")    
+    val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
+    val rowBytes = SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema)
+    val record: GenericRecord = parse(rowBytes, avroSchema).asInstanceOf[GenericRecord]
     for (i <- 0 until data.length) assert(record.get(i) == data(i)) 
   }
     
