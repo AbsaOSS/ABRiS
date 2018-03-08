@@ -85,3 +85,5 @@ Seamlessly get your Avro records from Kakfa and query them as a regular Structur
 
 ## Performance
 Tests on fairly complex schemas show that Avro records can be up to 16% smaller than Kryo ones. 
+
+In local tests with a single core, the library can parse, per second, up to 100k Avro records into Spark rows per second, and up to 5k Spark rows into Avro records. 
