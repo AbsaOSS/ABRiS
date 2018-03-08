@@ -7,6 +7,12 @@ import org.apache.spark.sql.types.StructType
 import org.apache.avro.SchemaBuilder.RecordBuilder
 import org.apache.avro.SchemaBuilder
 
+/**
+ * This class works as a bridge between Databricks' and the current library.
+ * 
+ * It was created in order to prevent changes to Databricks from bugging this library, since the changes 
+ * can be dealt with at a single location. 
+ */
 object DatabricksAdapter {
 
   def getNewRecordNamespace(

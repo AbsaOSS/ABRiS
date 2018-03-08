@@ -1,5 +1,10 @@
-package za.co.absa.avro.dataframes.utils
+package za.co.absa.avro.dataframes.examples.data.generation
 
+/**
+ * Provides several Avro schemas.
+ * 
+ * Used for tests and examples.
+ */
 object TestSchemas {
   
   val NATIVE_SIMPLE_OUTER_SCHEMA = """{

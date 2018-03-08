@@ -36,6 +36,9 @@ import scalaz.std.effect.writer
 import za.co.absa.avro.dataframes.avro.write.AvroWriterHolder
 import scala.collection._
 
+/**
+ * This class provides conversions between Avro and Spark schemas and data.
+ */
 object SparkAvroConversions {
 
   private case class ConverterKey(sparkSchema: DataType, recordName: String, recordNamespace: String) 
@@ -43,6 +46,11 @@ object SparkAvroConversions {
   
   private def avroWriterHolder = new AvroWriterHolder()
   
+  /**
+   * Converts an Avro record into an Array[Byte].
+   * 
+   * Uses Avro's Java API under the hood.
+   */
   def toByteArray(record: IndexedRecord, schema: Schema): Array[Byte] = {    
     val outStream = new ByteArrayOutputStream()
     val encoder = avroWriterHolder.getEncoder(outStream)
@@ -56,6 +64,9 @@ object SparkAvroConversions {
     }    
   }  
   
+  /**
+   * Converts a Spark's SQL type into an Avro schema, using specific names and namespaces for the schema.
+   */
   def toAvroSchema(
       structType: StructType,
       schemaName: String,
@@ -64,21 +75,14 @@ object SparkAvroConversions {
     DatabricksAdapter.convertStructToAvro(structType, build, schemaNamespace)
   }
   
+  /**
+   * Converts a Spark Row into an Avro's binary record.
+   */
   def rowToBinaryAvro(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
     val record = rowToGenericRecord(row, sparkSchema, avroSchema)    
     toByteArray(record, avroSchema)
   }
 
-  private def rowToGenericRecord(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
-    //val converter = SparkAvroConversions.createConverterToAvro(sparkSchema, avroSchema.getName, avroSchema.getNamespace)
-    val converter = getConverter(sparkSchema, avroSchema.getName, avroSchema.getNamespace)
-    converter(row).asInstanceOf[GenericRecord]
-  }
-  
-  private def getConverter(dataType: DataType, name: String, namespace: String): Any => Any = {
-    converterCache.getOrElseUpdate(new ConverterKey(dataType, name, namespace), SparkAvroConversions.createConverterToAvro(dataType, name, namespace)) 
-  }
-  
   /**
    * Translates an Avro Schema into a Spark's StructType.
    * 
@@ -88,7 +92,17 @@ object SparkAvroConversions {
     DatabricksAdapter.toSqlType(schema).dataType.asInstanceOf[StructType]
   }   
   
-  // copied from Databricks as this is a very convenient method which is encapsulated by one of their classes
+  private def rowToGenericRecord(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
+    val converter = getConverter(sparkSchema, avroSchema.getName, avroSchema.getNamespace)
+    converter(row).asInstanceOf[GenericRecord]
+  }
+  
+  private def getConverter(dataType: DataType, name: String, namespace: String): Any => Any = {
+    converterCache.getOrElseUpdate(new ConverterKey(dataType, name, namespace), SparkAvroConversions.createConverterToAvro(dataType, name, namespace)) 
+  }  
+  
+  // Copied from Databricks, as any implementation would be very similar and this library already uses Databricks'.
+  // This method is private inside "com.databricks.spark.avro.AvroOutputWriter".
   private def createConverterToAvro(
     dataType:        DataType,
     structName:      String,

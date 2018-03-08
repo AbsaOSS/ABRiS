@@ -9,6 +9,9 @@ import org.apache.avro.io.DatumWriter
 import org.apache.avro.io.Encoder
 import org.apache.avro.io.EncoderFactory
 
+/**
+ * Holds an Avro writer. Convenient for encapsulating logic behind object reuse.
+ */
 class AvroWriterHolder {
      
   def getWriter(schema: Schema): DatumWriter[IndexedRecord] = {    

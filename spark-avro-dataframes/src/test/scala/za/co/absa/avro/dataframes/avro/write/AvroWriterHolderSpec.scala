@@ -3,7 +3,7 @@ package za.co.absa.avro.dataframes.avro.write
 import org.scalatest.FlatSpec
 import java.io.ByteArrayOutputStream
 import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.avro.dataframes.utils.TestSchemas
+import za.co.absa.avro.dataframes.examples.data.generation.TestSchemas
 
 class AvroWriterHolderSpec extends FlatSpec {
   

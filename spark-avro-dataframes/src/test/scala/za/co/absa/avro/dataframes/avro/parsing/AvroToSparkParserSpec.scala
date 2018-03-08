@@ -16,13 +16,13 @@ import org.apache.spark.sql.catalyst.expressions.GenericRow
 import org.scalatest._
 import org.scalatest.FlatSpec
 
-import za.co.absa.avro.dataframes.utils.AvroParsingTestUtils
-import za.co.absa.avro.dataframes.utils.TestSchemas
+import za.co.absa.avro.dataframes.examples.data.generation.AvroDataUtils
+import za.co.absa.avro.dataframes.examples.data.generation.TestSchemas
 import java.util.Arrays
 import java.nio.ByteBuffer
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericFixed
-import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
+import za.co.absa.avro.dataframes.examples.data.generation.FixedString
 import za.co.absa.avro.dataframes.avro.format.ScalaAvroRecord
 import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
 
@@ -41,7 +41,7 @@ class AvroToSparkParserSpec extends FlatSpec {
       "double" ->  new Double(Double.MAX_VALUE),
       "boolean" -> new Boolean(true))
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -58,7 +58,7 @@ class AvroToSparkParserSpec extends FlatSpec {
       "double"  -> null,
       "boolean" -> null)
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (i <- 0 until resultRow.size) {
@@ -70,7 +70,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "array" -> new ArrayList(Arrays.asList("elem1", "elem2")))
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.ARRAY_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.ARRAY_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -86,7 +86,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "map" -> map)
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MAP_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.MAP_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -98,7 +98,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "bytes" -> ByteBuffer.wrap("ASimpleString".getBytes))
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.BYTES_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.BYTES_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -110,7 +110,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "fixed" -> new FixedString("ASimpleString"))
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.FIXED_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.FIXED_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -122,7 +122,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "decimal" -> ByteBuffer.wrap("1".getBytes))
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DECIMAL_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.DECIMAL_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
     
     for (entry <- testData) {
@@ -134,7 +134,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "date" -> new Integer(Integer.MAX_VALUE))
          
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DATE_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.DATE_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -146,7 +146,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "millisecond" -> new Integer(Integer.MAX_VALUE))
          
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MILLISECOND_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.MILLISECOND_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -158,7 +158,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "microsecond" -> new Long(Long.MAX_VALUE))
          
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.MICROSECOND_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.MICROSECOND_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -170,7 +170,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "timestampMillis" -> new Long(Long.MAX_VALUE))
          
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MILLIS_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MILLIS_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -182,7 +182,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "timestampMicros" -> new Long(Long.MAX_VALUE))
          
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MICROS_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.TIMESTAMP_MICROS_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -194,7 +194,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val testData = Map[String, Object](
       "duration" -> new FixedString("111111111111"))
          
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.DURATION_MICROS_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.DURATION_MICROS_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     for (entry <- testData) {
@@ -220,42 +220,42 @@ class AvroToSparkParserSpec extends FlatSpec {
     val neighborhood1 = Map(
       "name" -> "A neighborhood",
       "streets" -> new ArrayList(java.util.Arrays.asList(
-        AvroParsingTestUtils.mapToGenericRecord(street1, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street2, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
+        AvroDataUtils.mapToGenericRecord(street1, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
+        AvroDataUtils.mapToGenericRecord(street2, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val neighborhood2 = Map(
       "name" -> "B neighborhood",
       "streets" -> new ArrayList(java.util.Arrays.asList(
-        AvroParsingTestUtils.mapToGenericRecord(street3, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street4, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
+        AvroDataUtils.mapToGenericRecord(street3, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
+        AvroDataUtils.mapToGenericRecord(street4, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val neighborhood3 = Map(
       "name" -> "C neighborhood",
       "streets" -> new ArrayList(java.util.Arrays.asList(
-        AvroParsingTestUtils.mapToGenericRecord(street5, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street6, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
+        AvroDataUtils.mapToGenericRecord(street5, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
+        AvroDataUtils.mapToGenericRecord(street6, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val neighborhood4 = Map(
       "name" -> "D neighborhood",
       "streets" -> new ArrayList(java.util.Arrays.asList(
-        AvroParsingTestUtils.mapToGenericRecord(street7, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(street8, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
+        AvroDataUtils.mapToGenericRecord(street7, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC),
+        AvroDataUtils.mapToGenericRecord(street8, TestSchemas.COMPLEX_SCHEMA_STREET_SPEC))))
 
     val city1 = Map(
       "name" -> "first city",
       "neighborhoods" -> new ArrayList(java.util.Arrays.asList(
-        AvroParsingTestUtils.mapToGenericRecord(neighborhood1, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(neighborhood2, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC))))
+        AvroDataUtils.mapToGenericRecord(neighborhood1, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC),
+        AvroDataUtils.mapToGenericRecord(neighborhood2, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC))))
 
     val city2 = Map(
       "name" -> "second city",
       "neighborhoods" -> new ArrayList(java.util.Arrays.asList(
-        AvroParsingTestUtils.mapToGenericRecord(neighborhood3, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(neighborhood4, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC))))
+        AvroDataUtils.mapToGenericRecord(neighborhood3, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC),
+        AvroDataUtils.mapToGenericRecord(neighborhood4, TestSchemas.COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC))))
 
     val cityList = new ArrayList(java.util.Arrays.asList(
-        AvroParsingTestUtils.mapToGenericRecord(city1, TestSchemas.COMPLEX_SCHEMA_CITY_SPEC),
-        AvroParsingTestUtils.mapToGenericRecord(city2, TestSchemas.COMPLEX_SCHEMA_CITY_SPEC)
+        AvroDataUtils.mapToGenericRecord(city1, TestSchemas.COMPLEX_SCHEMA_CITY_SPEC),
+        AvroDataUtils.mapToGenericRecord(city2, TestSchemas.COMPLEX_SCHEMA_CITY_SPEC)
                        ))
         
     val cities = new HashMap[String, Object]()
@@ -265,7 +265,7 @@ class AvroToSparkParserSpec extends FlatSpec {
       "name" -> "A State",
       "regions" -> cities)
 
-    val avroRecord = AvroParsingTestUtils.mapToGenericRecord(state, TestSchemas.COMPLEX_SCHEMA_SPEC)
+    val avroRecord = AvroDataUtils.mapToGenericRecord(state, TestSchemas.COMPLEX_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 
     val cityMap: scala.collection.mutable.HashMap[String,Object] = resultRow.getAs("regions")

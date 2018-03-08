@@ -7,6 +7,8 @@ import org.apache.spark.sql.SparkSession
 
 import scala.collection.JavaConversions._
 
+import org.apache.kafka.common.serialization.Serdes
+
 object SampleKafkaAvroFilterApp {
 
   private val PARAM_JOB_NAME = "job.name"
@@ -15,6 +17,7 @@ object SampleKafkaAvroFilterApp {
   private val PARAM_KAFKA_TOPICS = "kafka.topics"
   private val PARAM_AVRO_SCHEMA = "avro.schema"
   private val PARAM_TASK_FILTER = "task.filter"
+  private val PARAM_LOG_LEVEL = "log.level"
 
   def main(args: Array[String]): Unit = {
 
@@ -36,7 +39,7 @@ object SampleKafkaAvroFilterApp {
       .master(properties.getProperty(PARAM_JOB_MASTER))
       .getOrCreate()
 
-    spark.sparkContext.setLogLevel("INFO")
+    spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
       
     import za.co.absa.avro.dataframes.avro.AvroSerDe._
 
@@ -51,8 +54,7 @@ object SampleKafkaAvroFilterApp {
     println("Going to run filter: " + filter)
 
     stream.printSchema()
-    //stream.filter(filter).writeStream.format("console").start().awaitTermination()
-    stream.writeStream.format("console").start().awaitTermination()
+    stream.filter(filter).writeStream.format("console").start().awaitTermination()    
   }
 
   private def loadProperties(path: String): Properties = {

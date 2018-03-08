@@ -1,4 +1,4 @@
-package za.co.absa.avro.dataframes.utils
+package za.co.absa.avro.dataframes.examples.data.generation
 
 import java.io.ByteArrayOutputStream
 import org.apache.avro.Schema
@@ -8,9 +8,13 @@ import org.apache.avro.io.DecoderFactory
 import org.apache.avro.io.EncoderFactory
 import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
 import za.co.absa.avro.dataframes.avro.write.ScalaCustomDatumWriter
+import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
 
-
-object AvroParsingTestUtils {
+/**
+ * This class provides utilities for coping with Avro data.
+ * This is not part of the library core is used for example data generation only. 
+ */
+object AvroDataUtils {
 
   def mapToGenericRecordDirectly(data: Map[String, Object], schema: String): GenericRecord = {
     val avroRecordBuilder = getRecordBuilder(schema)
@@ -24,15 +28,11 @@ object AvroParsingTestUtils {
     passRecordThroughAvroApi(mapToGenericRecordDirectly(data, schema)) // so that we have the proper data types added to each record field
   }
   
-  def getRecordBuilder(schema: String): GenericRecordBuilder = {
-    val parsedSchema = parseSchema(schema)
+  private def getRecordBuilder(schema: String): GenericRecordBuilder = {
+    val parsedSchema = AvroSchemaUtils.parse(schema)
     new GenericRecordBuilder(parsedSchema)
   }
-
-  def parseSchema(schemaSpec: String): Schema = {
-    new Schema.Parser().parse(schemaSpec)
-  }
-
+  
   private def passRecordThroughAvroApi(avroRecord: GenericRecord): GenericRecord = {
     val recordBytes = recordToBytes(avroRecord)
     bytesToRecord(recordBytes, avroRecord.getSchema)

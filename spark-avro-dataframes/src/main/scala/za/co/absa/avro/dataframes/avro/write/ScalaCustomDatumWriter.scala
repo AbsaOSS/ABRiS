@@ -10,6 +10,10 @@ import org.apache.avro.generic.GenericFixed
 import org.apache.avro.io.Encoder
 import java.nio.ByteBuffer
 
+/**
+ * This class redefines Avro data writing methods that cope with collections and arrays in order to provide 
+ * compatibility between Java and Scala while using Avro's original library.
+ */
 class ScalaCustomDatumWriter[T] extends SpecificDatumWriter[T](ScalaCustomSpecificData.get()) {
   
   /**

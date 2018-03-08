@@ -1,33 +1,28 @@
-package za.co.absa.avro.dataframes.utils.generation
+package za.co.absa.avro.dataframes.examples.data.generation
 
-import java.lang.Boolean
-import java.lang.Double
-import java.lang.Float
-import java.lang.Long
+import java.lang._
+
 import java.nio.ByteBuffer
-import java.util.ArrayList
-import java.util.Arrays
-
-import scala.collection._
-import scala.collection.JavaConverters._
-import scala.collection.mutable.HashMap
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.Map
+import scala.collection.Seq
+import scala.collection.immutable
+import scala.collection.mutable
 import scala.util.Random
-
-import org.apache.spark.sql.Row
-
-import za.co.absa.avro.dataframes.avro.format.ScalaAvroRecord
-import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
-import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.avro.dataframes.utils.TestSchemas
-import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
-import za.co.absa.avro.dataframes.utils.AvroParsingTestUtils
-import org.apache.avro.generic.IndexedRecord
 import org.apache.avro.generic.GenericRecord
+import org.apache.spark.sql.Row
+import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
 
+/**
+ * This class provides methods to generate example/test data.
+ * Not part of the library core.
+ */
 object ComplexRecordsGenerator {
 
-  case class Bean(bytes: Array[Byte], string: String, int: Int, long: Long, double: Double,
-                  float: Float, boolean: Boolean, array: mutable.ListBuffer[Any], fixed: Array[Byte],
+  case class Bean(bytes: Array[scala.Byte], string: String, int: Int, long: Long, double: Double,
+                  float: Float, boolean: Boolean, array: mutable.ListBuffer[Any], fixed: Array[scala.Byte],
                   map: Map[String, java.util.ArrayList[Long]])
 
   private val plainSchema = TestSchemas.NATIVE_COMPLETE_SCHEMA
@@ -39,7 +34,7 @@ object ComplexRecordsGenerator {
   def generateRecords(howMany: Int): List[GenericRecord] = {
     val result = new Array[GenericRecord](howMany)
     for (i <- 0 until howMany) {
-      result(i) = AvroParsingTestUtils.mapToGenericRecord(getDataMap(), plainSchema)
+      result(i) = AvroDataUtils.mapToGenericRecord(getDataMap(), plainSchema)
     }
     result.toList
   }
@@ -95,7 +90,7 @@ object ComplexRecordsGenerator {
     eagerlyConvertToRows(generateRecords(howMany))
   }
 
-  def convertToBeans(records: List[GenericRecord]): List[Bean] = {
+  def lazilyConvertToBeans(records: List[GenericRecord]): List[Bean] = {
     records.toStream.map(record => recordToBean(record)).toList
   }
 
@@ -136,9 +131,9 @@ object ComplexRecordsGenerator {
     randomStream.take(length).mkString
   }
 
-  private def recordToBean(record: GenericRecord): Bean = {
+  private def recordToBean(record: GenericRecord): Bean = {    
     new Bean(
-      record.get("bytes").asInstanceOf[Array[Byte]],
+      record.get("bytes").toString().getBytes(),
       record.get("string").asInstanceOf[String],
       record.get("int").asInstanceOf[Int],
       record.get("long").asInstanceOf[Long],
@@ -146,7 +141,7 @@ object ComplexRecordsGenerator {
       record.get("float").asInstanceOf[Float],
       record.get("boolean").asInstanceOf[Boolean],
       record.get("array").asInstanceOf[mutable.ListBuffer[Any]],
-      record.get("fixed").asInstanceOf[Array[Byte]],
+      record.get("fixed").toString().getBytes,
       record.get("map").asInstanceOf[Map[String, java.util.ArrayList[Long]]])
   }
 }

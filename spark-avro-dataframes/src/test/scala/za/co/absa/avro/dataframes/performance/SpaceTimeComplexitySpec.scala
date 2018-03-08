@@ -4,7 +4,7 @@ import org.scalatest.FlatSpec
 import java.io.File
 import org.apache.commons.io.FileUtils
 import com.sun.xml.internal.bind.v2.schemagen.xmlschema.ComplexRestriction
-import za.co.absa.avro.dataframes.utils.generation.ComplexRecordsGenerator
+import za.co.absa.avro.dataframes.examples.data.generation.ComplexRecordsGenerator
 import org.apache.spark.sql.SparkSession
 import org.scalatest.BeforeAndAfterAll
 import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
@@ -18,11 +18,11 @@ import org.apache.spark.sql.catalyst.expressions.GenericRow
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.SaveMode
 import org.slf4j.LoggerFactory
-import za.co.absa.avro.dataframes.utils.generation.ComplexRecordsGenerator.Bean
+import za.co.absa.avro.dataframes.examples.data.generation.ComplexRecordsGenerator.Bean
 import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
 import za.co.absa.avro.dataframes.avro.format.SparkAvroConversions
 import java.nio.ByteBuffer
-import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
+import za.co.absa.avro.dataframes.examples.data.generation.FixedString
 
 class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
 
@@ -68,7 +68,7 @@ class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
     val data = ComplexRecordsGenerator.generateRecords(numRecords)
         
     val avroResult = writeAvro(ComplexRecordsGenerator.lazilyConvertToRows(data), sparkSchema)     
-    val kryoResult = writeKryo(ComplexRecordsGenerator.convertToBeans(data))
+    val kryoResult = writeKryo(ComplexRecordsGenerator.lazilyConvertToBeans(data))
     
     val avroSize = FileUtils.sizeOf(avroResult).doubleValue()
     val kryoSize = FileUtils.sizeOf(kryoResult).doubleValue()    

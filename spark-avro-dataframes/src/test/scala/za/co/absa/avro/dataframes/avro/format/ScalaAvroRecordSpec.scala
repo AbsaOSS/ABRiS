@@ -12,10 +12,10 @@ import scala.collection.JavaConverters._
 
 import org.scalatest.FlatSpec
 import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.avro.dataframes.utils.TestSchemas
+import za.co.absa.avro.dataframes.examples.data.generation.TestSchemas
 import java.nio.ByteBuffer
 import java.util.Arrays
-import za.co.absa.avro.dataframes.utils.avro.fixed.FixedString
+import za.co.absa.avro.dataframes.examples.data.generation.FixedString
 
 import org.apache.spark.sql.Row
 

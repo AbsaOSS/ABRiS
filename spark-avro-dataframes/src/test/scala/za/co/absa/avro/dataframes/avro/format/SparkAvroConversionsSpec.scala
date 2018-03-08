@@ -14,8 +14,8 @@ import org.apache.avro.io.DecoderFactory
 import org.scalatest.FlatSpec
 
 import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.avro.dataframes.utils.AvroParsingTestUtils
-import za.co.absa.avro.dataframes.utils.TestSchemas
+import za.co.absa.avro.dataframes.examples.data.generation.AvroDataUtils
+import za.co.absa.avro.dataframes.examples.data.generation.TestSchemas
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.sql.types.StructType
@@ -68,7 +68,7 @@ class SparkAvroConversionsSpec extends FlatSpec {
       "double" ->  new Double(Double.MAX_VALUE),
       "boolean" -> new Boolean(true))
 
-    val record = AvroParsingTestUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
+    val record = AvroDataUtils.mapToGenericRecord(testData, TestSchemas.NATIVE_SCHEMA_SPEC)
     val schema = AvroSchemaUtils.parse(TestSchemas.NATIVE_SCHEMA_SPEC)    
     val bytes = SparkAvroConversions.toByteArray(record, schema)
     val parsedRecord = parse(bytes, schema)

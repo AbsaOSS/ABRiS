@@ -14,8 +14,8 @@ import org.scalatest.FlatSpec
 import java.util.ArrayList
 import java.util.Arrays
 import java.util.HashSet
-import za.co.absa.avro.dataframes.utils.TestSchemas
-import za.co.absa.avro.dataframes.utils.AvroParsingTestUtils
+import za.co.absa.avro.dataframes.examples.data.generation.TestSchemas
+import za.co.absa.avro.dataframes.examples.data.generation.AvroDataUtils
 import scala.collection._
 import org.apache.spark.sql.Row
 import org.apache.avro.generic.GenericRecord
@@ -32,8 +32,8 @@ class ScalaDatumReaderSpec extends FlatSpec {
     val list = immutable.Map[String, Object]("array" -> new ArrayList(Arrays.asList("elem1", "elem2")))
     val set = immutable.Map[String, Object]("array" -> new HashSet[String](Arrays.asList("elem1", "elem2")))
 
-    val listRecord: GenericRecord = AvroParsingTestUtils.mapToGenericRecord(list, TestSchemas.ARRAY_SCHEMA_SPEC)
-    val setRecord = AvroParsingTestUtils.mapToGenericRecord(set, TestSchemas.ARRAY_SCHEMA_SPEC)
+    val listRecord: GenericRecord = AvroDataUtils.mapToGenericRecord(list, TestSchemas.ARRAY_SCHEMA_SPEC)
+    val setRecord = AvroDataUtils.mapToGenericRecord(set, TestSchemas.ARRAY_SCHEMA_SPEC)
 
     assert(listRecord.get(0).isInstanceOf[mutable.ListBuffer[Any]])
     assert(setRecord.get(0).isInstanceOf[mutable.ListBuffer[Any]])
@@ -48,7 +48,7 @@ class ScalaDatumReaderSpec extends FlatSpec {
       "float" -> new Float(Float.MAX_VALUE),
       "boolean" -> new Boolean(true))
 
-    val nativesRecord: GenericRecord = AvroParsingTestUtils.mapToGenericRecord(natives, TestSchemas.NATIVE_SCHEMA_SPEC)
+    val nativesRecord: GenericRecord = AvroDataUtils.mapToGenericRecord(natives, TestSchemas.NATIVE_SCHEMA_SPEC)
 
     assert(nativesRecord.get(0).isInstanceOf[java.lang.String])
     assert(nativesRecord.get(1).isInstanceOf[java.lang.Integer])
@@ -68,11 +68,11 @@ class ScalaDatumReaderSpec extends FlatSpec {
     treeMap.put("entry2", new ArrayList(java.util.Arrays.asList(new Long(3), new Long(4))))
 
     val hashMapData = immutable.Map[String, Object]("map" -> hashMap)
-    val hashMapRecord: GenericRecord = AvroParsingTestUtils.mapToGenericRecord(hashMapData, TestSchemas.MAP_SCHEMA_SPEC)
+    val hashMapRecord: GenericRecord = AvroDataUtils.mapToGenericRecord(hashMapData, TestSchemas.MAP_SCHEMA_SPEC)
     assert(mapsAreEqual(hashMap, hashMapRecord.get(0)))
     
     val treeMapData = immutable.Map[String, Object]("map" -> treeMap)
-    val treeMapRecord: GenericRecord = AvroParsingTestUtils.mapToGenericRecord(treeMapData, TestSchemas.MAP_SCHEMA_SPEC)
+    val treeMapRecord: GenericRecord = AvroDataUtils.mapToGenericRecord(treeMapData, TestSchemas.MAP_SCHEMA_SPEC)
     assert(mapsAreEqual(treeMap, treeMapRecord.get(0)))    
   }
 
