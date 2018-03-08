@@ -1,4 +1,4 @@
-#Spark Avro Dataframes
+# Spark Avro Dataframes
 
 Seamlessly get your Avro records from Kakfa and query them as a regular Structured Streaming. Convert your Dataframes to Avro records without even specifying a schema.
 
