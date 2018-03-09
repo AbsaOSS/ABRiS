@@ -33,7 +33,7 @@ object SampleKafkaAvroFilterApp {
   private val PARAM_KAFKA_TOPICS = "kafka.topics"
   private val PARAM_AVRO_SCHEMA = "avro.schema"
   private val PARAM_TASK_FILTER = "task.filter"
-  private val PARAM_LOG_LEVEL = "log.level"
+  private val PARAM_LOG_LEVEL = "log.level"  
 
   def main(args: Array[String]): Unit = {
 
@@ -63,7 +63,7 @@ object SampleKafkaAvroFilterApp {
       .readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", properties.getProperty(PARAM_KAFKA_SERVERS))
-      .option("subscribe", properties.getProperty(PARAM_KAFKA_TOPICS))
+      .option("subscribe", properties.getProperty(PARAM_KAFKA_TOPICS)) 
       .avro(properties.getProperty(PARAM_AVRO_SCHEMA))
 
     val filter = properties.getProperty(PARAM_TASK_FILTER)

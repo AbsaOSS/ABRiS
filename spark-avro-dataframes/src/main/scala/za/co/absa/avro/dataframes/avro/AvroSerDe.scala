@@ -33,6 +33,7 @@ import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
 import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
 import java.security.InvalidParameterException
+import org.apache.spark.sql.util.SchemaUtils
 
 /**
  * This object provides the main point of integration between applications and this library.
@@ -52,8 +53,8 @@ object AvroSerDe {
     avroParser.parse(decodedAvroData)
   }
 
-  private def createAvroReader(schema: String) = {
-    reader = new ScalaDatumReader[GenericRecord](AvroSchemaUtils.load(schema))
+  private def createAvroReader(schemaPath: String) = {
+    reader = new ScalaDatumReader[GenericRecord](AvroSchemaUtils.load(schemaPath))
   }
 
   private def createRowEncoder(schema: Schema) = {
@@ -68,20 +69,18 @@ object AvroSerDe {
    * It requires the path to the Avro schema which defines the records to be read.
    */
   implicit class Deserializer(dsReader: DataStreamReader) extends Serializable {
-
-    def avro(schema: String) = {
-
-      createAvroReader(schema)
-
-      val rowEncoder = createRowEncoder(reader.getSchema)
-
-      val data = dsReader.load.select("value").as(Encoders.BINARY)      
-
-      val rows = data.map(avroRecord => {
-        decodeAvro(avroRecord)
-      })(rowEncoder)
-
-      rows
+    
+    def avro(schemaPath: String) = {
+      implicit val rowEncoder = createRowEncoder(AvroSchemaUtils.load(schemaPath))
+      
+      dsReader.load.select("value")
+      .as(Encoders.BINARY)
+      .mapPartitions(partition => {
+        createAvroReader(schemaPath)          
+        partition.map(avroRecord => {
+          decodeAvro(avroRecord)
+        })
+      })
     }
   }
   
