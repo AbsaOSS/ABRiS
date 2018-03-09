@@ -62,11 +62,15 @@ object SampleKafkaDataframeWriterApp {
 
     println("Loading properties from: " + args(0))
     val properties = loadProperties(args(0))
-
+    
+    for (key <- properties.keysIterator) {
+      println(s"\t${key} = ${properties.getProperty(key)}")
+    }
+    
     val spark = SparkSession
       .builder()
-      .appName("writer")
-      .master("local[2]")
+      .appName(properties.getProperty(PARAM_JOB_NAME))
+      .master(properties.getProperty(PARAM_JOB_MASTER))
       .getOrCreate()
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
