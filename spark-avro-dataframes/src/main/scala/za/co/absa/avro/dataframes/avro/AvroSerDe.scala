@@ -95,8 +95,6 @@ object AvroSerDe {
    */
   implicit class Serializer(dataframe: Dataset[Row]) {
     
-    implicit val recEncoder = Encoders.BINARY
-
     /**
      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records. 
      * 
@@ -137,6 +135,7 @@ object AvroSerDe {
      * Converts a Dataset[Row] into a Dataset[Array[Byte]] containing Avro schemas generated according to the plain specification informed as a parameter.
      */
     private def toAvro(rows: Dataset[Row], plainAvroSchema: String) = {
+      implicit val recEncoder = Encoders.BINARY
       rows.mapPartitions(partition => {        
         val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
         val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)

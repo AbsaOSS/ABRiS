@@ -160,7 +160,7 @@ You can also do the inverse operation by running:
 
 ```scala
 val sqlSchema = new StructType(new StructField ....
-val avroSchema = SparkAvroConversions.toAvroSchema(sqlSchema, avro_schema_name, avro_schemq_namespace)
+val avroSchema = SparkAvroConversions.toAvroSchema(sqlSchema, avro_schema_name, avro_schema_namespace)
 ```
 
 ### Alternative Data Sources
