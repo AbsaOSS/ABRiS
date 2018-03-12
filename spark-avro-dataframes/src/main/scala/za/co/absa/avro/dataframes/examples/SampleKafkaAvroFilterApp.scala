@@ -37,6 +37,7 @@ object SampleKafkaAvroFilterApp {
 
   def main(args: Array[String]): Unit = {
 
+    // there is an example file at /src/test/resources/AvroReadingExample.properties
     if (args.length != 1) {
       println("No properties file specified.")
       System.exit(1)

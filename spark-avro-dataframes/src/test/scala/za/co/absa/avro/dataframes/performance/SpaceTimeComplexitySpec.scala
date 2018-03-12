@@ -62,20 +62,7 @@ class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
   }
 
   behavior of "Library Performance"
-  
-  it should " parse at least 5k rows/second/core into Avro records" in {    
-    val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
-    val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    val rows = ComplexRecordsGenerator.generateUnparsedRows(5000)    
-    val init = System.nanoTime()
-    val numRecords = rows.map(row => {      
-      SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema)
-    }).size
-    val elapsed = System.nanoTime() - init
-    println(s"******* AvroSparkParser processed ${numRecords} rows in ${elapsed/1000000} ms.")
-    assert(elapsed < 1e+9)
-  }    
-  
+    
   it should "be more space-efficient than Kryo when serializing records" in {    
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema: StructType = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]    
@@ -107,6 +94,19 @@ class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
     println(s"******* AvroSparkParser processed ${numRows} records in ${elapsed/1000000} ms.")
     assert(elapsed < 1e+9)    
   }  
+  
+  it should " parse at least 5k rows/second/core into Avro records" in {    
+    val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
+    val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
+    val rows = ComplexRecordsGenerator.generateUnparsedRows(5000)    
+    val init = System.nanoTime()
+    val numRecords = rows.map(row => {      
+      SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema)
+    }).size
+    val elapsed = System.nanoTime() - init
+    println(s"******* AvroSparkParser processed ${numRecords} rows in ${elapsed/1000000} ms.")
+    assert(elapsed < 1e+9)
+  }    
   
   private def writeKryo(data: List[Bean]): File = {
     import spark.implicits._

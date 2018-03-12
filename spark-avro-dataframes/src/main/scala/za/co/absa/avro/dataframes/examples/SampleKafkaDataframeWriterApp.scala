@@ -55,6 +55,7 @@ object SampleKafkaDataframeWriterApp {
 
   def main(args: Array[String]): Unit = {
 
+    // there is a sample properties file at /src/test/resources/DataframeWritingExample.properties
     if (args.length != 1) {
       println("No properties file specified.")
       System.exit(1)
@@ -83,7 +84,7 @@ object SampleKafkaDataframeWriterApp {
     do {
       val dataframe = getRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt).toDF()
       toAvro(dataframe, properties)
-        .write
+        .write       
         .format("kafka")
         .option("kafka.bootstrap.servers", properties.getProperty(PARAM_KAFKA_SERVERS))
         .option("topic", properties.getProperty(PARAM_KAFKA_TOPICS))
