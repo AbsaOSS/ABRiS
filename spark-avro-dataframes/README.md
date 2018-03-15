@@ -210,6 +210,10 @@ a self-contained piece of software. In case your environment already provides so
 
 - Spark 2.2.0
 
+- Spark SQL Kafka 0-10
+
+- Spark Streaming Kafka 0-8 or higher
+
 
 ## Performance
 

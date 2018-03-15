@@ -38,13 +38,12 @@ import java.io.FileInputStream
 
 import scala.collection.JavaConversions._
 import org.apache.spark.sql.Dataset
+import za.co.absa.avro.dataframes.examples.utils.ExamplesUtils
 
 object SampleKafkaDataframeWriterApp {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_KAFKA_SERVERS = "kafka.bootstrap.servers"
-  private val PARAM_KAFKA_TOPICS = "kafka.topics"
   private val PARAM_AVRO_SCHEMA = "avro.schema"
   private val PARAM_AVRO_RECORD_NAME = "avro.record.name"
   private val PARAM_AVRO_RECORD_NAMESPACE = "avro.record.namespace"
@@ -71,14 +70,15 @@ object SampleKafkaDataframeWriterApp {
     val spark = SparkSession
       .builder()
       .appName(properties.getProperty(PARAM_JOB_NAME))
-      .master(properties.getProperty(PARAM_JOB_MASTER))
+      .master(properties.getProperty(PARAM_JOB_MASTER))   
       .getOrCreate()
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
 
     import za.co.absa.avro.dataframes.avro.AvroSerDe._
     import spark.implicits._
-
+    import ExamplesUtils._
+    
     implicit val encoder = getEncoder()
     
     do {
@@ -86,8 +86,7 @@ object SampleKafkaDataframeWriterApp {
       toAvro(dataframe, properties)
         .write       
         .format("kafka")
-        .option("kafka.bootstrap.servers", properties.getProperty(PARAM_KAFKA_SERVERS))
-        .option("topic", properties.getProperty(PARAM_KAFKA_TOPICS))
+        .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file
         .save()
     } while (properties.getProperty(PARAM_EXECUTION_REPEAT).toBoolean)
   }
