@@ -24,13 +24,12 @@ import org.apache.spark.sql.SparkSession
 import scala.collection.JavaConversions._
 
 import org.apache.kafka.common.serialization.Serdes
+import za.co.absa.avro.dataframes.examples.utils.ExamplesUtils
 
 object SampleKafkaAvroFilterApp {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_KAFKA_SERVERS = "kafka.bootstrap.servers"
-  private val PARAM_KAFKA_TOPICS = "kafka.topics"
   private val PARAM_AVRO_SCHEMA = "avro.schema"
   private val PARAM_TASK_FILTER = "task.filter"
   private val PARAM_LOG_LEVEL = "log.level"  
@@ -44,7 +43,7 @@ object SampleKafkaAvroFilterApp {
     }
 
     println("Loading properties from: " + args(0))
-    val properties = loadProperties(args(0))
+    val properties = ExamplesUtils.loadProperties(args(0))
     
     for (key <- properties.keysIterator) {
       println(s"\t${key} = ${properties.getProperty(key)}")
@@ -59,12 +58,12 @@ object SampleKafkaAvroFilterApp {
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
       
     import za.co.absa.avro.dataframes.avro.AvroSerDe._
-
+    import ExamplesUtils._
+    
     val stream = spark
       .readStream
-      .format("kafka")
-      .option("kafka.bootstrap.servers", properties.getProperty(PARAM_KAFKA_SERVERS))
-      .option("subscribe", properties.getProperty(PARAM_KAFKA_TOPICS)) 
+      .format("kafka")      
+      .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file      
       .avro(properties.getProperty(PARAM_AVRO_SCHEMA))
 
     val filter = properties.getProperty(PARAM_TASK_FILTER)
@@ -72,11 +71,5 @@ object SampleKafkaAvroFilterApp {
 
     stream.printSchema()
     stream.filter(filter).writeStream.format("console").start().awaitTermination()    
-  }
-
-  private def loadProperties(path: String): Properties = {
-    val properties = new Properties()
-    properties.load(new FileInputStream(path))
-    properties
   }
 }

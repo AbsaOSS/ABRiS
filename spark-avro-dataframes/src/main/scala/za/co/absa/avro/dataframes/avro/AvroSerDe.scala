@@ -16,11 +16,12 @@
 
 package za.co.absa.avro.dataframes.avro
 
+import java.security.InvalidParameterException
+
 import scala.reflect.ClassTag
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.io.BinaryDecoder
 import org.apache.avro.io.DecoderFactory
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.Encoders
@@ -32,8 +33,6 @@ import za.co.absa.avro.dataframes.avro.format.SparkAvroConversions
 import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
 import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
-import java.security.InvalidParameterException
-import org.apache.spark.sql.util.SchemaUtils
 
 /**
  * This object provides the main point of integration between applications and this library.
