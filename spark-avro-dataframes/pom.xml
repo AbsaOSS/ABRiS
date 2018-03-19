@@ -19,7 +19,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>za.co.absa.avro.dataframes</groupId>
 	<artifactId>spark-avro-dataframes</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>spark-avro-dataframes</name>
 	<description>Provides seamless integration between Avro and Spark Structured Streaming</description>
 

@@ -51,6 +51,7 @@ object SampleKafkaDataframeWriterApp {
   private val PARAM_LOG_LEVEL = "log.level"
   private val PARAM_TEST_DATA_ENTRIES = "test.data.entries"
   private val PARAM_EXECUTION_REPEAT = "execution.repeat"
+  private val PARAM_NUM_PARTITIONS = "num.partitions"
 
   def main(args: Array[String]): Unit = {
 
@@ -82,7 +83,8 @@ object SampleKafkaDataframeWriterApp {
     implicit val encoder = getEncoder()
     
     do {
-      val dataframe = getRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt).toDF()
+      val rows = getRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
+      val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()      
       toAvro(dataframe, properties)
         .write       
         .format("kafka")
