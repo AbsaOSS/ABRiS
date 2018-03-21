@@ -33,6 +33,8 @@ import za.co.absa.avro.dataframes.avro.format.SparkAvroConversions
 import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
 import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
+import za.co.absa.avro.dataframes.avro.format.ScalaAvroRecord
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 
 /**
  * This object provides the main point of integration between applications and this library.
@@ -40,7 +42,7 @@ import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
 object AvroSerDe {
 
   private val avroParser = new AvroToSparkParser()
-  private var reader: ScalaDatumReader[GenericRecord] = _  
+  private var reader: ScalaDatumReader[ScalaAvroRecord] = _  
 
   /**
    * Method responsible for receiving binary Avro records and converting them into Spark Rows.
@@ -48,12 +50,12 @@ object AvroSerDe {
   private def decodeAvro[T](avroRecord: Array[Byte])(implicit tag: ClassTag[T]): Row = {
     val decoder = DecoderFactory.get().binaryDecoder(avroRecord, null)
     val decodedAvroData: GenericRecord = reader.read(null, decoder)
-
+    
     avroParser.parse(decodedAvroData)
   }
 
   private def createAvroReader(schemaPath: String) = {
-    reader = new ScalaDatumReader[GenericRecord](AvroSchemaUtils.load(schemaPath))
+    reader = new ScalaDatumReader[ScalaAvroRecord](AvroSchemaUtils.load(schemaPath))
   }
 
   private def createRowEncoder(schema: Schema) = {
@@ -77,7 +79,7 @@ object AvroSerDe {
       .mapPartitions(partition => {
         createAvroReader(schemaPath)          
         partition.map(avroRecord => {
-          decodeAvro(avroRecord)
+          decodeAvro(avroRecord)           
         })
       })
     }
@@ -116,7 +118,7 @@ object AvroSerDe {
      * 
      * The API will infer the Avro schema from the incoming Dataframe. The inferred schema will receive the name and namespace informed as parameters.
      * 
-     * The API will throw in case the Dataframe does not hava a schema.
+     * The API will throw in case the Dataframe does not have a schema.
      * 
      * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
      * already used by Spark. 
