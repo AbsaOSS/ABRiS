@@ -41,6 +41,7 @@ import org.apache.avro.generic.GenericFixed
 import za.co.absa.avro.dataframes.examples.data.generation.FixedString
 import za.co.absa.avro.dataframes.avro.format.ScalaAvroRecord
 import za.co.absa.avro.dataframes.avro.parsing.AvroToSparkParser
+import org.apache.spark.sql.SparkSession
 
 class AvroToSparkParserSpec extends FlatSpec {
 
@@ -280,7 +281,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     val state = Map(
       "name" -> "A State",
       "regions" -> cities)
-
+      
     val avroRecord = AvroDataUtils.mapToGenericRecord(state, TestSchemas.COMPLEX_SCHEMA_SPEC)
     val resultRow = avroParser.parse(avroRecord)
 

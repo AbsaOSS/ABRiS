@@ -70,6 +70,8 @@ object SampleKafkaAvroFilterApp {
     println("Going to run filter: " + filter)
 
     stream.printSchema()
-    stream.filter(filter).writeStream.format("console").start().awaitTermination()    
+    stream
+    //.filter(filter)
+    .writeStream.format("console").start().awaitTermination()    
   }
 }

@@ -16,6 +16,8 @@
 
 package za.co.absa.avro.dataframes.avro.format
 
+
+
 import org.apache.avro.AvroRuntimeException
 import org.apache.avro.Schema
 import org.apache.avro.Schema.Field
@@ -23,6 +25,7 @@ import org.apache.avro.Schema.Type
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.Row
+import scala.collection._
 import org.apache.avro.generic.GenericData.Fixed
 
 /**
@@ -54,13 +57,14 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
 
   override def put(position: Int, value: Object): Unit = {
     values(position) = value match {
-      case v: ScalaAvroRecord     => toRow(value.asInstanceOf[ScalaAvroRecord].values)
-      case v: java.nio.ByteBuffer => v.array()
-      case v: Fixed               => v.bytes()
-      case default                => default
+      case v: ScalaAvroRecord                                => toRow(value.asInstanceOf[ScalaAvroRecord].values)
+      case v: java.nio.ByteBuffer                            => v.array()      
+      case v: Fixed                                          => v.bytes()
+      case v: mutable.ListBuffer[Any] if isListOfRecords(v)  => convertToListOfRows(v)      
+      case default                                           => default
     }
-  }
-
+  }  
+  
   private def toRow(values: Array[Object]) = {
     if (values.length == 1) {
       Row(values(0))
@@ -69,6 +73,14 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
     }
   }
 
+  private def convertToListOfRows(list: mutable.ListBuffer[Any]) = {
+    list.map(value => toRow(value.asInstanceOf[ScalaAvroRecord].values))
+  }
+  
+  private def isListOfRecords(value: mutable.ListBuffer[Any]) = {    
+    !value.isEmpty && value.head.isInstanceOf[ScalaAvroRecord]
+  }
+  
   override def get(key: String): Object = {
     val field: Field = schema.getField(key)
     if (field != null) {

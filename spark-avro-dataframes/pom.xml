@@ -73,14 +73,15 @@
 		<!-- Avro -->
 		<dependency>
 			<groupId>org.apache.avro</groupId>
-			<artifactId>avro</artifactId>			
+			<artifactId>avro</artifactId>		
+			<scope>compile</scope>	
 		</dependency>
 
 		<!-- Spark -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-sql_${scala.compat.version}</artifactId>
-			<scope>provided</scope>			
+			<scope>compile</scope>			
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
@@ -96,11 +97,13 @@
 		<!-- Spark Kafka -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>				
+			<artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>		
+			<scope>compile</scope>		
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>			
+			<artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
+			<scope>compile</scope>			
 		</dependency>
 
 		<!-- Jackson -->
@@ -211,6 +214,7 @@
 							<descriptorRefs>
 								<descriptorRef>jar-with-dependencies</descriptorRef>
 							</descriptorRefs>
+							<appendAssemblyId>false</appendAssemblyId>
 						</configuration>
 					</execution>
 				</executions>

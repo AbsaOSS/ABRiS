@@ -48,6 +48,8 @@ import org.apache.avro.generic.GenericRecord
 import scala.collection._
 import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
 import org.apache.avro.Schema.Field
+import scalaz.std.java.util.map
+import org.apache.spark.sql.SparkSession
 
 class SparkAvroConversionsSpec extends FlatSpec {
   
@@ -105,8 +107,8 @@ class SparkAvroConversionsSpec extends FlatSpec {
     val rowBytes = SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema)
     val record: GenericRecord = parse(rowBytes, avroSchema).asInstanceOf[GenericRecord]
     for (i <- 0 until data.length) assert(record.get(i) == data(i)) 
-  }
-    
+  }  
+  
   it should "convert Avro schemas to SQL types" in {
     val schema = AvroSchemaUtils.parse(TestSchemas.COMPLEX_SCHEMA_SPEC)
     val sql = SparkAvroConversions.toSqlType(schema)    

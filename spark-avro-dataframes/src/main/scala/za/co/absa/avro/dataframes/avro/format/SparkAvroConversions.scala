@@ -16,41 +16,42 @@
 
 package za.co.absa.avro.dataframes.avro.format
 
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.sql.Date
+import java.sql.Timestamp
+import java.util.HashMap
+
+import scala.collection._
+
+import org.apache.avro.Schema
 import org.apache.avro.SchemaBuilder
-import org.apache.spark.sql.types.LongType
-import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.types.DoubleType
-import org.apache.spark.sql.types.DateType
-import org.apache.spark.sql.types.StructType
+import org.apache.avro.generic.GenericData.Record
+import org.apache.avro.generic.GenericRecord
+import org.apache.avro.generic.IndexedRecord
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.ArrayType
 import org.apache.spark.sql.types.BinaryType
-import org.apache.spark.sql.types.DecimalType
 import org.apache.spark.sql.types.BooleanType
-import org.apache.spark.sql.types.DataType
 import org.apache.spark.sql.types.ByteType
+import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types.DateType
+import org.apache.spark.sql.types.DecimalType
+import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.sql.types.FloatType
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.types.MapType
 import org.apache.spark.sql.types.ShortType
 import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.Row
-import java.nio.ByteBuffer
-import java.util.HashMap
-import com.databricks.spark.avro.SchemaConverters
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.types.TimestampType
-import org.apache.spark.sql.types.ArrayType
-import org.apache.avro.generic.GenericData.Record
-import java.sql.Timestamp
-import java.sql.Date
-import org.apache.avro.Schema
-import org.apache.spark.sql.types.MapType
+
 import com.databricks.spark.avro.DatabricksAdapter
-import com.databricks.spark.avro.SchemaConverters.SchemaType
-import org.apache.avro.generic.GenericRecord
-import org.apache.avro.io.EncoderFactory
-import org.apache.avro.generic.GenericDatumWriter
-import java.io.ByteArrayOutputStream
-import org.apache.avro.generic.IndexedRecord
-import scalaz.std.effect.writer
+import com.databricks.spark.avro.SchemaConverters
+
 import za.co.absa.avro.dataframes.avro.write.AvroWriterHolder
-import scala.collection._
+
 
 /**
  * This class provides conversions between Avro and Spark schemas and data.
@@ -96,9 +97,9 @@ object SparkAvroConversions {
    */
   def rowToBinaryAvro(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
     val record = rowToGenericRecord(row, sparkSchema, avroSchema)    
-    toByteArray(record, avroSchema)
+    toByteArray(record, avroSchema)       
   }
-
+  
   /**
    * Translates an Avro Schema into a Spark's StructType.
    * 
@@ -185,13 +186,13 @@ object SparkAvroConversions {
           if (item == null) {
             null
           } else {
-            val record = new Record(schema)
+            val record = new Record(schema)            
             val convertersIterator = fieldConverters.iterator
             val fieldNamesIterator = dataType.asInstanceOf[StructType].fieldNames.iterator
             val rowIterator = item.asInstanceOf[Row].toSeq.iterator
 
             while (convertersIterator.hasNext) {
-              val converter = convertersIterator.next() 
+              val converter = convertersIterator.next()
               record.put(fieldNamesIterator.next(), converter(rowIterator.next()))
             }
             record

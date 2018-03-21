@@ -18,11 +18,14 @@ package za.co.absa.avro.dataframes.examples.data.generation
 
 /**
  * Provides several Avro schemas.
- * 
+ *
  * Used for tests and examples.
  */
 object TestSchemas {
-  
+
+  case class ErrorMessage(errType: String, errCode: String, errMsg: String, errCol: String, rawValues: Seq[String], mappings: Seq[Mapping] = Seq())
+  case class Mapping(mappingTableColumn: String, mappedDatasetColumn: String)
+
   val NATIVE_SIMPLE_OUTER_SCHEMA = """{
     "type":"record",
     "name":"outer_nested",
@@ -40,8 +43,8 @@ object TestSchemas {
 		    }
 	    }
 	  ]
-  }"""    
-  
+  }"""
+
   val NATIVE_SIMPLE_NESTED_SCHEMA = """{
      "namespace": "all-types.test",
      "type":"record",  
@@ -51,8 +54,8 @@ object TestSchemas {
 					  {"name":"int", "type":"int"},
 					  {"name":"long","type":"long"}
 					]				 				     
-  }"""  
-  
+  }"""
+
   val NATIVE_COMPLETE_SCHEMA = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -69,8 +72,8 @@ object TestSchemas {
  		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}},
  		     {"name": "fixed",  "type": {"type": "fixed", "size": 13, "name": "fixed"}}
      ]
-  }""" 
-  
+  }"""
+
   val NATIVE_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -83,8 +86,8 @@ object TestSchemas {
  		     { "name": "float",       "type": ["float",  "null"] },
  		     { "name": "boolean",     "type": ["boolean","null"] }
      ]
-  }"""  
-  
+  }"""
+
   val ARRAY_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -92,7 +95,7 @@ object TestSchemas {
      "fields":[                  
  		     { "name": "array", "type": {"type": "array", "items": "string"} }
      ]
-  }"""    
+  }"""
 
   val MAP_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
@@ -101,8 +104,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
      ]
-  }"""      
-  
+  }"""
+
   val BYTES_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -110,8 +113,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "bytes", "type": "bytes" }
      ]
-  }"""     
-  
+  }"""
+
   val FIXED_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -119,8 +122,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "fixed", "type": {"type": "fixed", "size": 13, "name": "fixed"}}
      ]
-  }"""  
-  
+  }"""
+
   val DECIMAL_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -128,8 +131,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "decimal", "type": {"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2}}
      ]
-  }"""    
-  
+  }"""
+
   val DATE_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -137,8 +140,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "date", "type": {"type": "int", "logicalType": "date"}}
      ]
-  }"""   
-  
+  }"""
+
   val MILLISECOND_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -146,8 +149,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "millisecond", "type": {"type": "int", "logicalType": "time-millis"}}
      ]
-  }"""    
-  
+  }"""
+
   val MICROSECOND_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -155,8 +158,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "microsecond", "type": {"type": "long", "logicalType": "time-micros"}}
      ]
-  }"""     
-  
+  }"""
+
   val TIMESTAMP_MILLIS_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -164,8 +167,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "timestampMillis", "type": {"type": "long", "logicalType": "timestamp-millis"}}
      ]
-  }"""   
-  
+  }"""
+
   val TIMESTAMP_MICROS_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -173,8 +176,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "timestampMicros", "type": {"type": "long", "logicalType": "timestamp-micros"}}
      ]
-  }"""   
-  
+  }"""
+
   val DURATION_MICROS_SCHEMA_SPEC = """{
      "namespace": "all-types.test",
      "type": "record",
@@ -182,8 +185,8 @@ object TestSchemas {
      "fields":[                  
  		     {"name": "duration", "type": {"type": "fixed", "size": 12, "name": "name", "logicalType": "duration"}}
      ]
-  }"""     
-  
+  }"""
+
   val COMPLEX_SCHEMA_SPEC = """{	
 	"type":"record",
 	"name":"complex",
@@ -223,7 +226,7 @@ object TestSchemas {
 		}
 	]
   }"""
-  
+
   val COMPLEX_SCHEMA_STREET_SPEC = """		
 	  {
 	    "namespace":"test_city",
@@ -234,8 +237,8 @@ object TestSchemas {
 	  	  {"name":"name","type":"string"},
 		  	{"name":"zip","type":"string"}
 		  ]		
-    }"""  
-  
+    }"""
+
   val COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC = """
   { 
     "namespace":"test_neighborhood",
@@ -262,7 +265,7 @@ object TestSchemas {
 	      }
 			]
 	}"""
-  
+
   val COMPLEX_SCHEMA_CITY_SPEC = """
     {	
       "namespace":"test_city",
@@ -301,5 +304,108 @@ object TestSchemas {
 																	}
 					}
 				]
-		}"""  
+		}"""
+
+  val CASE_CLASSES_SCHEMA = """
+  {  
+   "type":"record",
+   "name":"name",
+   "namespace":"namespace",
+   "fields":[  
+      {  
+         "name":"errCol",
+         "type":[  
+            {  
+               "type":"array",
+               "items":[  
+                  {  
+                     "type":"record",
+                     "name":"errCol",
+                     "namespace":"namespace.errCol",
+                     "fields":[  
+                        {  
+                           "name":"errType",
+                           "type":[  
+                              "string",
+                              "null"
+                           ]
+                        },
+                        {  
+                           "name":"errCode",
+                           "type":[  
+                              "string",
+                              "null"
+                           ]
+                        },
+                        {  
+                           "name":"errMsg",
+                           "type":[  
+                              "string",
+                              "null"
+                           ]
+                        },
+                        {  
+                           "name":"errCol",
+                           "type":[  
+                              "string",
+                              "null"
+                           ]
+                        },
+                        {  
+                           "name":"rawValues",
+                           "type":[  
+                              {  
+                                 "type":"array",
+                                 "items":[  
+                                    "string",
+                                    "null"
+                                 ]
+                              },
+                              "null"
+                           ]
+                        },
+                        {  
+                           "name":"mappings",
+                           "type":[  
+                              {  
+                                 "type":"array",
+                                 "items":[  
+                                    {  
+                                       "type":"record",
+                                       "name":"mappings",
+                                       "namespace":"namespace.errCol.mappings",
+                                       "fields":[  
+                                          {  
+                                             "name":"mappingTableColumn",
+                                             "type":[  
+                                                "string",
+                                                "null"
+                                             ]
+                                          },
+                                          {  
+                                             "name":"mappedDatasetColumn",
+                                             "type":[  
+                                                "string",
+                                                "null"
+                                             ]
+                                          }
+                                       ]
+                                    },
+                                    "null"
+                                 ]
+                              },
+                              "null"
+                           ]
+                        }
+                     ]
+                  },
+                  "null"
+               ]
+            },
+            "null"
+         ]
+      }
+   ]
+}    
+    """
 }
