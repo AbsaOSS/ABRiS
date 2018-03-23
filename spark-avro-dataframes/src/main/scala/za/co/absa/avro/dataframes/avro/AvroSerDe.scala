@@ -35,6 +35,10 @@ import za.co.absa.avro.dataframes.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.avro.dataframes.avro.read.ScalaDatumReader
 import za.co.absa.avro.dataframes.avro.format.ScalaAvroRecord
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.spark.sql.types.StructType
+import za.co.absa.avro.dataframes.avro.schemas.SchemasProcessor
+import za.co.absa.avro.dataframes.avro.schemas.impl.AvroToSparkProcessor
+import za.co.absa.avro.dataframes.avro.schemas.impl.SparkToAvroProcessor
 
 /**
  * This object provides the main point of integration between applications and this library.
@@ -97,7 +101,9 @@ object AvroSerDe {
   implicit class Serializer(dataframe: Dataset[Row]) {
     
     /**
-     * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records. 
+     * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records.
+     * 
+     * Intended to be used when there is not Spark schema available in the Dataframe but there is an expected Avro schema.
      * 
      * It is important to keep in mind that the specification for a field in the schema MUST be the same at both ends, writer and reader.
      * For some fields (e.g. strings), Spark can ignore the nullability specified in the SQL struct (SPARK-14139). This issue could lead 
@@ -110,11 +116,14 @@ object AvroSerDe {
      */
     def avro(schemaPath: String): Dataset[Array[Byte]] = {            
       val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)            
-      toAvro(dataframe, plainAvroSchema)
+      //toAvro(dataframe, plainAvroSchema, None)
+      toAvro2(dataframe, new AvroToSparkProcessor(plainAvroSchema))
     }
     
     /**
      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records.
+     * 
+     * Intended to be used when there is a Spark schema present in the Dataframe from which the Avro schema will be translated.
      * 
      * The API will infer the Avro schema from the incoming Dataframe. The inferred schema will receive the name and namespace informed as parameters.
      * 
@@ -128,20 +137,31 @@ object AvroSerDe {
         throw new InvalidParameterException("Dataframe does not have a schema.")
       }
       
-      val plainAvroSchema = SparkAvroConversions.toAvroSchema(dataframe.schema, schemaName, schemaNamespace).toString()                     
-      toAvro(dataframe, plainAvroSchema)
+      //val plainAvroSchema = SparkAvroConversions.toAvroSchema(dataframe.schema, schemaName, schemaNamespace).toString()                     
+      //toAvro(dataframe, plainAvroSchema, Some(dataframe.schema))
+      toAvro2(dataframe, new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace))
     }   
     
     /**
      * Converts a Dataset[Row] into a Dataset[Array[Byte]] containing Avro schemas generated according to the plain specification informed as a parameter.
      */
-    private def toAvro(rows: Dataset[Row], plainAvroSchema: String) = {
+    private def toAvro(rows: Dataset[Row], plainAvroSchema: String, originalSparkSchema: Option[StructType]) = {
       implicit val recEncoder = Encoders.BINARY
       rows.mapPartitions(partition => {        
         val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
-        val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
+        val sparkSchema = originalSparkSchema match { 
+          case None => SparkAvroConversions.toSqlType(avroSchema) 
+          case Some(v) => v
+        }
         partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema))        
       })      
     }
+    
+    private def toAvro2(rows: Dataset[Row], schemas: SchemasProcessor) = {
+      implicit val recEncoder = Encoders.BINARY
+      rows.mapPartitions(partition => {                
+        partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, schemas.getSparkSchema(), schemas.getAvroSchema()))        
+      })      
+    }    
   }    
 }
