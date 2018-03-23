@@ -27,6 +27,7 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.Row
 import scala.collection._
 import org.apache.avro.generic.GenericData.Fixed
+import scala.collection.JavaConversions._
 
 /**
  * In order to support Spark-compliant queryable nested structures, nested Avro records need to be converted into Spark Rows.
@@ -60,7 +61,7 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
       case v: ScalaAvroRecord                                => toRow(value.asInstanceOf[ScalaAvroRecord].values)
       case v: java.nio.ByteBuffer                            => v.array()      
       case v: Fixed                                          => v.bytes()
-      case v: mutable.ListBuffer[Any] if isListOfRecords(v)  => convertToListOfRows(v)      
+      case v: mutable.ListBuffer[Any] if isListOfRecords(v)  => convertToListOfRows(v)        
       case default                                           => default
     }
   }  

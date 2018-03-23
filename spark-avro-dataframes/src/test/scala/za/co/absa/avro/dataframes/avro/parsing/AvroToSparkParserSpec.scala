@@ -147,7 +147,7 @@ class AvroToSparkParserSpec extends FlatSpec {
     }       
   }
   
-  it should "support date type" in {
+  it should "support date type as Integer" in {
     val testData = Map[String, Object](
       "date" -> new Integer(Integer.MAX_VALUE))
          
@@ -157,8 +157,8 @@ class AvroToSparkParserSpec extends FlatSpec {
     for (entry <- testData) {
       assert(assertEquals(entry._2, resultRow.getAs(entry._1)), s"${entry._1} did not match")
     }        
-  }  
-
+  }    
+  
   it should "support millisecond type" in {
     val testData = Map[String, Object](
       "millisecond" -> new Integer(Integer.MAX_VALUE))
