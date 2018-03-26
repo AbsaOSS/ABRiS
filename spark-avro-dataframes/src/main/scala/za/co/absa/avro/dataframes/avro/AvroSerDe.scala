@@ -143,8 +143,10 @@ object AvroSerDe {
      */    
     private def toAvro(rows: Dataset[Row], schemas: SchemasProcessor) = {
       implicit val recEncoder = Encoders.BINARY
-      rows.mapPartitions(partition => {                
-        partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, schemas.getSparkSchema(), schemas.getAvroSchema()))        
+      rows.mapPartitions(partition => {       
+        val avroSchema = schemas.getAvroSchema()
+        val sparkSchema = schemas.getSparkSchema()
+        partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema))        
       })      
     }    
   }    

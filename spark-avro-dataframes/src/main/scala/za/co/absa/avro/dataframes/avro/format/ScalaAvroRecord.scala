@@ -61,8 +61,8 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
       case v: ScalaAvroRecord                                => toRow(value.asInstanceOf[ScalaAvroRecord].values)
       case v: java.nio.ByteBuffer                            => v.array()      
       case v: Fixed                                          => v.bytes()
-      case v: mutable.ListBuffer[Any] if isListOfRecords(v)  => convertToListOfRows(v)
-      // TODO MAPS of Records
+      case v: mutable.ListBuffer[Any]  if isListOfRecords(v) => convertToListOfRows(v)
+      case v: mutable.HashMap[Any,Any] if isMapOfRecords(v)  => convertToMapOfRows(v)      
       case default                                           => default
     }
   }  
@@ -79,8 +79,16 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
     list.map(value => toRow(value.asInstanceOf[ScalaAvroRecord].values))
   }
   
+  private def convertToMapOfRows(map: mutable.HashMap[Any,Any]) = {
+    map.mapValues(value => toRow(value.asInstanceOf[ScalaAvroRecord].values))
+  }
+  
   private def isListOfRecords(value: mutable.ListBuffer[Any]) = {    
-    !value.isEmpty && value.head.isInstanceOf[ScalaAvroRecord]
+    value.nonEmpty && value.head.isInstanceOf[ScalaAvroRecord]
+  }
+  
+  private def isMapOfRecords(value: mutable.HashMap[Any,Any]) = {
+    value.nonEmpty && value.head._2.isInstanceOf[ScalaAvroRecord]
   }
   
   override def get(key: String): Object = {
