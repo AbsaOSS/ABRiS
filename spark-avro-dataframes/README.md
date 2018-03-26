@@ -114,8 +114,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
 
 ### Writing Dataframes to Kafka as Avro records without specifying a schema
 
-Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace
-for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.avro("schema_name", "schema_namespace")```
+Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.avro("schema_name", "schema_namespace")```
 
 Below is an example whose full version can be found at ```za.co.absa.avro.dataframes.examples.SampleKafkaDataframeWriterApp```
 
@@ -164,12 +163,11 @@ val avroSchema = SparkAvroConversions.toAvroSchema(sqlSchema, avro_schema_name, 
 ```
 
 ### Alternative Data Sources
-Your data may not come from Spark and, if you are using Avro, there is a chance you are also using Java. This libary provides utilities to easily convert Java beans into Avro
-records and send them to Kafka. 
+Your data may not come from Spark and, if you are using Avro, there is a chance you are also using Java. This library provides utilities to easily convert Java beans into Avro records and send them to Kafka. 
 
 To use you need to: 
 
-1. Store the Avro schema for the class structure you want to send (the schema will be inferred from the that):
+1. Store the Avro schema for the class structure you want to send (the Spark schema will be inferred from there later, in your reading job):
 
 ```Java
 Class<?> dataType = YourBean.class;
@@ -203,8 +201,7 @@ A complete application can be found at ```za.co.absa.avro.dataframes.utils.examp
 
 ## Dependencies
 
-The environment dependencies are below. For the other dependencies, the library POM is configured with all dependencies scoped as ```compile```, thus, you can understand it as
-a self-contained piece of software. In case your environment already provides some of those dependencies, you can specify it in your project POM.
+The environment dependencies are below. For the other dependencies, the library POM is configured with all dependencies scoped as ```compile```, thus, you can understand it as a self-contained piece of software. In case your environment already provides some of those dependencies, you can specify it in your project POM.
 
 - Scala 2.11
 
@@ -226,8 +223,7 @@ a self-contained piece of software. In case your environment already provides so
 - 16 GB RAM
 
 
-Tests serializing 50k records using a fairly complex schemas show that Avro records can be up to 16% smaller than Kryo ones, i.e. converting Dataframes into Avro records save up to 16% 
-more space than converting them into case classes and using Kryo as a serializer.
+Tests serializing 50k records using a fairly complex schemas show that Avro records can be up to 16% smaller than Kryo ones, i.e. converting Dataframes into Avro records save up to 16% more space than converting them into case classes and using Kryo as a serializer.
 
 In local tests with a single core, the library was able to parse, per second, up to 100k Avro records into Spark rows per second, and up to 5k Spark rows into Avro records.
 
