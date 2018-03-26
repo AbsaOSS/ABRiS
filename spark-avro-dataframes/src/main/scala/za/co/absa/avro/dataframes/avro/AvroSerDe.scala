@@ -115,9 +115,8 @@ object AvroSerDe {
      * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
      */
     def avro(schemaPath: String): Dataset[Array[Byte]] = {            
-      val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)            
-      //toAvro(dataframe, plainAvroSchema, None)
-      toAvro2(dataframe, new AvroToSparkProcessor(plainAvroSchema))
+      val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)                  
+      toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))
     }
     
     /**
@@ -136,28 +135,13 @@ object AvroSerDe {
       if (dataframe.schema == null || dataframe.schema.isEmpty) {
         throw new InvalidParameterException("Dataframe does not have a schema.")
       }
-      
-      //val plainAvroSchema = SparkAvroConversions.toAvroSchema(dataframe.schema, schemaName, schemaNamespace).toString()                     
-      //toAvro(dataframe, plainAvroSchema, Some(dataframe.schema))
-      toAvro2(dataframe, new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace))
+      toAvro(dataframe, new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace))
     }   
     
     /**
      * Converts a Dataset[Row] into a Dataset[Array[Byte]] containing Avro schemas generated according to the plain specification informed as a parameter.
-     */
-    private def toAvro(rows: Dataset[Row], plainAvroSchema: String, originalSparkSchema: Option[StructType]) = {
-      implicit val recEncoder = Encoders.BINARY
-      rows.mapPartitions(partition => {        
-        val avroSchema = AvroSchemaUtils.parse(plainAvroSchema)
-        val sparkSchema = originalSparkSchema match { 
-          case None => SparkAvroConversions.toSqlType(avroSchema) 
-          case Some(v) => v
-        }
-        partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema))        
-      })      
-    }
-    
-    private def toAvro2(rows: Dataset[Row], schemas: SchemasProcessor) = {
+     */    
+    private def toAvro(rows: Dataset[Row], schemas: SchemasProcessor) = {
       implicit val recEncoder = Encoders.BINARY
       rows.mapPartitions(partition => {                
         partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, schemas.getSparkSchema(), schemas.getAvroSchema()))        
