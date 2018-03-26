@@ -114,8 +114,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
 
 ### Writing Dataframes to Kafka as Avro records without specifying a schema
 
-Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace
-for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.avro("schema_name", "schema_namespace")```
+Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.avro("schema_name", "schema_namespace")```
 
 Below is an example whose full version can be found at ```za.co.absa.avro.dataframes.examples.SampleKafkaDataframeWriterApp```
 
@@ -164,12 +163,11 @@ val avroSchema = SparkAvroConversions.toAvroSchema(sqlSchema, avro_schema_name, 
 ```
 
 ### Alternative Data Sources
-Your data may not come from Spark and, if you are using Avro, there is a chance you are also using Java. This libary provides utilities to easily convert Java beans into Avro
-records and send them to Kafka. 
+Your data may not come from Spark and, if you are using Avro, there is a chance you are also using Java. This library provides utilities to easily convert Java beans into Avro records and send them to Kafka. 
 
 To use you need to: 
 
-1. Store the Avro schema for the class structure you want to send (the schema will be inferred from the that):
+1. Store the Avro schema for the class structure you want to send (the Spark schema will be inferred from there later, in your reading job):
 
 ```Java
 Class<?> dataType = YourBean.class;
