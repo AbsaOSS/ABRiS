@@ -61,7 +61,8 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
       case v: ScalaAvroRecord                                => toRow(value.asInstanceOf[ScalaAvroRecord].values)
       case v: java.nio.ByteBuffer                            => v.array()      
       case v: Fixed                                          => v.bytes()
-      case v: mutable.ListBuffer[Any] if isListOfRecords(v)  => convertToListOfRows(v)        
+      case v: mutable.ListBuffer[Any] if isListOfRecords(v)  => convertToListOfRows(v)
+      // TODO MAPS of Records
       case default                                           => default
     }
   }  
