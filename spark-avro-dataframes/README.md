@@ -65,7 +65,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .avro("path_to_Avro_schema") // invoke the library
+      .fromAvro("path_to_Avro_schema") // invoke the library
 
     stream.filter("field_x % 2 == 0")
       .writeStream
@@ -103,7 +103,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
       val dataframe = spark.parallelize( .....
       
       dataframe
-      	.avro("path_to_existing_Avro_schema") // invoke library            
+      	.toAvro("path_to_existing_Avro_schema") // invoke library            
       	.write
       	.format("kafka")    
       	.option("kafka.bootstrap.servers", "localhost:9092"))
@@ -135,7 +135,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
       import za.co.absa.avro.dataframes.avro.AvroSerDe._
       
       dataframe
-      	.avro("dest_schema_name", "dest_schema_namespace") // invoke library            
+      	.toAvro("dest_schema_name", "dest_schema_namespace") // invoke library            
       	.write
       	.format("kafka")    
       	.option("kafka.bootstrap.servers", "localhost:9092"))
