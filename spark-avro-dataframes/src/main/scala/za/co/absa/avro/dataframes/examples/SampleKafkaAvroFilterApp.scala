@@ -64,7 +64,7 @@ object SampleKafkaAvroFilterApp {
       .readStream
       .format("kafka")      
       .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file      
-      .streamToAvro(properties.getProperty(PARAM_AVRO_SCHEMA))
+      .fromAvro(properties.getProperty(PARAM_AVRO_SCHEMA))
 
     val filter = properties.getProperty(PARAM_TASK_FILTER)
     println("Going to run filter: " + filter)

@@ -46,7 +46,7 @@ object SampleAvroParquetExample {
     val dataframe = spark.sparkContext.parallelize(rows, 8).toDF()      
       
     dataframe
-      .avro(AVRO_SCHEMA)
+      .toAvro(AVRO_SCHEMA)
       .write
       .mode(SaveMode.Overwrite)
       .parquet(destination)      
@@ -59,8 +59,8 @@ object SampleAvroParquetExample {
     
     spark
       .read
-      .parquet(source)      
-      .dataframeToavro(AVRO_SCHEMA)
+      .parquet(source)            
+      .fromAvro(AVRO_SCHEMA)
   }
   
   private def loadProperties(path: String): Properties = {

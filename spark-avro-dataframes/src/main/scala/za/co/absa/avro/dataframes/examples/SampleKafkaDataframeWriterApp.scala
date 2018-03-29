@@ -96,9 +96,9 @@ object SampleKafkaDataframeWriterApp {
   private def toAvro(dataframe: Dataset[Row], properties: Properties) = {
     import za.co.absa.avro.dataframes.avro.AvroSerDe._
     if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
-      dataframe.avro(properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))
+      dataframe.toAvro(properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))
     } else {
-      dataframe.avro(properties.getProperty(PARAM_AVRO_SCHEMA))
+      dataframe.toAvro(properties.getProperty(PARAM_AVRO_SCHEMA))
     }
   }
 
