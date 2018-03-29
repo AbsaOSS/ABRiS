@@ -12,11 +12,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 
-# Spark Avro Dataframes
+# ABRIS - Avro Bridge for Spark
 
-Pain free Spark/Kafka/Avro integration.
+Pain free Spark/Avro integration.
 
-Retrieve your Avro records from Kakfa and seamlessly query them as regular structured streams. 
+Seamlessly convert your Avro records from anywhere (e.g. Kafka, Parquet, HDFS, etc) into Spark Rows. 
 
 Convert your Dataframes into Avro records without even specifying a schema.
 
@@ -27,13 +27,11 @@ Among the motivations for this project, it is possible to highlight:
 
 - Avro is Confluent's recommended payload to Kafka (https://www.confluent.io/blog/avro-kafka-data/).
 
-- Current solutions do not support reading Avro record from Kafka into Spark structured streams (e.g. https://github.com/databricks/spark-avro).
+- Current solutions do not support reading Avro record as Spark structured streams (e.g. https://github.com/databricks/spark-avro).
 
 - Lack tools for writing Spark Dataframes directly into Kafka as Avro records.
 
-- Right now, all the efforts to integrated Kafka-Avro-Spark streams depend on the user.
-
-- Pretty much every implementation that tries to solve this problem does not support nested types.
+- Right now, all the efforts to integrated Avro-Spark streams or Dataframes depend on the user.
 
 
 ## Usage
