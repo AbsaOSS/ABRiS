@@ -48,17 +48,44 @@ public class TestDataGenerator {
 					createRandomList(random.nextInt(10), random), 
 					createRandomSet(random.nextInt(10), random), 
 					createRandomMap(random.nextInt(10), random), 
-					createRandomComplex(random.nextInt(10), random)));
+					createRandomComplex(random)));
 		}		
 		
 		return testData;
+	}			
+	
+	private final static ComplexNested createRandomComplex(Random random) {		
+		return new ComplexNested(random.nextLong(), 
+				createRandomSimpleDataList(random.nextInt(10), random),
+				createRandomSimpleDataMap(random.nextInt(10), random));
+	}
+
+	private final static Map<String,List<SimpleData>> createRandomSimpleDataMapList(int number, Random random) {
+		Map<String,List<SimpleData>> map = new HashMap<String,List<SimpleData>>();
+		for (int i = 0 ; i < number ; i++) {
+			map.put(UUID.randomUUID().toString(), createRandomSimpleDataList(random.nextInt(10), random));			
+		}
+		return map;
+	}		
+	
+	private final static Map<String,SimpleData> createRandomSimpleDataMap(int number, Random random) {
+		Map<String,SimpleData> map = new HashMap<String,SimpleData>();
+		for (int i = 0 ; i < number ; i++) {
+			map.put(UUID.randomUUID().toString(), createRandomSimpleData(random));			
+		}
+		return map;
+	}	
+	
+	private final static List<SimpleData> createRandomSimpleDataList(int number, Random random) {
+		List<SimpleData> list = new ArrayList<SimpleData>();
+		for (int i = 0 ; i < number ; i++) {
+			list.add(createRandomSimpleData(random));
+		}
+		return list;
 	}
 	
-	private final static ComplexNested createRandomComplex(int count, Random random) {		
-		return new ComplexNested(random.nextLong(), 
-				new SimpleData(random.nextInt(), 
-						UUID.randomUUID().toString(), 
-						createRandomList(random.nextInt(10), random)));
+	private final static SimpleData createRandomSimpleData(Random random) {
+		return new SimpleData(random.nextInt(), UUID.randomUUID().toString(), createRandomList(random.nextInt(10), random));
 	}
 	
 	private final static Map<String,Integer> createRandomMap(int entries, Random random) {
@@ -67,7 +94,7 @@ public class TestDataGenerator {
 			randomMap.put(UUID.randomUUID().toString(), random.nextInt());
 		}
 		return randomMap;
-	}
+	}		
 	
 	private final static List<Long> createRandomList(int entries, Random random) {
 		List<Long> randomList = new ArrayList<Long>();
@@ -113,11 +140,14 @@ public class TestDataGenerator {
 	public final static class ComplexNested {
 		
 		private long whateverLong;
-		private SimpleData nested;
+		private List<SimpleData> nestedList;
+		private Map<String,SimpleData> nestedMap;
+		private Map<String,List<SimpleData>> nestedMapList;
 		
-		public ComplexNested(long whateverLong, SimpleData nested) {		
+		public ComplexNested(long whateverLong, List<SimpleData> nestedList, Map<String,SimpleData> nestedMap) {		
 			this.whateverLong = whateverLong;
-			this.nested = nested;
+			this.nestedList = nestedList;
+			this.nestedMap = nestedMap;
 		}		
 	}
 	

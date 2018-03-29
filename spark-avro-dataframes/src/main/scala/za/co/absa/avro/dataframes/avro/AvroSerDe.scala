@@ -66,6 +66,29 @@ object AvroSerDe {
     RowEncoder(SparkAvroConversions.toSqlType(schema))
   }
 
+    /**
+   * This class provides the method that performs the Kafka/Avro/Spark connection.
+   *
+   * It loads binary data from a stream and feed them into an Avro/Spark decoder, returning the resulting rows.
+   *
+   * It requires the path to the Avro schema which defines the records to be read.
+   */
+  implicit class DataframeDeserializer(dataframe: Dataset[Row]) extends Serializable {
+    
+    def dataframeToavro(schemaPath: String) = {
+      implicit val rowEncoder = createRowEncoder(AvroSchemaUtils.load(schemaPath))
+      
+      dataframe.select("value")
+      .as(Encoders.BINARY)
+      .mapPartitions(partition => {
+        createAvroReader(schemaPath)          
+        partition.map(avroRecord => {
+          decodeAvro(avroRecord)           
+        })
+      })
+    }
+  }
+  
   /**
    * This class provides the method that performs the Kafka/Avro/Spark connection.
    *
@@ -73,9 +96,9 @@ object AvroSerDe {
    *
    * It requires the path to the Avro schema which defines the records to be read.
    */
-  implicit class Deserializer(dsReader: DataStreamReader) extends Serializable {
+  implicit class StreamDeserializer(dsReader: DataStreamReader) extends Serializable {
     
-    def avro(schemaPath: String) = {
+    def streamToAvro(schemaPath: String) = {
       implicit val rowEncoder = createRowEncoder(AvroSchemaUtils.load(schemaPath))
       
       dsReader.load.select("value")
@@ -145,7 +168,7 @@ object AvroSerDe {
       implicit val recEncoder = Encoders.BINARY
       rows.mapPartitions(partition => {       
         val avroSchema = schemas.getAvroSchema()
-        val sparkSchema = schemas.getSparkSchema()
+        val sparkSchema = schemas.getSparkSchema()        
         partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema))        
       })      
     }    
