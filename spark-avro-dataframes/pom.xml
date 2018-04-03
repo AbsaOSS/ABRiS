@@ -192,31 +192,39 @@
 			</resource>
 		</resources>
 		
-		<plugins>		
+		<plugins>				
+			<!-- the Maven Scala plugin will compile Scala source files -->
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+				<configuration>
+					<scalaVersion>${scala.version}</scalaVersion>
+				</configuration>
 				<executions>
 					<execution>
-						<phase>package</phase>
+						<id>scala-compile</id>
+						<phase>process-resources</phase>
 						<goals>
-							<goal>single</goal>
+							<goal>add-source</goal>
+							<goal>compile</goal>
 						</goals>
-						<configuration>
-							<archive>
-								<manifest>
-									<mainClass>
-										za.co.absa.avro.dataframes.examples.SampleKafkaDataframeWriterApp
-									</mainClass>
-								</manifest>
-							</archive>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<appendAssemblyId>false</appendAssemblyId>
-						</configuration>
+					</execution>
+					<execution>
+						<id>scala-test-compile</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
 					</execution>
 				</executions>
+			</plugin>		
+		
+			<!-- disable surefire -->
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skipTests>true</skipTests>
+				</configuration>
 			</plugin>		
 		
 			<!-- enable scalatest -->
