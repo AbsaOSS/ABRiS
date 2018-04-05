@@ -38,7 +38,7 @@ Among the motivations for this project, it is possible to highlight:
 
 ### Reading Avro binary records from Kafka as Spark structured streams and performing regular SQL queries on them
 
-1. Import the library: ```import za.co.absa.avro.dataframes.avro.AvroSerDe._```
+1. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
 
 2. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
@@ -76,7 +76,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 
 1. Create your Dataframe. It MUST have a SQL schema.
 
-2. Import the library: ```import za.co.absa.avro.dataframes.avro.AvroSerDe._```
+2. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
 
 3. Invoke the library informing the path to the Avro schema to be used to generate the records: ```dataframe.avro("path_to_existing_Avro_schema")```
 
