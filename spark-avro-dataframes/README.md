@@ -46,7 +46,7 @@ Among the motivations for this project, it is possible to highlight:
 
 4. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
 
-Below is an example whose full version can be found at ```za.co.absa.avro.dataframes.examples.SampleKafkaAvroFilterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaAvroFilterApp```
 
 ```scala
     val spark = SparkSession
@@ -56,7 +56,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
       .getOrCreate()    
       
     // import Spark Avro Dataframes
-    import za.co.absa.avro.dataframes.avro.AvroSerDe._
+    import za.co.absa.abris.avro.AvroSerDe._
 
     val stream = spark
       .readStream
@@ -82,7 +82,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
 
 4. Send your data to Kafka as Avro records: ```... .write.format("kafka") ...```
 
-Below is an example whose full version can be found at ```za.co.absa.avro.dataframes.examples.SampleKafkaDataframeWriterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaDataframeWriterApp```
 
 ```scala
     val spark = SparkSession
@@ -94,7 +94,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
       import spark.implicits._
       
       // import library
-      import za.co.absa.avro.dataframes.avro.AvroSerDe._
+      import za.co.absa.abris.avro.AvroSerDe._
       
       val sparkSchema = StructType( .... // your SQL schema
       implicit val encoder = RowEncoder.apply(sparkSchema)
@@ -114,7 +114,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
 
 Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.avro("schema_name", "schema_namespace")```
 
-Below is an example whose full version can be found at ```za.co.absa.avro.dataframes.examples.SampleKafkaDataframeWriterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaDataframeWriterApp```
 
 ```scala
     val spark = SparkSession
@@ -130,7 +130,7 @@ Below is an example whose full version can be found at ```za.co.absa.avro.datafr
       val dataframe = spark.parallelize( .....
       
       // import library
-      import za.co.absa.avro.dataframes.avro.AvroSerDe._
+      import za.co.absa.abris.avro.AvroSerDe._
       
       dataframe
       	.toAvro("dest_schema_name", "dest_schema_namespace") // invoke library            
@@ -195,7 +195,7 @@ long dispatchWait = 1l; // how much time the writer should expect until all data
 writer.write(data, "destination_topic", dispatchWait);
 ```
 
-A complete application can be found at ```za.co.absa.avro.dataframes.utils.examples.SimpleAvroDataGenerator``` under Java source.
+A complete application can be found at ```za.co.absa.abris.utils.examples.SimpleAvroDataGenerator``` under Java source.
 
 ## Dependencies
 
@@ -225,6 +225,6 @@ Tests serializing 50k records using a fairly complex schemas show that Avro reco
 
 In local tests with a single core, the library was able to parse, per second, up to 100k Avro records into Spark rows per second, and up to 5k Spark rows into Avro records.
 
-The tests can be found at ```za.co.absa.avro.dataframes.performance.SpaceTimeComplexitySpec```.
+The tests can be found at ```za.co.absa.abris.performance.SpaceTimeComplexitySpec```.
 
  
