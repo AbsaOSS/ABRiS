@@ -16,15 +16,10 @@
 
 package za.co.absa.abris.examples
 
-import java.io.FileInputStream
-import java.util.Properties
-
 import org.apache.spark.sql.SparkSession
+import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
-
-import org.apache.kafka.common.serialization.Serdes
-import za.co.absa.abris.examples.utils.ExamplesUtils
 
 object SampleKafkaAvroFilterApp {
 
@@ -53,17 +48,18 @@ object SampleKafkaAvroFilterApp {
       .builder()
       .appName(properties.getProperty(PARAM_JOB_NAME))
       .master(properties.getProperty(PARAM_JOB_MASTER))
+        .config("value.deserializer","io.confluent.kafka.serializers.KafkaAvroDeserializer")
       .getOrCreate()
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
       
-    import za.co.absa.abris.avro.AvroSerDe._
     import ExamplesUtils._
+    import za.co.absa.abris.avro.AvroSerDe._
     
     val stream = spark
       .readStream
-      .format("kafka")      
-      .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file      
+      .format("kafka")
+      .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file
       .fromAvro(properties.getProperty(PARAM_AVRO_SCHEMA))
 
     val filter = properties.getProperty(PARAM_TASK_FILTER)
@@ -72,6 +68,6 @@ object SampleKafkaAvroFilterApp {
     stream.printSchema()
     stream
     //.filter(filter)
-    .writeStream.format("console").start().awaitTermination()    
+    .writeStream.format("console").start().awaitTermination()
   }
 }

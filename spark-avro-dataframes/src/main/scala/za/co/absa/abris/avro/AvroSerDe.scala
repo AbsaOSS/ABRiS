@@ -17,24 +17,22 @@
 package za.co.absa.abris.avro
 
 import java.security.InvalidParameterException
-import scala.reflect.ClassTag
+
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.DecoderFactory
-import org.apache.spark.sql.Dataset
-import org.apache.spark.sql.Encoders
-import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.streaming.DataStreamReader
-import za.co.absa.abris.avro.format.SparkAvroConversions
+import org.apache.spark.sql.{Dataset, Encoders, Row}
+import za.co.absa.abris.avro.format.{ScalaAvroRecord, SparkAvroConversions}
 import za.co.absa.abris.avro.parsing.AvroToSparkParser
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.ScalaDatumReader
-import za.co.absa.abris.avro.format.ScalaAvroRecord
+import za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer
 import za.co.absa.abris.avro.schemas.SchemasProcessor
-import za.co.absa.abris.avro.schemas.impl.AvroToSparkProcessor
-import za.co.absa.abris.avro.schemas.impl.SparkToAvroProcessor
+import za.co.absa.abris.avro.schemas.impl.{AvroToSparkProcessor, SparkToAvroProcessor}
 
+import scala.reflect.ClassTag
 /**
  * This object provides the main point of integration between applications and this library.
  */
@@ -51,6 +49,10 @@ object AvroSerDe {
     val decodedAvroData: GenericRecord = reader.read(null, decoder)
 
     avroParser.parse(decodedAvroData)
+  }
+
+  private def decodeAvro[T](avroRecord: GenericRecord)(implicit tag: ClassTag[T]): Row = {
+    avroParser.parse(avroRecord)
   }
 
   private def createAvroReader(schemaPath: String) = {
@@ -71,17 +73,36 @@ object AvroSerDe {
      * SQL schema whose specification is translated from the Avro schema informed.
      */
     protected def fromAvroToRow(dataframe: Dataset[Row], schemaPath: String) = {
-      
+
       implicit val rowEncoder = createRowEncoder(AvroSchemaUtils.load(schemaPath))
 
       dataframe
         .as(Encoders.BINARY)
         .mapPartitions(partition => {
           createAvroReader(schemaPath)
+          //val confluent = new KafkaAvroDeserializer()
+          val confluent = new ScalaConfluentKafkaAvroDeserializer()
+          val props = Map("schema.registry.url" -> "http://jgodsr000000260:8081")
+          confluent.configure(props, false)
+          partition.map(avroRecord => {
+            val schema = AvroSchemaUtils.load(schemaPath)
+
+            //val decoded = confluent.deserialize(avroRecord, schema).asInstanceOf[GenericRecord]
+            val decoded = confluent.deserialize("test.avro.country.e", avroRecord).asInstanceOf[GenericRecord]
+            println(decoded)
+            // IMPLEMENT OWN ConfluentDeserializer
+            decodeAvro(decoded)
+          })
+        })
+
+/*      dataframe
+        .as(Encoders.BINARY)
+        .mapPartitions(partition => {
+          createAvroReader(schemaPath)
           partition.map(avroRecord => {
             decodeAvro(avroRecord)
           })
-        })
+        })*/
     }
   }
 

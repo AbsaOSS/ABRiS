@@ -27,8 +27,12 @@ import za.co.absa.abris.avro.format.ScalaSpecificData
  * 
  * As those types are not directly translatable to Scala, this class overrides SpecificDatumReader to manually perform the translations at runtime. 
  */
-class ScalaDatumReader[T](schema: Schema) extends SpecificDatumReader[T](schema, schema, ScalaSpecificData.get()) with Serializable {
-  
+class ScalaDatumReader[T](writerSchema: Schema, readerSchema: Schema) extends SpecificDatumReader[T](writerSchema, readerSchema, ScalaSpecificData.get()) with Serializable {
+
+  def this(schema: Schema) {
+    this(schema, schema)
+  }
+
   /**
    * This method was overriden to force all Strings to be read as Scala strings
    * instead of Avro's org.apache.avro.util.Utf8.
