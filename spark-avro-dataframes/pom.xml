@@ -283,7 +283,6 @@
 				</executions>
 			</plugin>
 
-
 			<!-- jar generator -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
