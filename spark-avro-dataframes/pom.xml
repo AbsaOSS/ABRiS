@@ -63,6 +63,10 @@
             <id>nexus-release</id>
             <url>http://nexus.absa.co.za:8081/repository/releases</url>
         </repository>
+        <repository>
+            <id>nexus-public</id>
+            <url>http://nexus.absa.co.za:8081/repository/public</url>
+        </repository>
 	</repositories>
 
 	<dependencies>
