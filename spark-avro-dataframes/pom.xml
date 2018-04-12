@@ -59,6 +59,10 @@
 			<id>confluent</id>
 			<url>http://packages.confluent.io/maven/</url>
 		</repository>
+        <repository>
+            <id>nexus-release</id>
+            <url>http://nexus.absa.co.za:8081/repository/releases</url>
+        </repository>
 	</repositories>
 
 	<dependencies>
