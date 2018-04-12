@@ -45,11 +45,11 @@
 	<distributionManagement>
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/releases/</url>
+			<url>http://nexus.absa.co.za:8081/repository/public/</url>
 		</snapshotRepository>
 		<repository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/releases</url>
+			<url>http://nexus.absa.co.za:8081/repository/public</url>
 		</repository>
 	</distributionManagement>
 
