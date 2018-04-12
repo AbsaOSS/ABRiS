@@ -24,6 +24,7 @@
 		<mockito.version>1.8.5</mockito.version>
 		<scalatest.version>3.0.0</scalatest.version>
 		<scalatest.maven.version>1.0</scalatest.maven.version>
+		<scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
 		<spark.version>2.2.1</spark.version>
 		<kafka.spark.version>0-10</kafka.spark.version>
@@ -45,11 +46,11 @@
 	<distributionManagement>
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/releases/</url>
+			<url>http://nexus.absa.co.za:8081/repository/public/</url>
 		</snapshotRepository>
 		<repository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/releases</url>
+			<url>http://nexus.absa.co.za:8081/repository/public</url>
 		</repository>
 	</distributionManagement>
 
@@ -275,10 +276,38 @@
 			</plugin>
 
 
+			<!-- jar generator -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<archive>
+								<manifest>
+									<mainClass>
+										za.co.absa.spark.cobol.examples.App
+									</mainClass>
+								</manifest>
+							</archive>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<appendAssemblyId>false</appendAssemblyId>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<!-- the Maven Scala plugin will compile Scala source files -->
 			<plugin>
 				<groupId>net.alchim31.maven</groupId>
 				<artifactId>scala-maven-plugin</artifactId>
+				<version>${scala.maven.plugin.version}</version>
 				<configuration>
 					<scalaVersion>${scala.version}</scalaVersion>
 				</configuration>
@@ -316,7 +345,7 @@
 				<configuration>
 					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
 					<junitxml>.</junitxml>
-					<filereports>TestSuite.txt</filereports>
+					<filereports>WDF TestSuite.txt</filereports>
 				</configuration>
 				<executions>
 					<execution>
