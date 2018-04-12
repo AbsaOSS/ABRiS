@@ -17,6 +17,7 @@
 package za.co.absa.abris.avro.parsing.utils
 
 import org.apache.avro.Schema
+import za.co.absa.abris.avro.schemas.SchemaLoader
 
 /**
  * This class provides utility methods to cope with Avro schemas.
@@ -39,10 +40,10 @@ object AvroSchemaUtils {
    * Loads an Avro's plain schema from the path.
    */
   def loadPlain(path: String) = {
-    za.co.absa.abris.avro.schemas.SchemaLoader.loadFromFile(path)
+    SchemaLoader.loadFromFile(path)
   }
 
   def loadConfluent(params: Map[String,String]): Schema = {
-    za.co.absa.abris.avro.schemas.SchemaLoader.loadFromSchemaRegistry(params)
+    SchemaLoader.loadFromSchemaRegistry(params)
   }
 }
