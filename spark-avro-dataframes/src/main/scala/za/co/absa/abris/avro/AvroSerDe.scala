@@ -24,11 +24,12 @@ import org.apache.avro.io.DecoderFactory
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Encoders, Row}
+import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.format.{ScalaAvroRecord, SparkAvroConversions}
 import za.co.absa.abris.avro.parsing.AvroToSparkParser
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.ScalaDatumReader
-import za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer
+import za.co.absa.abris.avro.read.confluent.{ScalaConfluentKafkaAvroDeserializer, SchemaManager}
 import za.co.absa.abris.avro.schemas.SchemasProcessor
 import za.co.absa.abris.avro.schemas.impl.{AvroToSparkProcessor, SparkToAvroProcessor}
 
@@ -37,6 +38,8 @@ import scala.reflect.ClassTag
  * This object provides the main point of integration between applications and this library.
  */
 object AvroSerDe {
+
+  private val logger = LoggerFactory.getLogger(AvroSerDe.getClass)
 
   private val avroParser = new AvroToSparkParser()
   private var reader: ScalaDatumReader[ScalaAvroRecord] = _
@@ -51,12 +54,32 @@ object AvroSerDe {
     avroParser.parse(decodedAvroData)
   }
 
+  /**
+    * Parses an Avro GenericRecord into a Spark row.
+    */
   private def decodeAvro[T](avroRecord: GenericRecord)(implicit tag: ClassTag[T]): Row = {
     avroParser.parse(avroRecord)
   }
 
-  private def createAvroReader(schemaPath: String) = {
+  /**
+    * Creates an instance of ScalaDatumReader for the schema informed.
+    */
+  private def createAvroReader(schemaPath: String): Unit = {
     reader = new ScalaDatumReader[ScalaAvroRecord](AvroSchemaUtils.load(schemaPath))
+  }
+
+  /**
+    * Creates an instance of [[ScalaConfluentKafkaAvroDeserializer]] and configures its Schema Registry access in case
+    * the parameters to do it are defined.
+    */
+  private def createConfiguredConfluentAvroReader(schemaPath: Option[String], schemaRegistryConf: Option[Map[String,String]]): ScalaConfluentKafkaAvroDeserializer = {
+    val schema = if (schemaPath.isDefined) Some(AvroSchemaUtils.load(schemaPath.get)) else None
+    val configs = if (schemaRegistryConf.isDefined) schemaRegistryConf.get else Map[String,String]()
+    val topic = if (configs.contains(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)) Some(configs(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)) else None
+
+    val reader = new ScalaConfluentKafkaAvroDeserializer(topic, schema)
+    reader.configureSchemaRegistry(configs)
+    reader
   }
 
   private def createRowEncoder(schema: Schema) = {
@@ -67,6 +90,48 @@ object AvroSerDe {
    * Converts binary Avro records into Spark Rows.
    */
   private[avro] class AvroRowConverter {
+
+    /**
+      * Converts Dataframes of binary Avro records into Dataframes of type Spark data.
+      *
+      * Highlights:
+      *
+      * 1. Either, the path to a schema stored in a file system or the configuration to access a Confluent's Schema Registry
+      *    instance must be informed.
+      *
+      * 2. The RowEncoder for the resulting Dataframes will be created here, thus. If a schema path is informed, the schema
+      *    under that path will be used to create the RowEncoder, otherwise, the schema retrieved from Schema Registry will
+      *    be used.
+      *
+      *    To allow the retrieval of a remote schema, the API will look into the configurations for:
+      *
+      *    a. the topic name
+      *    b. the Schema Registry URLs
+      *    c. The schema version
+      */
+    protected def fromConfluentAvroToRow(dataframe: Dataset[Row], schemaPath: Option[String], schemaRegistryConf: Option[Map[String,String]]) = {
+
+      if (schemaPath.isEmpty && schemaRegistryConf.isEmpty) {
+        throw new InvalidParameterException("Neither schemaPath nor confluentConf were provided.")
+      }
+
+      implicit val rowEncoder = if (schemaPath.isDefined) {
+        createRowEncoder(AvroSchemaUtils.load(schemaPath.get))
+      }
+      else {
+        SchemaManager.configureSchemaRegistry(schemaRegistryConf.get)
+        createRowEncoder(AvroSchemaUtils.loadConfluent(schemaRegistryConf.get))
+      }
+
+      dataframe
+        .as(Encoders.BINARY)
+        .mapPartitions(partition => {
+          val reader = createConfiguredConfluentAvroReader(schemaPath, schemaRegistryConf)
+          partition.map(avroRecord => {
+            decodeAvro(reader.deserialize(avroRecord))
+          })
+        })
+    }
 
     /**
      * Converts the binary Avro records contained in the Dataframe into regular Rows with a
@@ -80,29 +145,10 @@ object AvroSerDe {
         .as(Encoders.BINARY)
         .mapPartitions(partition => {
           createAvroReader(schemaPath)
-          //val confluent = new KafkaAvroDeserializer()
-          val confluent = new ScalaConfluentKafkaAvroDeserializer()
-          val props = Map("schema.registry.url" -> "http://jgodsr000000260:8081")
-          confluent.configure(props, false)
-          partition.map(avroRecord => {
-            val schema = AvroSchemaUtils.load(schemaPath)
-
-            //val decoded = confluent.deserialize(avroRecord, schema).asInstanceOf[GenericRecord]
-            val decoded = confluent.deserialize("test.avro.country.e", avroRecord).asInstanceOf[GenericRecord]
-            println(decoded)
-            // IMPLEMENT OWN ConfluentDeserializer
-            decodeAvro(decoded)
-          })
-        })
-
-/*      dataframe
-        .as(Encoders.BINARY)
-        .mapPartitions(partition => {
-          createAvroReader(schemaPath)
           partition.map(avroRecord => {
             decodeAvro(avroRecord)
           })
-        })*/
+        })
     }
   }
 
@@ -115,8 +161,22 @@ object AvroSerDe {
    */
   implicit class DataframeDeserializer(dataframe: Dataset[Row]) extends AvroRowConverter {
     def fromAvro(schemaPath: String) = {
-      fromAvroToRow(dataframe.select("value").cache(), schemaPath)
+      fromAvroToRow(getBatchData(), schemaPath)
     }
+
+    /**
+      * This method supports schema changes from Schema Registry. However, the conversion between Avro records and Spark
+      * rows relies on RowEncoders, which are defined before the job starts. Thus, although the schema changes are supported
+      * while reading, they are not translated to RowEncoders, which could take to errors in the final data.
+      *
+      * Refer to the [[ScalaConfluentKafkaAvroDeserializer.deserialize()]] documentation to better understand how this
+      * operation is performed.
+      */
+    def fromConfluentAvro(schemaPath: Option[String], schemaRegistryConf: Option[Map[String,String]]) = {
+      fromConfluentAvroToRow(getBatchData(), schemaPath, schemaRegistryConf)
+    }
+
+    private def getBatchData() = dataframe.select("value").cache()
   }
 
   /**
@@ -128,8 +188,22 @@ object AvroSerDe {
    */
   implicit class StreamDeserializer(dsReader: DataStreamReader) extends AvroRowConverter {
     def fromAvro(schemaPath: String) = {
-      fromAvroToRow(dsReader.load.select("value"), schemaPath)
+      fromAvroToRow(getStreamData(), schemaPath)
     }
+
+    /**
+      * This method supports schema changes from Schema Registry. However, the conversion between Avro records and Spark
+      * rows relies on RowEncoders, which are defined before the job starts. Thus, although the schema changes are supported
+      * while reading, they are not translated to RowEncoders, which could take to errors in the final data.
+      *
+      * Refer to the [[ScalaConfluentKafkaAvroDeserializer.deserialize()]] documentation to better understand how this
+      * operation is performed.
+      */
+    def fromConfluentAvro(schemaPath: Option[String], confluentConf: Option[Map[String,String]]) = {
+      fromConfluentAvroToRow(getStreamData(), schemaPath, confluentConf)
+    }
+
+    private def getStreamData() = dsReader.load.select("value")
   }
 
   /**

@@ -1,39 +1,53 @@
+/*
+ * Copyright 2018 Barclays Africa Group Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package za.co.absa.abris.avro.read.confluent
 
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig
+import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDeserializerConfig}
 import org.apache.avro.Schema
-import org.apache.avro.generic.GenericContainer
 import org.apache.kafka.common.config.ConfigException
-import org.apache.kafka.common.errors.SerializationException
 
+import scala.collection.JavaConverters._
+
+/**
+  * This object provides methods to integrate with remote schemas through Schema Registry.
+  *
+  * This can be considered an "enriched" facade to the Schema Registry client.
+  *
+  * This is NOT THREAD SAFE, which means that multiple threads operating on this object (e.g. calling 'configureSchemaRegistry'
+  * with different parameters) would operated on the same Schema Registry client, thus, leading to inconsistent behavior.
+  */
 object SchemaManager {
 
+  val PARAM_SCHEMA_REGISTRY_TOPIC = "schema.registry.topic"
+  val PARAM_SCHEMA_REGISTRY_URL = "schema.registry.url"
+  val PARAM_SCHEMA_ID = "schema.id"
+
   val MAGIC_BYTE = 0x0
-  val idSize = 4
+  val SCHEMA_ID_SIZE_BYTES = 4
 
-  private val parser = new Schema.Parser()
+  private var schemaRegistry: SchemaRegistryClient = _
 
-  private val primitiveSchemas = Map[Any,Schema](
-    "Null"    -> createPrimitiveSchema(parser, "null"),
-    "Boolean" -> createPrimitiveSchema(parser, "boolean"),
-    "Integer" -> createPrimitiveSchema(parser, "int"),
-    "Long"    -> createPrimitiveSchema(parser, "long"),
-    "Float"   -> createPrimitiveSchema(parser, "float"),
-    "Double"  -> createPrimitiveSchema(parser, "double"),
-    "String"  -> createPrimitiveSchema(parser, "string"),
-    "Bytes"   -> createPrimitiveSchema(parser, "bytes")
-  )
-
-  private def createPrimitiveSchema(parser: Schema.Parser, dataType: String) = {
-    val schemaString = String.format("{\"type\" : \"%s\"}", dataType)
-    parser.parse(schemaString)
-  }
-
-  def getPrimitiveSchemas() = {
-    primitiveSchemas
-  }
-
+  /**
+    * Confluent's Schema Registry supports schemas for Kafka keys and values. What makes them different is simply the
+    * what is appended to the schema name, either '-key' or '-value'.
+    *
+    * This method returns the subject name based on the topic and to which part of the message it corresponds.
+    */
   def getSubjectName(topic: String, isKey: Boolean): String = {
     if (isKey) {
       topic + "-key"
@@ -41,13 +55,35 @@ object SchemaManager {
       topic + "-value"
     }
   }
-}
 
-class SchemaManager {
+  /**
+    * Configures the Schema Registry client.
+    * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
+    */
+  def configureSchemaRegistry(configs: Map[String,String]): Unit = {
+    if (configs.nonEmpty) {
+      configureSchemaRegistry(new KafkaAvroDeserializerConfig(configs.asJava))
+    }
+  }
 
-  private var schemaRegistry: SchemaRegistryClient = _
+  /**
+    * Retrieves an Avro Schema instance from a given subject and stored with a given id.
+    * It will return None if the Schema Registry client is not configured.
+    */
+  def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
+    if (isSchemaRegistryConfigured()) Some(schemaRegistry.getBySubjectAndID(subject, id)) else None
+  }
 
-  def configureClientProperties(config: AbstractKafkaAvroSerDeConfig) = {
+  /**
+    * Checks if SchemaRegistry has been configured, i.e. if it is null
+    */
+  def isSchemaRegistryConfigured(): Boolean = schemaRegistry != null
+
+  /**
+    * Configures the Schema Registry client.
+    * When invoked, it expects at least the [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
+    */
+  private def configureSchemaRegistry(config: AbstractKafkaAvroSerDeConfig) = {
     try {
       val urls = config.getSchemaRegistryUrls()
       val maxSchemaObject = config.getMaxSchemasPerSubject()
@@ -58,43 +94,5 @@ class SchemaManager {
     } catch {
       case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage())
     }
-  }
-
-  def getOldSubjectName(value: Object): String = {
-    value match {
-      case o: GenericContainer => o.getSchema.getName + "-value"
-      case default => throw new SerializationException("Primitive types are not supported yet");
-    }
-  }
-
-  def getSchema(o: Object): Schema = {
-    o match {
-      case null                      => SchemaManager.primitiveSchemas("Null")
-      case o: java.lang.Boolean      => SchemaManager.primitiveSchemas("Boolean")
-      case o: java.lang.Integer      => SchemaManager.primitiveSchemas("Integer")
-      case o: java.lang.Long         => SchemaManager.primitiveSchemas("Long")
-      case o: java.lang.Float        => SchemaManager.primitiveSchemas("Float")
-      case o: java.lang.Double       => SchemaManager.primitiveSchemas("Double")
-      case o: java.lang.CharSequence => SchemaManager.primitiveSchemas("String")
-      case o: Array[Byte]            => SchemaManager.primitiveSchemas("Bytes")
-      case o: GenericContainer       => o.getSchema
-      case default => throw new IllegalArgumentException("Unsupported Avro type. Supported types are null, Boolean, Integer, Long, Float, Double, String, byte[] and IndexedRecord")
-    }
-  }
-
-  def register(subject: String, schema: Schema): Int = {
-    schemaRegistry.register(subject, schema)
-  }
-
-  def getById(id: Int): Schema = {
-    schemaRegistry.getByID(id)
-  }
-
-  def getBySubjectAndId(subject: String, id: Int): Schema = {
-    schemaRegistry.getBySubjectAndID(subject, id)
-  }
-
-  def getVersion(subject: String, schema: Schema) = {
-    schemaRegistry.getVersion(subject, schema)
   }
 }

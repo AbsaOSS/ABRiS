@@ -38,41 +38,29 @@
 		<avro.version>1.8.2</avro.version>
 
 		<jackson.databind.version>2.6.1</jackson.databind.version>
+
+		<confluent.version>3.1.1</confluent.version>
 	</properties>
 
 	<distributionManagement>
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/public/</url>
+			<url>http://nexus.absa.co.za:8081/repository/releases/</url>
 		</snapshotRepository>
 		<repository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/public</url>
+			<url>http://nexus.absa.co.za:8081/repository/releases</url>
 		</repository>
 	</distributionManagement>
 
-	<dependencies>
-		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.5</version>
-			<scope>test</scope>
-			<classifier>tests</classifier>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/fluent-hc -->
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>fluent-hc</artifactId>
-			<version>4.5.5</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpcore -->
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-			<version>4.4.9</version>
-		</dependency>
+	<repositories>
+		<repository>
+			<id>confluent</id>
+			<url>http://packages.confluent.io/maven/</url>
+		</repository>
+	</repositories>
 
+	<dependencies>
 
 		<!-- Provides Avro schema to Spark StructType conversion -->
 		<dependency>
@@ -101,24 +89,20 @@
 		<dependency>
 			<groupId>org.apache.avro</groupId>
 			<artifactId>avro</artifactId>
-			<scope>compile</scope>
 		</dependency>
 
 		<!-- Spark -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-sql_${scala.compat.version}</artifactId>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-core_${scala.compat.version}</artifactId>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-streaming_${scala.compat.version}</artifactId>
-			<scope>compile</scope>
 		</dependency>
 
 		<!-- Spark Kafka -->
@@ -143,6 +127,24 @@
 		<dependency>
 			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-deploy-plugin</artifactId>
+		</dependency>
+
+		<!-- Confluent's Kafka and Schema Registry -->
+		<dependency>
+			<groupId>io.confluent</groupId>
+			<artifactId>kafka-avro-serializer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.confluent</groupId>
+			<artifactId>kafka-schema-registry-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.confluent</groupId>
+			<artifactId>common-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.confluent</groupId>
+			<artifactId>common-utils</artifactId>
 		</dependency>
 
 	</dependencies>
@@ -221,6 +223,28 @@
 				<version>${maven.deploy.plugin}</version>
 			</dependency>
 
+			<!-- Confluent's Kafka and Schema Registry -->
+			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>kafka-avro-serializer</artifactId>
+				<version>${confluent.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>kafka-schema-registry-client</artifactId>
+				<version>${confluent.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>common-config</artifactId>
+				<version>${confluent.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.confluent</groupId>
+				<artifactId>common-utils</artifactId>
+				<version>${confluent.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
@@ -292,7 +316,7 @@
 				<configuration>
 					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
 					<junitxml>.</junitxml>
-					<filereports>WDF TestSuite.txt</filereports>
+					<filereports>TestSuite.txt</filereports>
 				</configuration>
 				<executions>
 					<execution>

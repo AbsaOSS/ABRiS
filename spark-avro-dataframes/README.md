@@ -20,6 +20,8 @@ Seamlessly convert your Avro records from anywhere (e.g. Kafka, Parquet, HDFS, e
 
 Convert your Dataframes into Avro records without even specifying a schema.
 
+Seamlessly integrate with Confluent platform, including Schema Registry.
+
 
 ## Motivation
 
@@ -33,6 +35,8 @@ Among the motivations for this project, it is possible to highlight:
 
 - Right now, all the efforts to integrated Avro-Spark streams or Dataframes depend on the user.
 
+- Confluent's Avro payload requires specialized deserializers, since they send schema metadata with it, which makes the integration with Spark cumbersome.
+
 
 ## Usage
 
@@ -42,13 +46,13 @@ Among the motivations for this project, it is possible to highlight:
 
 2. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-3. Invoke the library on your structured stream: ```... .avro("path_to_Avro_schema")```
+3. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema")```
 
 4. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
 
 Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaAvroFilterApp```
 
-```scala
+```scala    
     val spark = SparkSession
       .builder()
       .appName("ReadAvro")
@@ -72,13 +76,110 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .awaitTermination() 
 ```
 
+### Reading Avro binary records from Confluent platform (using Schema Registry) as Spark structured streams and performing regular SQL queries on them 
+
+1. Gather Schema Registry configurations:
+
+```scala
+val schemaRegistryConfs = Map(
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
+  SchemaManager.PARAM_SCHEMA_ID             -> "current_schema_id"
+)
+```
+
+2. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
+
+3. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
+
+4. Invoke the library on your structured stream: ```... .fromConfluentAvro(None, Some(schemaRegistryConfs))```
+
+5. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
+
+The library will automatically retrieve the Avro schema from Schema Registry and configure Spark according to it.
+
+We strongly recommend you to read the documentation of ```za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer.deserialize()``` in order to better understand how the integration with the Confluent platform works.
+
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaConfluentAvroFilterApp```
+
+```scala    
+    val spark = SparkSession
+      .builder()
+      .appName("ReadAvro")
+      .master("local[2]")
+      .getOrCreate()    
+
+    val schemaRegistryConfs = Map(
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
+      SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
+      SchemaManager.PARAM_SCHEMA_ID             -> "current_schema_id"
+    )
+      
+    // import Spark Avro Dataframes
+    import za.co.absa.abris.avro.AvroSerDe._
+
+    val stream = spark
+      .readStream
+      .format("kafka")
+      .option("kafka.bootstrap.servers", "localhost:9092")
+      .option("subscribe", "test-topic")
+      .fromConfluentAvro(None, Some(schemaRegistryConfs)) // invoke the library passing over parameters to access the Schema Registry
+
+    stream.filter("field_x % 2 == 0")
+      .writeStream
+      .format("console")
+      .start()
+      .awaitTermination() 
+```
+
+### Reading Avro binary records from Confluent platform (WITHOUT Schema Registry), as Spark structured streams and performing regular SQL queries on them 
+
+1. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
+
+2. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
+
+3. Invoke the library on your structured stream: ```... .fromConfluentAvro(Some(""path_to_avro_schema_in_some_file_system"), None)```
+
+4. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
+
+The Avro schema will be loaded from the file system and used to configure Spark Dataframes. The loaded schema will be considered both, the reader and the writer one.
+
+We strongly recommend you to read the documentation of ```za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer.deserialize()``` in order to better understand how the integration with the Confluent platform works.
+
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaConfluentAvroFilterApp```
+
+
+```scala
+    val spark = SparkSession
+      .builder()
+      .appName("ReadAvro")
+      .master("local[2]")
+      .getOrCreate()    
+      
+    // import Spark Avro Dataframes
+    import za.co.absa.abris.avro.AvroSerDe._
+
+    val stream = spark
+      .readStream
+      .format("kafka")
+      .option("kafka.bootstrap.servers", "localhost:9092")
+      .option("subscribe", "test-topic")
+      .fromConfluentAvro(Some("path_to_avro_schema_in_some_file_system"), None) // invoke the library passing over the path to the Avro schema
+
+    stream.filter("field_x % 2 == 0")
+      .writeStream
+      .format("console")
+      .start()
+      .awaitTermination() 
+```
+
 ### Writing Dataframes to Kafka as Avro records specifying a schema
 
 1. Create your Dataframe. It MUST have a SQL schema.
 
 2. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
 
-3. Invoke the library informing the path to the Avro schema to be used to generate the records: ```dataframe.avro("path_to_existing_Avro_schema")```
+3. Invoke the library informing the path to the Avro schema to be used to generate the records: ```dataframe.toAvro("path_to_existing_Avro_schema")```
 
 4. Send your data to Kafka as Avro records: ```... .write.format("kafka") ...```
 
@@ -112,7 +213,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 
 ### Writing Dataframes to Kafka as Avro records without specifying a schema
 
-Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.avro("schema_name", "schema_namespace")```
+Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.toAvro("schema_name", "schema_namespace")```
 
 Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaDataframeWriterApp```
 

@@ -1,217 +1,134 @@
 package za.co.absa.abris.avro.read.confluent
 
-import java.io.IOException
-import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentHashMap
-
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException
-import io.confluent.kafka.serializers.{KafkaAvroDeserializerConfig, NonRecordContainer}
 import org.apache.avro.Schema
-import org.apache.avro.generic.GenericContainer
+import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.DecoderFactory
-import org.apache.avro.specific.{SpecificData, SpecificRecord}
-import org.apache.kafka.common.config.ConfigException
 import org.apache.kafka.common.errors.SerializationException
-import org.codehaus.jackson.node.JsonNodeFactory
 import za.co.absa.abris.avro.format.ScalaAvroRecord
 import za.co.absa.abris.avro.read.ScalaDatumReader
+import java.nio.ByteBuffer
 
-import scala.collection.JavaConverters._
+/**
+  * This class provides methods to deserialize Confluent binary Avro records into Spark Rows with schemas.
+  *
+  * Please, invest some time in understanding how it works and above all, read the documentation for the method 'deserialize()'.
+  */
+class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerSchema: Option[Schema]) {
 
-
-class ScalaConfluentKafkaAvroDeserializer {
-
-  val SCHEMA_REGISTRY_SCHEMA_VERSION_PROP = "schema.registry.schema.version"
+  if (topic.isEmpty && readerSchema.isEmpty) {
+    throw new IllegalArgumentException("Neither topic nor reader Schema were informed. If you want a specific schema to" +
+      " be used for reading pass it as the readerSchema value. Otherwise, if you'd like the schema to be retrieved from" +
+      " SchemaRegistry, pass in the topic being consume and inform the SchemaRegistry URLs by calling " +
+      " 'configure' in this object using SchemaManager.PARAM_SCHEMA_REGISTRY_URL as the key.")
+  }
 
   private val decoderFactory = DecoderFactory.get()
-  protected var useSpecificAvroReader = false
-  private var readerSchemaCache = new ConcurrentHashMap[String, Schema]()
-
-  private val schemaManager = new SchemaManager()
+  private val idSchemaReader = scala.collection.mutable.Map[Int,ScalaDatumReader[ScalaAvroRecord]]()
 
   /**
-    * Sets properties for this deserializer without overriding the schema registry client itself.
-    * Useful for testing, where a mock client is injected.
+    * This class does not hold a Schema Registry client instance. Instead, it relies on SchemaManager. This, this method
+    * configures the Schema Registry on SchemaManager.
+    *
+    * This is here as a utility, so that users do not need to invoke SchemaManager in their codes at any time.
     */
-  protected def configure(config: KafkaAvroDeserializerConfig) = {
-    schemaManager.configureClientProperties(config)
-    useSpecificAvroReader = config.getBoolean(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG)
-  }
-
-  def configure(configs: Map[String,Any], isKey: Boolean): Unit = {
-    configure(new KafkaAvroDeserializerConfig(configs.asJava))
-  }
-
-  protected def deserializerConfig(props: Map[String, Any]): KafkaAvroDeserializerConfig = {
-    try {
-      return new KafkaAvroDeserializerConfig(props.asJava)
+  def configureSchemaRegistry(configs: Map[String,String]): Unit = {
+    if (configs.nonEmpty) {
+      SchemaManager.configureSchemaRegistry(configs)
     }
-    catch {
-      case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage())
-    }
-  }
-
-/*  protected def deserializerConfig(props: VerifiableProperties): KafkaAvroDeserializerConfig = {
-    try {
-      return new KafkaAvroDeserializerConfig(props.props())
-    }
-    catch {
-      case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage())
-    }
-  }*/
-
-  private def getByteBuffer(payload: Array[Byte]): ByteBuffer = {
-    val buffer = ByteBuffer.wrap(payload)
-    if (buffer.get() != SchemaManager.MAGIC_BYTE) {
-      throw new SerializationException("Unknown magic byte!")
-    }
-    return buffer
   }
 
   /**
-    * Deserializes the payload without including schema information for primitive types, maps, and
-    * arrays. Just the resulting deserialized object is returned.
+    * Converts the Avro binary payload into an Avro's GenericRecord.
+    * Important highlights:
     *
-    * <p>This behavior is the norm for Decoders/Deserializers.
+    * 1. This uses the [[ScalaDatumReader]] to parse the bytes.
+    * 2. This takes into account Confluent's specific metadata included in the payload (e.g. schema id), thus, it will
+    *    not work on regular binary Avro records.
+    * 3. If there is a topic defined in the constructor and access to Schema Registry is configured, the schema retrieved
+    *    from the later will be considered the writer schema, otherwise, the reader schema passed to the constructor will
+    *    be used as both, reader and writer (either, topic or reader schema must be informed).
+    * 4. The Avro DatumReader is cached based on the schema id, thus, if a new id is received as part of the payload, a new
+    *    DatumReader will be created for that id, with a new schema being retrieved, iff the topic is informed and Schema
+    *    Registry is configured.
+    * 5. Although changes in the schema are supported, it is important to bear in mind that this class's main reason of
+    *    existence is to parse GenericRecords that will be later converted into Spark Rows. This conversion relies on
+    *    RowEncoders, which need to be instantiated once, outside this class. Thus, even though schema changes can be dealt
+    *    with here, they cannot be translated to new RowEncoders, which could generated from exceptions to inconsistencies
+    *    in the final data.
     *
-    * @param payload serialized data
-    * @return the deserialized object
+    *    The only way to overcome the issue described in 5. is to change Spark code itself, which would then be able to
+    *    change the RowEncoder instance on the fly as a new schema version is detected.
     */
-  def deserialize(payload: Array[Byte]): Object = {
-    return deserialize(false, None, Some(false), payload, None);
-  }
-
-  /**
-    * Just like single-parameter version but accepts an Avro schema to use for reading
-    *
-    * @param payload      serialized data
-    * @param readerSchema schema to use for Avro read (optional, enables Avro projection)
-    * @return the deserialized object
-    */
-  def deserialize(payload: Array[Byte], readerSchema: Schema): Object = {
-    return deserialize(false, None, Some(false), payload, Some(readerSchema))
-  }
-
-  def deserialize(topic: String, payload: Array[Byte]): GenericContainer = {
-    deserialize(true, Some(topic), Some(false), payload, None).asInstanceOf[GenericContainer]
-  }
-
-  // The Object return type is a bit messy, but this is the simplest way to have
-  // flexible decoding and not duplicate deserialization code multiple times for different variants.
-  protected def deserialize(includeSchemaAndVersion: Boolean, topic: Option[String], isKey: Option[Boolean],
-                            payload: Array[Byte], readerSchema: Option[Schema]): Object = {
+  def deserialize(payload: Array[Byte]): GenericRecord = {
     // Even if the caller requests schema & version, if the payload is null we cannot include it.
     // The caller must handle this case.
     if (payload == null) {
       return null
     }
 
-    var id = -1
+    var schemaId = -1
     try {
       val buffer = getByteBuffer(payload)
-      id = buffer.getInt()
-      val subject = if (includeSchemaAndVersion) SchemaManager.getSubjectName(topic.get, isKey.get) else null
-      val schema = if (readerSchema.isEmpty)schemaManager.getBySubjectAndId(subject, id) else readerSchema.get
-      println("SCHEMA: "+schema)
-      val length = buffer.limit() - 1 - SchemaManager.idSize
-      var result: Object = null
-      if (schema.getType.equals(Schema.Type.BYTES)) {
-        val bytes = new Array[Byte](length)
-        buffer.get(bytes, 0, length)
-        result = bytes
-      } else {
-        val start = buffer.position() + buffer.arrayOffset()
-        //val reader = getDatumReader(schema, readerSchema.get)
-        val reader = getDatumReader(schema, schema)
-        result = reader.read(null, decoderFactory.binaryDecoder(buffer.array(), start, length, null))
-      }
 
-      if (includeSchemaAndVersion) {
-        // Annotate the schema with the version. Note that we only do this if the schema +
-        // version are requested, i.e. in Kafka Connect converters. This is critical because that
-        // code *will not* rely on exact schema equality. Regular deserializers *must not* include
-        // this information because it would return schemas which are not equivalent.
-        //
-        // Note, however, that we also do not fill in the connect.version field. This allows the
-        // Converter to let a version provided by a Kafka Connect source take priority over the
-        // schema registry's ordering (which is implicit by auto-registration time rather than
-        // explicit from the Connector).
-        val version = schemaManager.getVersion(subject, schema);
-        if (schema.getType() == Schema.Type.UNION) {
-          // Can't set additional properties on a union schema since it's just a list, so set it
-          // on the first non-null entry
+      schemaId = buffer.getInt()
+      val writerSchema = getWriterSchema(topic, schemaId)
 
-          val notNullMember = schema.getTypes.asScala.find {member => member.getType != Schema.Type.NULL}
-          if (notNullMember.nonEmpty) {
-            notNullMember.get.addProp(SCHEMA_REGISTRY_SCHEMA_VERSION_PROP, JsonNodeFactory.instance.numberNode(version))
-          }
+      val length = buffer.limit() - 1 - SchemaManager.SCHEMA_ID_SIZE_BYTES
+      val start = buffer.position() + buffer.arrayOffset()
 
-/*          for (memberSchema: Schema <- schema.getTypes) {
-            if (memberSchema.getType() != Schema.Type.NULL) {
-              memberSchema.addProp(SCHEMA_REGISTRY_SCHEMA_VERSION_PROP, JsonNodeFactory.instance.numberNode(version))
-              break;
-            }
-          }*/
-        } else {
-          schema.addProp(SCHEMA_REGISTRY_SCHEMA_VERSION_PROP,
-            JsonNodeFactory.instance.numberNode(version))
-        }
-        if (schema.getType().equals(Schema.Type.RECORD)) {
-          return result
-        } else {
-          return new NonRecordContainer(schema, result)
-        }
-      } else {
-        return result
-      }
-    } catch {
-      case e: IOException         => throw new SerializationException("Error deserializing Avro message for id " + id, e)
-      case e: RuntimeException    => throw new SerializationException("Error deserializing Avro message for id " + id, e)
-      case e: RestClientException => throw new SerializationException("Error retrieving Avro schema for id " + id, e)
+      val reader = getDatumReader(writerSchema, readerSchema, schemaId)
+      reader.read(null, decoderFactory.binaryDecoder(buffer.array(), start, length, null))
+    }
+    catch {
+      case e: RestClientException => throw new SerializationException("Error retrieving Avro schema for id " + schemaId, e)
+      case default: Throwable     => throw new SerializationException("Error deserializing Avro message for id " + schemaId, default)
     }
   }
 
-  private def getDatumReader(writerSchema: Schema, readerSchema: Schema): ScalaDatumReader[ScalaAvroRecord] = {
-    val writerSchemaIsPrimitive = SchemaManager.getPrimitiveSchemas().valuesIterator.contains(writerSchema)
-    // do not use SpecificDatumReader if writerSchema is a primitive
-    if (useSpecificAvroReader && !writerSchemaIsPrimitive) {
-      new ScalaDatumReader[ScalaAvroRecord](writerSchema,
-        if (readerSchema != null) readerSchema else getReaderSchema(writerSchema))
-    } else {
-      if (readerSchema == null) {
-        new ScalaDatumReader[ScalaAvroRecord](writerSchema)
-      }
-      else {
-        return new ScalaDatumReader[ScalaAvroRecord](writerSchema, readerSchema)
-      }
+  /**
+    * If there is a topic defined and the Schema Registry has been configured, the writer schema will be retrieved from
+    * Schema Registry, otherwise, the reader schema passed on to the constructor will also the considered the writer's.
+    */
+  private def getWriterSchema(topic: Option[String], id: Int): Schema = {
+    if (topic.isDefined && SchemaManager.isSchemaRegistryConfigured()) {
+      SchemaManager.getBySubjectAndId(SchemaManager.getSubjectName(topic.get, false), id).get
+    }
+    else {
+      readerSchema.get
     }
   }
 
-  private def getReaderSchema(writerSchema: Schema): Schema = {
-    var readerSchema = readerSchemaCache.get(writerSchema.getFullName())
-    if (readerSchema == null) {
-      val readerClass = SpecificData.get().getClass(writerSchema).asInstanceOf[Class[SpecificRecord]]
-      if (readerClass != null) {
-        try {
-          readerSchema = readerClass.newInstance().getSchema()
-        } catch {
-          case e: InstantiationException => throw new SerializationException(writerSchema.getFullName()
-            + " specified by the "
-            + "writers schema could not be instantiated to "
-            + "find the readers schema.")
-          case e: IllegalAccessException => throw new SerializationException(writerSchema.getFullName()
-            + " specified by the "
-            + "writers schema is not allowed to be instantiated "
-            + "to find the readers schema.")
-        }
-        readerSchemaCache.put(writerSchema.getFullName(), readerSchema)
-      } else {
-        throw new SerializationException("Could not find class "
-          + writerSchema.getFullName()
-          + " specified in writer's schema whilst finding reader's "
-          + "schema for a SpecificRecord.")
-      }
+  /**
+    * Converts the binary payload into a ByteBuffer.
+    * This code was copied from [[io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer]].
+    */
+  private def getByteBuffer(payload: Array[Byte]): ByteBuffer = {
+    val buffer = ByteBuffer.wrap(payload)
+    if (buffer.get() != SchemaManager.MAGIC_BYTE) {
+      throw new SerializationException("Unknown magic byte!")
     }
-    return readerSchema
+    buffer
+  }
+
+  /**
+    * Retrieves a DatumReader for a given schema id.
+    *
+    * The DatumReader is cached based on the id, thus, whenever the id changes, a new DatumReader is created. Refer to
+    * the documentation of [[ScalaConfluentKafkaAvroDeserializer.deserialize()]] to understand the implications of schema
+    * changes.
+    */
+  private def getDatumReader(writerSchema: Schema, readerSchema: Option[Schema], id: Int): ScalaDatumReader[ScalaAvroRecord] = {
+    idSchemaReader.getOrElseUpdate(id, createDatumReader(writerSchema, readerSchema))
+  }
+
+  /**
+    * Creates a DatumReader for given reader and writer Avro schemas.
+    *
+    * If the reader schema passed on to the constructor is undefined, the writer schema is also considered the reader one.
+    */
+  private def createDatumReader(writerSchema: Schema, readerSchema: Option[Schema]): ScalaDatumReader[ScalaAvroRecord] = {
+    new ScalaDatumReader[ScalaAvroRecord](writerSchema,
+      if (readerSchema.isDefined) readerSchema.get else writerSchema)
   }
 }
