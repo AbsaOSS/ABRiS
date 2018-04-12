@@ -16,29 +16,17 @@
 
 package za.co.absa.abris.examples
 
-import java.io.File
-
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.types.StructField
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.types.LongType
-import org.apache.spark.sql.types.ArrayType
-import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
-import org.apache.spark.sql.Encoder
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.format.SparkAvroConversions
-
-import org.apache.kafka.common.serialization.BytesSerializer
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
+
+import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import za.co.absa.abris.avro.format.SparkAvroConversions
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
+import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
-import org.apache.spark.sql.Dataset
-import za.co.absa.abris.examples.utils.ExamplesUtils
 
 object SampleKafkaDataframeWriterApp {
 
@@ -76,9 +64,8 @@ object SampleKafkaDataframeWriterApp {
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
 
-    import za.co.absa.abris.avro.AvroSerDe._
-    import spark.implicits._
     import ExamplesUtils._
+    import spark.implicits._
     
     implicit val encoder = getEncoder()
     
@@ -109,7 +96,12 @@ object SampleKafkaDataframeWriterApp {
   }
 
   private def getRows(howMany: Int): List[Row] = {
-    ComplexRecordsGenerator.generateUnparsedRows(howMany)
+    //ComplexRecordsGenerator.generateUnparsedRows(howMany)
+    List(
+      Row.fromSeq(Seq(1,"code1","name1", 21)),
+      Row.fromSeq(Seq(2,"code2","name2", 22)),
+      Row.fromSeq(Seq(3,"code3","name3", 23))
+    )
   }
 
   private def getEncoder(): Encoder[Row] = {
