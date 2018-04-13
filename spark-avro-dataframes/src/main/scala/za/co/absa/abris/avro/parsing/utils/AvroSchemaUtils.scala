@@ -34,16 +34,16 @@ object AvroSchemaUtils {
    */
   def load(path: String): Schema = {    
     parse(loadPlain(path))
-  }    
-  
+  }
+
+  def load(schemaRegistryConf: Map[String,String]): Schema = {
+    SchemaLoader.loadFromSchemaRegistry(schemaRegistryConf)
+  }
+
   /**
    * Loads an Avro's plain schema from the path.
    */
   def loadPlain(path: String) = {
     SchemaLoader.loadFromFile(path)
-  }
-
-  def loadConfluent(params: Map[String,String]): Schema = {
-    SchemaLoader.loadFromSchemaRegistry(params)
   }
 }

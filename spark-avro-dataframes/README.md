@@ -40,7 +40,7 @@ Among the motivations for this project, it is possible to highlight:
 
 ## Usage
 
-### Reading Avro binary records from Kafka as Spark structured streams and performing regular SQL queries on them
+### Reading Avro binary records from Kafka as Spark structured streams (loading schema from file system) and performing regular SQL queries on them
 
 1. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
 
@@ -52,13 +52,7 @@ Among the motivations for this project, it is possible to highlight:
 
 Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaAvroFilterApp```
 
-```scala    
-    val spark = SparkSession
-      .builder()
-      .appName("ReadAvro")
-      .master("local[2]")
-      .getOrCreate()    
-      
+```scala
     // import Spark Avro Dataframes
     import za.co.absa.abris.avro.AvroSerDe._
 
@@ -70,10 +64,48 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .fromAvro("path_to_Avro_schema") // invoke the library
 
     stream.filter("field_x % 2 == 0")
-      .writeStream
-      .format("console")
-      .start()
-      .awaitTermination() 
+      .writeStream.format("console").start().awaitTermination()
+```
+
+### Reading Avro binary records from Kafka as Spark structured streams (loading schema from Schema Registry) and performing regular SQL queries on them
+
+1. Gather Schema Registry configurations:
+
+```scala
+val schemaRegistryConfs = Map(
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
+  SchemaManager.PARAM_SCHEMA_ID             -> "current_schema_id" // set to "latest" if you want the latest schema version to used
+)
+```
+
+2. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
+
+3. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
+
+4. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema")```
+
+5. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()```
+
+The library will automatically retrieve the Avro schema from Schema Registry and configure Spark according to it.
+
+Although the Avro schema was retrieved from Schema Registry, this API expects Avro records to be "standard", not Confluent ones. For consuming Confluent Avro records please refer to the next example.
+
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaAvroFilterApp```
+
+```scala
+    // import Spark Avro Dataframes
+    import za.co.absa.abris.avro.AvroSerDe._
+
+    val stream = spark
+      .readStream
+      .format("kafka")
+      .option("kafka.bootstrap.servers", "localhost:9092")
+      .option("subscribe", "test-topic")
+      .fromAvro("path_to_Avro_schema") // invoke the library
+
+    stream.filter("field_x % 2 == 0")
+      .writeStream.format("console").start().awaitTermination()
 ```
 
 ### Reading Avro binary records from Confluent platform (using Schema Registry) as Spark structured streams and performing regular SQL queries on them 
@@ -84,7 +116,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 val schemaRegistryConfs = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-  SchemaManager.PARAM_SCHEMA_ID             -> "current_schema_id"
+  SchemaManager.PARAM_SCHEMA_ID             -> "current_schema_id" // set to "latest" if you want the latest schema version to used
 )
 ```
 
@@ -102,17 +134,11 @@ We strongly recommend you to read the documentation of ```za.co.absa.abris.avro.
 
 Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaConfluentAvroFilterApp```
 
-```scala    
-    val spark = SparkSession
-      .builder()
-      .appName("ReadAvro")
-      .master("local[2]")
-      .getOrCreate()    
-
+```scala
     val schemaRegistryConfs = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-      SchemaManager.PARAM_SCHEMA_ID             -> "current_schema_id"
+      SchemaManager.PARAM_SCHEMA_ID             -> "latest" // otherwise, just specify an id
     )
       
     // import Spark Avro Dataframes
@@ -126,10 +152,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .fromConfluentAvro(None, Some(schemaRegistryConfs)) // invoke the library passing over parameters to access the Schema Registry
 
     stream.filter("field_x % 2 == 0")
-      .writeStream
-      .format("console")
-      .start()
-      .awaitTermination() 
+      .writeStream.format("console").start().awaitTermination()
 ```
 
 ### Reading Avro binary records from Confluent platform (WITHOUT Schema Registry), as Spark structured streams and performing regular SQL queries on them 
@@ -150,12 +173,6 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 
 
 ```scala
-    val spark = SparkSession
-      .builder()
-      .appName("ReadAvro")
-      .master("local[2]")
-      .getOrCreate()    
-      
     // import Spark Avro Dataframes
     import za.co.absa.abris.avro.AvroSerDe._
 
@@ -167,10 +184,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .fromConfluentAvro(Some("path_to_avro_schema_in_some_file_system"), None) // invoke the library passing over the path to the Avro schema
 
     stream.filter("field_x % 2 == 0")
-      .writeStream
-      .format("console")
-      .start()
-      .awaitTermination() 
+      .writeStream.format("console").start().awaitTermination()
 ```
 
 ### Writing Dataframes to Kafka as Avro records specifying a schema
@@ -186,12 +200,6 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaDataframeWriterApp```
 
 ```scala
-    val spark = SparkSession
-      .builder()
-      .appName("KafkaAvroWriter")
-      .master("local[2]")
-      .getOrCreate()                 
-            
       import spark.implicits._
       
       // import library
@@ -218,12 +226,6 @@ Follow the same steps as above, however, when invoking the library, instead of i
 Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaDataframeWriterApp```
 
 ```scala
-    val spark = SparkSession
-      .builder()
-      .appName("KafkaAvroWriter")
-      .master("local[2]")
-      .getOrCreate()                 
-            
       import spark.implicits._
             
       val sparkSchema = StructType( .... // your SQL schema

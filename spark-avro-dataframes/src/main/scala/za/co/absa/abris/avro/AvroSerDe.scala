@@ -21,7 +21,7 @@ import java.security.InvalidParameterException
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.DecoderFactory
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Encoders, Row}
 import org.slf4j.LoggerFactory
@@ -65,7 +65,14 @@ object AvroSerDe {
     * Creates an instance of ScalaDatumReader for the schema informed.
     */
   private def createAvroReader(schemaPath: String): Unit = {
-    reader = new ScalaDatumReader[ScalaAvroRecord](AvroSchemaUtils.load(schemaPath))
+    createAvroReader(AvroSchemaUtils.load(schemaPath))
+  }
+
+  /**
+    * Creates an instance of ScalaDatumReader for the schema informed.
+    */
+  private def createAvroReader(schema: Schema): Unit = {
+    reader = new ScalaDatumReader[ScalaAvroRecord](schema)
   }
 
   /**
@@ -84,6 +91,14 @@ object AvroSerDe {
 
   private def createRowEncoder(schema: Schema) = {
     RowEncoder(SparkAvroConversions.toSqlType(schema))
+  }
+
+  private def createRowEncoder(schemaPath: String): ExpressionEncoder[Row] = {
+    createRowEncoder(AvroSchemaUtils.load(schemaPath))
+  }
+
+  private def createRowEncoder(schemaRegistryConf: Map[String,String]): ExpressionEncoder[Row] = {
+    createRowEncoder(AvroSchemaUtils.load(schemaRegistryConf))
   }
 
   /**
@@ -112,15 +127,14 @@ object AvroSerDe {
     protected def fromConfluentAvroToRow(dataframe: Dataset[Row], schemaPath: Option[String], schemaRegistryConf: Option[Map[String,String]]) = {
 
       if (schemaPath.isEmpty && schemaRegistryConf.isEmpty) {
-        throw new InvalidParameterException("Neither schemaPath nor confluentConf were provided.")
+        throw new InvalidParameterException("Neither path to schema in file system nor Schema Registry configurations was provided.")
       }
 
-      implicit val rowEncoder = if (schemaPath.isDefined) {
-        createRowEncoder(AvroSchemaUtils.load(schemaPath.get))
+      implicit val rowEncoder = if (schemaRegistryConf.isDefined) {
+        createRowEncoder(schemaRegistryConf.get)
       }
       else {
-        SchemaManager.configureSchemaRegistry(schemaRegistryConf.get)
-        createRowEncoder(AvroSchemaUtils.loadConfluent(schemaRegistryConf.get))
+        createRowEncoder(schemaPath.get)
       }
 
       dataframe
@@ -150,6 +164,28 @@ object AvroSerDe {
           })
         })
     }
+
+    /**
+      * Converts the binary Avro records contained in the Dataframe into regular Rows with a
+      * SQL schema whose specification is translated from the Avro schema informed.
+      */
+    protected def fromAvroToRow(dataframe: Dataset[Row], schemaRegistryConf: Map[String,String]) = {
+
+      val schema = AvroSchemaUtils.load(schemaRegistryConf)
+      implicit val rowEncoder = createRowEncoder(schema)
+
+      // has to convert into String and re-parse it inside the 'map' operation since Avro Schema instances are not serializable
+      val plainSchema = schema.toString()
+
+      dataframe
+        .as(Encoders.BINARY)
+        .mapPartitions(partition => {
+          createAvroReader(AvroSchemaUtils.parse(plainSchema))
+          partition.map(avroRecord => {
+            decodeAvro(avroRecord)
+          })
+        })
+    }
   }
 
   /**
@@ -160,8 +196,19 @@ object AvroSerDe {
    * It requires the path to the Avro schema which defines the records to be read.
    */
   implicit class DataframeDeserializer(dataframe: Dataset[Row]) extends AvroRowConverter {
+
+    /**
+      * Loads the schema from a file.
+      */
     def fromAvro(schemaPath: String) = {
       fromAvroToRow(getBatchData(), schemaPath)
+    }
+
+    /**
+      * Loads the schema from Schema Registry.
+      */
+    def fromAvro(schemaRegistryConf: Map[String,String]) = {
+      fromAvroToRow(getBatchData(), schemaRegistryConf)
     }
 
     /**
@@ -187,8 +234,19 @@ object AvroSerDe {
    * It requires the path to the Avro schema which defines the records to be read.
    */
   implicit class StreamDeserializer(dsReader: DataStreamReader) extends AvroRowConverter {
+
+    /**
+      * Loads the schema from a file system.
+      */
     def fromAvro(schemaPath: String) = {
       fromAvroToRow(getStreamData(), schemaPath)
+    }
+
+    /**
+      * Loads the schema from Schema Registry.
+      */
+    def fromAvro(schemaRegistryConf: Map[String,String]) = {
+      fromAvroToRow(getStreamData(), schemaRegistryConf)
     }
 
     /**

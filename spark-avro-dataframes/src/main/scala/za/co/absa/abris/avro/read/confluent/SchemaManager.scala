@@ -36,6 +36,7 @@ object SchemaManager {
   val PARAM_SCHEMA_REGISTRY_TOPIC = "schema.registry.topic"
   val PARAM_SCHEMA_REGISTRY_URL = "schema.registry.url"
   val PARAM_SCHEMA_ID = "schema.id"
+  val PARAM_SCHEMA_ID_LATEST_NAME = "latest"
 
   val MAGIC_BYTE = 0x0
   val SCHEMA_ID_SIZE_BYTES = 4
@@ -74,6 +75,12 @@ object SchemaManager {
     if (isSchemaRegistryConfigured()) Some(schemaRegistry.getBySubjectAndID(subject, id)) else None
   }
 
+  /**
+    * Retrieves the id corresponding to the latest schema available in Schema Registry.
+    */
+  def getLatestVersion(subject: String): Option[Int] = {
+    if (isSchemaRegistryConfigured()) Some(schemaRegistry.getLatestSchemaMetadata(subject).getId) else None
+  }
   /**
     * Checks if SchemaRegistry has been configured, i.e. if it is null
     */

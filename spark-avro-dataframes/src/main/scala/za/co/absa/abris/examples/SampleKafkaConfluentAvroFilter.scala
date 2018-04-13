@@ -20,7 +20,6 @@ import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
@@ -78,23 +77,14 @@ object SampleKafkaConfluentAvroFilterApp {
   }
 
   private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
+    import ExamplesUtils._
     import za.co.absa.abris.avro.AvroSerDe._
+
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromConfluentAvro(None, Some(getConfs(props)))
+      stream.fromConfluentAvro(None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))
     }
     else {
       stream.fromConfluentAvro(Some(props.getProperty(PARAM_AVRO_SCHEMA)), None)
     }
-  }
-
-  private def getConfs(props: Properties): Map[String,String] = {
-    val keys = Set(SchemaManager.PARAM_SCHEMA_REGISTRY_URL, SchemaManager.PARAM_SCHEMA_ID)
-    val confs = scala.collection.mutable.Map[String,String](SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(PARAM_OPTION_SUBSCRIBE))
-    for (propKey <- keys) yield {
-      if (props.containsKey(propKey)) {
-        confs += propKey -> props.getProperty(propKey)
-      }
-    }
-    Map[String,String](confs.toSeq:_*)
   }
 }
