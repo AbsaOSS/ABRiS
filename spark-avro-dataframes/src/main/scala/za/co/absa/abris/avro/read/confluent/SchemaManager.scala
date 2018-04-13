@@ -41,7 +41,7 @@ object SchemaManager {
   val MAGIC_BYTE = 0x0
   val SCHEMA_ID_SIZE_BYTES = 4
 
-  private var schemaRegistry: SchemaRegistryClient = _
+  private var schemaRegistryClient: SchemaRegistryClient = _
 
   /**
     * Confluent's Schema Registry supports schemas for Kafka keys and values. What makes them different is simply the
@@ -72,19 +72,29 @@ object SchemaManager {
     * It will return None if the Schema Registry client is not configured.
     */
   def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistry.getBySubjectAndID(subject, id)) else None
+    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getBySubjectAndID(subject, id)) else None
   }
 
   /**
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
     */
   def getLatestVersion(subject: String): Option[Int] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistry.getLatestSchemaMetadata(subject).getId) else None
+    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) else None
   }
+
+  /**
+    * Registers a schema into a given subject, returning the id the registration received.
+    *
+    * Afterwards the schema can be identified by this id.
+    */
+  def register(schema: Schema, subject: String): Option[Int] = {
+    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.register(subject, schema)) else None
+  }
+
   /**
     * Checks if SchemaRegistry has been configured, i.e. if it is null
     */
-  def isSchemaRegistryConfigured(): Boolean = schemaRegistry != null
+  def isSchemaRegistryConfigured(): Boolean = schemaRegistryClient != null
 
   /**
     * Configures the Schema Registry client.
@@ -95,11 +105,22 @@ object SchemaManager {
       val urls = config.getSchemaRegistryUrls()
       val maxSchemaObject = config.getMaxSchemasPerSubject()
 
-      if (null == schemaRegistry) {
-        schemaRegistry = new CachedSchemaRegistryClient(urls, maxSchemaObject)
+      if (null == schemaRegistryClient) {
+        schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject)
       }
     } catch {
       case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage())
     }
+  }
+
+  /**
+    * This class uses [[CachedSchemaRegistryClient]] by default. This method can override the default.
+    *
+    * The incoming instance MUST be already configured.
+    *
+    * Useful for tests using mocked SchemaRegistryClient instances.
+    */
+  def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient) = {
+    this.schemaRegistryClient = schemaRegistryClient
   }
 }
