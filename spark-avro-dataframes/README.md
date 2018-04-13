@@ -246,6 +246,22 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 
 ## Other Features
 
+### Schema registration for subject into Schema Registry
+This library provides utility methods for registering schemas with topics into Schema Registry. Below is an example of how it can be done.
+
+```scala
+    val schemaRegistryConfs = Map(
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
+    )
+
+    val topic = "example_topic"
+    val subject = SchemaManager.getSubjectName(topic, false) // create a subject for the value
+
+    val schema = AvroSchemaUtils.load("path_to_the_schema_in_a_file_system")
+
+    val schemaId = SchemaManager.register(schema, subject)
+```
+
 ### Data Conversions
 This library also provides convenient methods to convert between Avro and Spark schemas. 
 
