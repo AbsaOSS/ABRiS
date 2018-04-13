@@ -46,11 +46,11 @@
 	<distributionManagement>
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/public/</url>
+			<url>http://nexus.absa.co.za:8081/repository/releases/</url>
 		</snapshotRepository>
 		<repository>
 			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/public</url>
+			<url>http://nexus.absa.co.za:8081/repository/releases/</url>
 		</repository>
 	</distributionManagement>
 
@@ -59,10 +59,6 @@
 			<id>confluent</id>
 			<url>http://packages.confluent.io/maven/</url>
 		</repository>
-        <repository>
-            <id>nexus-release</id>
-            <url>http://nexus.absa.co.za:8081/repository/releases</url>
-        </repository>
         <repository>
             <id>nexus-public</id>
             <url>http://nexus.absa.co.za:8081/repository/public</url>
