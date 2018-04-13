@@ -16,7 +16,10 @@
 
 package za.co.absa.abris.examples
 
-import org.apache.spark.sql.SparkSession
+import java.util.Properties
+
+import org.apache.spark.sql.streaming.DataStreamReader
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
@@ -27,7 +30,10 @@ object SampleKafkaAvroFilterApp {
   private val PARAM_JOB_MASTER = "job.master"
   private val PARAM_AVRO_SCHEMA = "avro.schema"
   private val PARAM_TASK_FILTER = "task.filter"
-  private val PARAM_LOG_LEVEL = "log.level"  
+  private val PARAM_LOG_LEVEL = "log.level"
+  private val PARAM_OPTION_SUBSCRIBE = "option.subscribe"
+
+  private val PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY = "example.should.use.schema.registry"
 
   def main(args: Array[String]): Unit = {
 
@@ -53,20 +59,32 @@ object SampleKafkaAvroFilterApp {
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
       
     import ExamplesUtils._
-    import za.co.absa.abris.avro.AvroSerDe._
     
     val stream = spark
       .readStream
       .format("kafka")
       .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file
-      .fromAvro(properties.getProperty(PARAM_AVRO_SCHEMA))
+
+    val deserialized = configureExample(stream, properties)
 
     val filter = properties.getProperty(PARAM_TASK_FILTER)
     println("Going to run filter: " + filter)
 
-    stream.printSchema()
-    stream
+    deserialized.printSchema()
+    deserialized
     //.filter(filter)
     .writeStream.format("console").start().awaitTermination()
+  }
+
+  private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
+    import ExamplesUtils._
+    import za.co.absa.abris.avro.AvroSerDe._
+
+    if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
+      stream.fromAvro(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))
+    }
+    else {
+      stream.fromAvro(props.getProperty(PARAM_AVRO_SCHEMA))
+    }
   }
 }

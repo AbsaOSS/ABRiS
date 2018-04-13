@@ -1,10 +1,13 @@
 package za.co.absa.abris.examples.utils
 
-import java.util.Properties
 import java.io.FileInputStream
-import org.apache.spark.sql.streaming.DataStreamReader
-import scala.collection.JavaConverters._
+import java.util.Properties
+
 import org.apache.spark.sql.DataFrameWriter
+import org.apache.spark.sql.streaming.DataStreamReader
+import za.co.absa.abris.avro.read.confluent.SchemaManager
+
+import scala.collection.JavaConverters._
 
 object ExamplesUtils {
 
@@ -41,6 +44,19 @@ object ExamplesUtils {
           stream.option(keys._2, properties.getProperty(keys._1))
         })
       stream
+    }
+  }
+
+  implicit class SchemaRegistryConfiguration(props: Properties) {
+    def getSchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] = {
+      val keys = Set(SchemaManager.PARAM_SCHEMA_REGISTRY_URL, SchemaManager.PARAM_SCHEMA_ID)
+      val confs = scala.collection.mutable.Map[String,String](SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(subscribeParamKey))
+      for (propKey <- keys) yield {
+        if (props.containsKey(propKey)) {
+          confs += propKey -> props.getProperty(propKey)
+        }
+      }
+      Map[String,String](confs.toSeq:_*)
     }
   }
 }
