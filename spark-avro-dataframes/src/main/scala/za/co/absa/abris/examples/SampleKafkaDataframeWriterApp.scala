@@ -96,12 +96,7 @@ object SampleKafkaDataframeWriterApp {
   }
 
   private def getRows(howMany: Int): List[Row] = {
-    //ComplexRecordsGenerator.generateUnparsedRows(howMany)
-    List(
-      Row.fromSeq(Seq(1,"code1","name1", 21)),
-      Row.fromSeq(Seq(2,"code2","name2", 22)),
-      Row.fromSeq(Seq(3,"code3","name3", 23))
-    )
+    ComplexRecordsGenerator.generateUnparsedRows(howMany)
   }
 
   private def getEncoder(): Encoder[Row] = {
