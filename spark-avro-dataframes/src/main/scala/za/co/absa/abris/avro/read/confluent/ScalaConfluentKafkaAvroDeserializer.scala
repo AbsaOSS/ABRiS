@@ -47,7 +47,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     *    not work on regular binary Avro records.
     * 3. If there is a topic defined in the constructor and access to Schema Registry is configured, the schema retrieved
     *    from the later will be considered the writer schema, otherwise, the reader schema passed to the constructor will
-    *    be used as both, reader and writer (either, topic or reader schema must be informed).
+    *    be used as both, reader and writer (thus notice that either, topic or reader schema must be informed).
     * 4. The Avro DatumReader is cached based on the schema id, thus, if a new id is received as part of the payload, a new
     *    DatumReader will be created for that id, with a new schema being retrieved, iff the topic is informed and Schema
     *    Registry is configured.

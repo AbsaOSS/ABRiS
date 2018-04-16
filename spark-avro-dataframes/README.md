@@ -253,6 +253,7 @@ This library provides utility methods for registering schemas with topics into S
     val schemaRegistryConfs = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry"
     )
+    SchemaManager.configureSchemaRegistry(schemaRegistryConfs)
 
     val topic = "example_topic"
     val subject = SchemaManager.getSubjectName(topic, false) // create a subject for the value

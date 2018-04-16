@@ -123,4 +123,9 @@ object SchemaManager {
   def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient) = {
     this.schemaRegistryClient = schemaRegistryClient
   }
+
+  /**
+    * Resets this manager to its initial state, before being configured.
+    */
+  def reset() = schemaRegistryClient = null
 }
