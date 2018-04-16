@@ -251,7 +251,7 @@ This library provides utility methods for registering schemas with topics into S
 
 ```scala
     val schemaRegistryConfs = Map(
-      SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry"
     )
 
     val topic = "example_topic"
@@ -315,6 +315,25 @@ writer.write(data, "destination_topic", dispatchWait);
 ```
 
 A complete application can be found at ```za.co.absa.abris.utils.examples.SimpleAvroDataGenerator``` under Java source.
+
+## Maven dependency
+Repository:
+```
+<mirror>
+    <id>nexus-absa</id>
+    <mirrorOf>external:*</mirrorOf>
+    <url>http://nexus.absa.co.za:8081/repository/public/</url>
+</mirror>
+```
+
+Dependency:
+```
+<dependency>
+    <groupId>za.co.absa</groupId>
+	<artifactId>abris</artifactId>
+	<version>0.0.1</version>
+</dependency>
+```
 
 ## Dependencies
 
