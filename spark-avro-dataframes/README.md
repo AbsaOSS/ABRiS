@@ -12,7 +12,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 
-# ABRIS - Avro Bridge for Spark
+# ABRiS - Avro Bridge for Spark
 
 Pain free Spark/Avro integration.
 
