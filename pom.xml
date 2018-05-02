@@ -15,6 +15,7 @@
 	<version>0.0.1</version>
 	<name>abris</name>
 	<description>Provides seamless integration between Avro and Spark Structured APIs.</description>
+	<url>https://github.com/AbsaOSS/ABRiS</url>
 
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
