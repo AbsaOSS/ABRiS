@@ -14,7 +14,7 @@
 	<artifactId>abris</artifactId>
 	<version>0.0.1</version>
 	<name>abris</name>
-	<description>Provides seamless integration between Avro and Spark Structured Streaming</description>
+	<description>Provides seamless integration between Avro and Spark Structured APIs.</description>
 
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -41,6 +41,8 @@
 		<jackson.databind.version>2.6.1</jackson.databind.version>
 
 		<confluent.version>3.1.1</confluent.version>
+
+		<gpg.plugin.version>1.6</gpg.plugin.version>
 	</properties>
 
 	<distributionManagement>
@@ -64,6 +66,28 @@
             <url>http://nexus.absa.co.za:8081/repository/public</url>
         </repository>
 	</repositories>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Barclays Africa Group Limited</name>
+		<url>https://www.barclaysafrica.com</url>
+	</organization>
+
+	<developers>
+		<developer>
+			<id>felipemmelo</id>
+			<name>Felipe Melo</name>
+			<timezone>Europe/Prague</timezone>
+			<url>https://github.com/felipemmelo</url>
+		</developer>
+	</developers>
 
 	<dependencies>
 
@@ -114,12 +138,10 @@
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-			<scope>compile</scope>
 		</dependency>
 
 		<!-- Jackson -->
@@ -359,6 +381,49 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<!-- generates sources.jar -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- generates docs.jar -->
+			<plugin>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>doc-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>${gpg.plugin.version}</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -366,6 +431,11 @@
 					<groupId>org.scalatest</groupId>
 					<artifactId>scalatest-maven-plugin</artifactId>
 					<version>${scalatest.maven.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<version>${gpg.plugin.version}</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
