@@ -57,10 +57,6 @@
 	</distributionManagement>
 
 	<repositories>
-		<repository>
-			<id>confluent</id>
-			<url>http://packages.confluent.io/maven/</url>
-		</repository>
         <repository>
             <id>nexus-public</id>
             <url>http://nexus.absa.co.za:8081/repository/public</url>
