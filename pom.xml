@@ -45,20 +45,6 @@
 		<gpg.plugin.version>1.6</gpg.plugin.version>
 	</properties>
 
-	<distributionManagement>
-		<repository>
-			<id>nexus-snapshots</id>
-			<url>http://nexus.absa.co.za:8081/repository/releases/</url>
-		</repository>
-	</distributionManagement>
-
-	<repositories>
-        <repository>
-            <id>nexus-public</id>
-            <url>http://nexus.absa.co.za:8081/repository/public</url>
-        </repository>
-	</repositories>
-
     <scm>
         <connection>scm:git:git://github.com/AbsaOSS/ABRiS.git</connection>
         <developerConnection>scm:git:ssh://github.com:AbsaOSS/ABRiS.git</developerConnection>
