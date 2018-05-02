@@ -59,6 +59,12 @@
         </repository>
 	</repositories>
 
+    <scm>
+        <connection>scm:git:git://github.com/AbsaOSS/ABRiS.git</connection>
+        <developerConnection>scm:git:ssh://github.com:AbsaOSS/ABRiS.git</developerConnection>
+        <url>https://github.com/AbsaOSS/ABRiS/tree/master</url>
+    </scm>
+
 	<licenses>
 		<license>
 			<name>Apache License, Version 2.0</name>
@@ -293,7 +299,7 @@
 				</executions>
 			</plugin>
 
-			<!-- jar generator -->
+			<!-- jar generator
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -319,6 +325,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			-->
 
 			<!-- the Maven Scala plugin will compile Scala source files -->
 			<plugin>
