@@ -318,15 +318,6 @@ writer.write(data, "destination_topic", dispatchWait);
 A complete application can be found at ```za.co.absa.abris.utils.examples.SimpleAvroDataGenerator``` under Java source.
 
 ## Maven dependency
-Repository:
-```
-<mirror>
-    <id>nexus-absa</id>
-    <mirrorOf>external:*</mirrorOf>
-    <url>http://nexus.absa.co.za:8081/repository/public/</url>
-</mirror>
-```
-
 Dependency:
 ```
 <dependency>

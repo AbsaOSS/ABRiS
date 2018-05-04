@@ -16,29 +16,20 @@
 
 package za.co.absa.abris.performance
 
-import org.scalatest.FlatSpec
 import java.io.File
-import org.apache.commons.io.FileUtils
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.ComplexRestriction
-import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
-import org.apache.spark.sql.SparkSession
-import org.scalatest.BeforeAndAfterAll
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import org.apache.spark.sql.types.StructType
+
 import com.databricks.spark.avro.SchemaConverters
+import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.catalyst.expressions.GenericRow
-import org.apache.spark.sql.Encoders
-import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.{Encoders, Row, SaveMode, SparkSession}
+import org.scalatest.{BeforeAndAfterAll, FlatSpec}
 import org.slf4j.LoggerFactory
-import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator.Bean
-import za.co.absa.abris.avro.parsing.AvroToSparkParser
 import za.co.absa.abris.avro.format.SparkAvroConversions
-import java.nio.ByteBuffer
-import za.co.absa.abris.examples.data.generation.FixedString
+import za.co.absa.abris.avro.parsing.AvroToSparkParser
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
+import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator.Bean
 
 class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
 
