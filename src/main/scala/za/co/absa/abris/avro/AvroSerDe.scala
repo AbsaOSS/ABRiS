@@ -223,7 +223,7 @@ object AvroSerDe {
       fromConfluentAvroToRow(getBatchData(), schemaPath, schemaRegistryConf)
     }
 
-    private def getBatchData() = dataframe.select("value").cache()
+    private def getBatchData() = dataframe.select("value")
   }
 
   /**
