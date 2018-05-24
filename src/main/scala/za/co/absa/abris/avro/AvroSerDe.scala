@@ -148,21 +148,32 @@ object AvroSerDe {
     }
 
     /**
-     * Converts the binary Avro records contained in the Dataframe into regular Rows with a
-     * SQL schema whose specification is translated from the Avro schema informed.
-     */
-    protected def fromAvroToRow(dataframe: Dataset[Row], schemaPath: String) = {
+      * Converts the binary Avro records contained in the Dataframe into regular Rows with a
+      * SQL schema whose specification is translated from the Avro schema informed.
+      */
+    protected def fromAvroToRow(dataframe: Dataset[Row], schema: Schema): Dataset[Row] = {
 
-      implicit val rowEncoder = createRowEncoder(AvroSchemaUtils.load(schemaPath))
+      implicit val rowEncoder = createRowEncoder(schema)
+
+      // transforming to plain and reparsing inside mapping because Schema instances are not serializable.
+      val plainSchema = schema.toString
 
       dataframe
         .as(Encoders.BINARY)
         .mapPartitions(partition => {
-          createAvroReader(schemaPath)
+          createAvroReader(AvroSchemaUtils.parse(plainSchema))
           partition.map(avroRecord => {
             decodeAvro(avroRecord)
           })
         })
+    }
+
+    /**
+     * Converts the binary Avro records contained in the Dataframe into regular Rows with a
+     * SQL schema whose specification is translated from the Avro schema informed.
+     */
+    protected def fromAvroToRow(dataframe: Dataset[Row], schemaPath: String): Dataset[Row] = {
+      fromAvroToRow(dataframe, AvroSchemaUtils.load(schemaPath))
     }
 
     /**
@@ -196,6 +207,13 @@ object AvroSerDe {
    * It requires the path to the Avro schema which defines the records to be read.
    */
   implicit class DataframeDeserializer(dataframe: Dataset[Row]) extends AvroRowConverter {
+
+    /**
+      * Converts used an instantiated Schema.
+      */
+    def fromAvro(schema: Schema) = {
+      fromAvroToRow(getBatchData(), schema)
+    }
 
     /**
       * Loads the schema from a file.
@@ -234,6 +252,13 @@ object AvroSerDe {
    * It requires the path to the Avro schema which defines the records to be read.
    */
   implicit class StreamDeserializer(dsReader: DataStreamReader) extends AvroRowConverter {
+
+    /**
+      * Converts used an instantiated Schema.
+      */
+    def fromAvro(schema: Schema) = {
+      fromAvroToRow(getStreamData(), schema)
+    }
 
     /**
       * Loads the schema from a file system.
@@ -291,6 +316,11 @@ object AvroSerDe {
      */
     def toAvro(schemaPath: String): Dataset[Array[Byte]] = {
       val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)
+      toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))
+    }
+
+    def toAvro(schema: Schema): Dataset[Array[Byte]] = {
+      val plainAvroSchema = schema.toString
       toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))
     }
 

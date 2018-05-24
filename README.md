@@ -46,7 +46,7 @@ Among the motivations for this project, it is possible to highlight:
 
 2. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-3. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema")```
+3. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance")```
 
 4. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
 
@@ -61,7 +61,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .fromAvro("path_to_Avro_schema") // invoke the library
+      .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance") // invoke the library
 
     stream.filter("field_x % 2 == 0")
       .writeStream.format("console").start().awaitTermination()
@@ -83,7 +83,7 @@ val schemaRegistryConfs = Map(
 
 3. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-4. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema")```
+4. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance")```
 
 5. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()```
 
@@ -102,7 +102,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .fromAvro("path_to_Avro_schema") // invoke the library
+      .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance") // invoke the library
 
     stream.filter("field_x % 2 == 0")
       .writeStream.format("console").start().awaitTermination()
@@ -210,7 +210,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       val dataframe = spark.parallelize( .....
       
       dataframe
-      	.toAvro("path_to_existing_Avro_schema") // invoke library            
+      	.toAvro("path_to_existing_Avro_schema or org.apache.avro.Schema instance") // invoke library
       	.write
       	.format("kafka")    
       	.option("kafka.bootstrap.servers", "localhost:9092"))
