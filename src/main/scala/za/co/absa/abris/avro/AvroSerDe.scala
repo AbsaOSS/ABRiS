@@ -301,6 +301,39 @@ object AvroSerDe {
   implicit class Serializer(dataframe: Dataset[Row]) {
 
     /**
+      * Checks if the incoming Dataframe has a schema.
+      *
+      * @throws InvalidParameterException in case the schema is not set.
+      */
+    @throws[InvalidParameterException]
+    private def checkDataframeSchema() = {
+      if (dataframe.schema == null || dataframe.schema.isEmpty) {
+        throw new InvalidParameterException("Dataframe does not have a schema.")
+      }
+    }
+
+    /**
+      * Tries to manage schema registration in case credentials to access Schema Registry are provided.
+      *
+      * This method either works or throws an InvalidParameterException.
+      */
+    @throws[InvalidParameterException]
+    private def manageSchemaRegistration(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Int = {
+
+      val schemaId = AvroSchemaUtils.registerIfCompatibleSchema(topic, schema, schemaRegistryConf)
+
+      if (schemaId.isEmpty) {
+        throw new InvalidParameterException(s"Schema could not be registered for topic '$topic'. Make sure that the Schema Registry " +
+            s"is available, the parameters are correct and the schemas ar compatible")
+      }
+      else {
+        logger.info(s"Schema successfully registered for topic '$topic' with id '{${schemaId.get}}'.")
+      }
+
+      schemaId.get
+    }
+
+    /**
      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records.
      *
      * Intended to be used when there is not Spark schema available in the Dataframe but there is an expected Avro schema.
@@ -315,13 +348,70 @@ object AvroSerDe {
      * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
      */
     def toAvro(schemaPath: String): Dataset[Array[Byte]] = {
-      val plainAvroSchema = AvroSchemaUtils.loadPlain(schemaPath)
-      toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))
+      toAvro(AvroSchemaUtils.load(schemaPath))
     }
 
     def toAvro(schema: Schema): Dataset[Array[Byte]] = {
       val plainAvroSchema = schema.toString
-      toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))
+      toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))(None)
+    }
+
+    /**
+      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records.
+      *
+      * Intended to be used when there is a Spark schema present in the Dataframe from which the Avro schema will be translated.
+      *
+      * The API will infer the Avro schema from the incoming Dataframe. The inferred schema will receive the name and namespace informed as parameters.
+      *
+      * The inferred schema will be registered with Schema Registry in case the parameters for accessing it are provided.
+      *
+      * The API will throw in case the Dataframe does not have a schema or if Schema Registry access details are provided but the schema could not be registered due to
+      * either incompatibility, wrong credentials or Schema Registry unavailability.
+      *
+      * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
+      * already used by Spark.
+      */
+    def toAvro(topic: String, schemaName: String, schemaNamespace: String)(schemaRegistryConf: Option[Map[String,String]] = None): Dataset[Array[Byte]] = {
+
+      checkDataframeSchema()
+      val schemaProcessor = new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace)
+
+      if (schemaRegistryConf.isDefined) {
+        manageSchemaRegistration(topic, schemaProcessor.getAvroSchema(), schemaRegistryConf.get)
+      }
+
+      toAvro(dataframe, schemaProcessor)(None)
+    }
+
+    /**
+      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records with the id of the schema in Schema Registry attached to the beginning of the payload.
+      *
+      * Intended to be used when there is a Spark schema present in the Dataframe from which the Avro schema will be translated.
+      *
+      * The API will infer the Avro schema from the incoming Dataframe. The inferred schema will receive the name and namespace informed as parameters.
+      *
+      * The inferred schema will be registered with Schema Registry in case the parameters for accessing it are provided.
+      *
+      * The API will throw in case the Dataframe does not have a schema or if Schema Registry access details are provided but the schema could not be registered due to
+      * either incompatibility, wrong credentials or Schema Registry unavailability.
+      *
+      * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
+      * already used by Spark.
+      */
+    def toConfluentAvro(topic: String, schemaName: String, schemaNamespace: String)(schemaRegistryConf: Map[String,String]): Dataset[Array[Byte]] = {
+
+      if (schemaRegistryConf.isEmpty) {
+        throw new IllegalArgumentException("No Schema Registry connection parameters found. It is mandatory for this API entry to connect to Schema Registry so that" +
+          " the inferred schema can be registered or updated and its id can be retrieved to be sent along with the payload.")
+      }
+
+      checkDataframeSchema()
+
+      val schemaProcessor = new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace)
+
+      val schemaId = manageSchemaRegistration(topic, schemaProcessor.getAvroSchema(), schemaRegistryConf)
+
+      toAvro(dataframe, schemaProcessor)(Some(schemaId))
     }
 
     /**
@@ -337,21 +427,19 @@ object AvroSerDe {
      * already used by Spark.
      */
     def toAvro(schemaName: String, schemaNamespace: String): Dataset[Array[Byte]] = {
-      if (dataframe.schema == null || dataframe.schema.isEmpty) {
-        throw new InvalidParameterException("Dataframe does not have a schema.")
-      }
-      toAvro(dataframe, new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace))
+      checkDataframeSchema()
+      toAvro(dataframe, new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace))(None)
     }
 
     /**
      * Converts a Dataset[Row] into a Dataset[Array[Byte]] containing Avro schemas generated according to the plain specification informed as a parameter.
      */
-    private def toAvro(rows: Dataset[Row], schemas: SchemasProcessor) = {
+    private def toAvro(rows: Dataset[Row], schemas: SchemasProcessor)(schemaId: Option[Int]): Dataset[Array[Byte]] = {
       implicit val recEncoder = Encoders.BINARY
       rows.mapPartitions(partition => {
         val avroSchema = schemas.getAvroSchema()
         val sparkSchema = schemas.getSparkSchema()
-        partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema))
+        partition.map(row => SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema, schemaId))
       })
     }
   }

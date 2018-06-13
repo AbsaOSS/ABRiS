@@ -36,7 +36,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     throw new IllegalArgumentException("Neither topic nor reader Schema were informed. If you want a specific schema to" +
       " be used for reading pass it as the readerSchema value. Otherwise, if you'd like the schema to be retrieved from" +
       " SchemaRegistry, pass in the topic being consume and inform the SchemaRegistry URLs by calling " +
-      " 'configure' in this object using SchemaManager.PARAM_SCHEMA_REGISTRY_URL as the key.")
+      " 'configure' in this object using SchemaManager.PARAM_SCHEMA_REGISTRY_URL as the key in the map.")
   }
 
   private val decoderFactory = DecoderFactory.get()
@@ -90,7 +90,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
       schemaId = buffer.getInt()
       val writerSchema = getWriterSchema(topic, schemaId)
 
-      val length = buffer.limit() - 1 - SchemaManager.SCHEMA_ID_SIZE_BYTES
+      val length = buffer.limit() - 1 - ConfluentConstants.SCHEMA_ID_SIZE_BYTES
       val start = buffer.position() + buffer.arrayOffset()
 
       val reader = getDatumReader(writerSchema, readerSchema, schemaId)
@@ -117,11 +117,12 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
 
   /**
     * Converts the binary payload into a ByteBuffer.
+    *
     * This code was copied from [[io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer]].
     */
   private def getByteBuffer(payload: Array[Byte]): ByteBuffer = {
     val buffer = ByteBuffer.wrap(payload)
-    if (buffer.get() != SchemaManager.MAGIC_BYTE) {
+    if (buffer.get() != ConfluentConstants.MAGIC_BYTE) {
       throw new SerializationException("Unknown magic byte!")
     }
     buffer

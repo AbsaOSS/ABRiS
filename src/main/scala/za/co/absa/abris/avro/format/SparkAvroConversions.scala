@@ -23,7 +23,6 @@ import java.sql.Timestamp
 import java.util.HashMap
 
 import scala.collection._
-
 import org.apache.avro.Schema
 import org.apache.avro.SchemaBuilder
 import org.apache.avro.generic.GenericData.Record
@@ -46,10 +45,9 @@ import org.apache.spark.sql.types.ShortType
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.types.TimestampType
-
 import com.databricks.spark.avro.DatabricksAdapter
 import com.databricks.spark.avro.SchemaConverters
-
+import za.co.absa.abris.avro.read.confluent.ConfluentConstants
 import za.co.absa.abris.avro.write.AvroWriterHolder
 
 
@@ -62,14 +60,27 @@ object SparkAvroConversions {
   private val converterCache = new mutable.HashMap[ConverterKey, Any => Any]()
   
   private def avroWriterHolder = new AvroWriterHolder()
-  
+
+  /**
+    * Attaches the id to the beginning of an output stream.
+    */
+  private def attachSchemaId(id: Int, outStream: ByteArrayOutputStream) = {
+    outStream.write(ConfluentConstants.MAGIC_BYTE)
+    outStream.write(ByteBuffer.allocate(ConfluentConstants.SCHEMA_ID_SIZE_BYTES).putInt(id).array())
+  }
+
   /**
    * Converts an Avro record into an Array[Byte].
    * 
    * Uses Avro's Java API under the hood.
    */
-  def toByteArray(record: IndexedRecord, schema: Schema): Array[Byte] = {    
+  def toByteArray(record: IndexedRecord, schema: Schema, schemaId: Option[Int] = None): Array[Byte] = {
     val outStream = new ByteArrayOutputStream()
+
+    if (schemaId.isDefined) {
+      attachSchemaId(schemaId.get, outStream)
+    }
+
     val encoder = avroWriterHolder.getEncoder(outStream)
     try {                 
       avroWriterHolder.getWriter(schema).write(record, encoder)
@@ -95,9 +106,9 @@ object SparkAvroConversions {
   /**
    * Converts a Spark Row into an Avro's binary record.
    */
-  def rowToBinaryAvro(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
+  def rowToBinaryAvro(row: Row, sparkSchema: StructType, avroSchema: Schema, schemaId: Option[Int] = None) = {
     val record = rowToGenericRecord(row, sparkSchema, avroSchema)    
-    toByteArray(record, avroSchema)       
+    toByteArray(record, avroSchema, schemaId)
   }
   
   /**

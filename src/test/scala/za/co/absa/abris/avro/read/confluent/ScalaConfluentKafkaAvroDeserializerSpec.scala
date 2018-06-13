@@ -98,8 +98,8 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
 
   private def getConfluentHeaderStream(): ByteArrayOutputStream = {
     val out = new ByteArrayOutputStream()
-    out.write(SchemaManager.MAGIC_BYTE)
-    out.write(ByteBuffer.allocate(SchemaManager.SCHEMA_ID_SIZE_BYTES).putInt(8).array)
+    out.write(ConfluentConstants.MAGIC_BYTE)
+    out.write(ByteBuffer.allocate(ConfluentConstants.SCHEMA_ID_SIZE_BYTES).putInt(8).array)
     out
   }
 

@@ -12,7 +12,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>za.co.absa</groupId>
 	<artifactId>abris</artifactId>
-	<version>0.0.1</version>
+	<version>1.0.0</version>
 	<name>abris</name>
 	<description>Provides seamless integration between Avro and Spark Structured APIs.</description>
 	<url>https://github.com/AbsaOSS/ABRiS</url>
@@ -38,7 +38,7 @@
 		<scalatest.maven.version>1.0</scalatest.maven.version>
 		<scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
-		<spark.version>2.2.1</spark.version>
+		<spark.version>2.3.0</spark.version>
 		<kafka.spark.version>0-10</kafka.spark.version>
 
 		<scala.version>2.11.8</scala.version>

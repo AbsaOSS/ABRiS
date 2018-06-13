@@ -244,6 +244,41 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       	.save()         
 ```
 
+### Writing Dataframes to Confluent Kafka as Avro records without specifying a schema.
+
+It is possible to infer the schema from the Dataframe, register it into Schema Registry and then attach its id to the beginning of the Avro binary payload, so that the records can be seamlessly consumed by Confluent tools.
+
+Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.toAvro("schema_name", "schema_namespace")```
+
+In this option it is mandatory to provide access to Schema Registry.
+
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleConfluentKafkaDataframeWriterApp```
+
+```scala
+      import spark.implicits._
+
+      val sparkSchema = StructType( .... // your SQL schema
+      implicit val encoder = RowEncoder.apply(sparkSchema)
+      val dataframe = spark.parallelize( .....
+
+      val schemaRegistryConfs = Map(
+        SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry"
+      )
+
+      val topic = "your_destination_topic"
+
+      // import library
+      import za.co.absa.abris.avro.AvroSerDe._
+
+      dataframe
+      	.toConfluentAvro(topic, "dest_schema_name", "dest_schema_namespace")(schemaRegistryConfs) // invoke library
+      	.write
+      	.format("kafka")
+      	.option("kafka.bootstrap.servers", "localhost:9092"))
+      	.option("topic", topic)
+      	.save()
+```
+
 ## Other Features
 
 ### Schema registration for subject into Schema Registry
@@ -323,7 +358,7 @@ Dependency:
 <dependency>
     <groupId>za.co.absa</groupId>
 	<artifactId>abris</artifactId>
-	<version>0.0.1</version>
+	<version>1.0.0</version>
 </dependency>
 ```
 

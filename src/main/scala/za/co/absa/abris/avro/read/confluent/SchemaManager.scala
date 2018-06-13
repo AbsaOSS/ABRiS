@@ -20,6 +20,7 @@ import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, Sch
 import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDeserializerConfig}
 import org.apache.avro.Schema
 import org.apache.kafka.common.config.ConfigException
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 
@@ -33,13 +34,12 @@ import scala.collection.JavaConverters._
   */
 object SchemaManager {
 
+  private val logger = LoggerFactory.getLogger(SchemaManager.getClass)
+
   val PARAM_SCHEMA_REGISTRY_TOPIC = "schema.registry.topic"
   val PARAM_SCHEMA_REGISTRY_URL = "schema.registry.url"
   val PARAM_SCHEMA_ID = "schema.id"
   val PARAM_SCHEMA_ID_LATEST_NAME = "latest"
-
-  val MAGIC_BYTE = 0x0
-  val SCHEMA_ID_SIZE_BYTES = 4
 
   private var schemaRegistryClient: SchemaRegistryClient = _
 
@@ -122,6 +122,34 @@ object SchemaManager {
     */
   def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient) = {
     this.schemaRegistryClient = schemaRegistryClient
+  }
+
+  /**
+    * Checks if a new schema is compatible with the latest schema registered for a given subject.
+    */
+  def isCompatible(newSchema: Schema, subject: String): Boolean = {
+    this.schemaRegistryClient.testCompatibility(subject, newSchema)
+  }
+
+  /**
+    * Checks if a given schema exists in Schema Registry.
+    */
+  def exists(subject: String): Boolean = {
+    try {
+      schemaRegistryClient.getLatestSchemaMetadata(subject)
+      true
+    }
+    catch {
+      case e: Exception => {
+        if (e.getMessage.contains("Subject not found")) {
+          logger.error(s"Subject not registered: '$subject'")
+        }
+        else {
+          logger.error(s"Problems found while retrieving metadata for subject '$subject'", e)
+        }
+      }
+        false
+    }
   }
 
   /**
