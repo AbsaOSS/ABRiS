@@ -17,13 +17,23 @@
 package za.co.absa.abris.avro.parsing.utils
 
 import org.apache.avro.Schema
+import org.slf4j.LoggerFactory
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.SchemaLoader
 
 /**
  * This class provides utility methods to cope with Avro schemas.
  */
 object AvroSchemaUtils {
-  
+
+  private val logger = LoggerFactory.getLogger(AvroSchemaUtils.getClass)
+
+  private def configureSchemaManager(schemaRegistryConf: Map[String,String]) = {
+    if (!SchemaManager.isSchemaRegistryConfigured()) {
+      SchemaManager.configureSchemaRegistry(schemaRegistryConf)
+    }
+  }
+
   /**
    * Parses a plain Avro schema into an org.apache.avro.Schema implementation.
    */
@@ -38,6 +48,25 @@ object AvroSchemaUtils {
 
   def load(schemaRegistryConf: Map[String,String]): Schema = {
     SchemaLoader.loadFromSchemaRegistry(schemaRegistryConf)
+  }
+
+  /**
+    * Register a new schema for a subject if the schema is compatible with the latest available version.
+    *
+    * @return None if incompatible or if could not perform the registration.
+    */
+  def registerIfCompatibleSchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
+
+    configureSchemaManager(schemaRegistryConf)
+
+    val subject = SchemaManager.getSubjectName(topic, false)
+    if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
+      SchemaManager.register(schema, subject)
+    }
+    else {
+      logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
+      None
+    }
   }
 
   /**
