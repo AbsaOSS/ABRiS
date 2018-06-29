@@ -414,6 +414,24 @@ object AvroSerDe {
       toAvro(dataframe, schemaProcessor)(Some(schemaId))
     }
 
+    def toConfluentAvro(topic: String, schemaPath: String)(schemaRegistryConf: Map[String,String]): Dataset[Array[Byte]] = {
+
+      if (schemaRegistryConf.isEmpty) {
+        throw new IllegalArgumentException("No Schema Registry connection parameters found. It is mandatory for this API entry to connect to Schema Registry so that" +
+          " the inferred schema can be registered or updated and its id can be retrieved to be sent along with the payload.")
+      }
+
+      checkDataframeSchema()
+
+      val schema = AvroSchemaUtils.load(schemaPath)
+
+      val schemaProcessor = new AvroToSparkProcessor(schema.toString)
+
+      val schemaId = manageSchemaRegistration(topic, schemaProcessor.getAvroSchema(), schemaRegistryConf)
+
+      toAvro(dataframe, schemaProcessor)(Some(schemaId))
+    }
+
     /**
      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records.
      *
