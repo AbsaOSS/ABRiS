@@ -51,8 +51,8 @@ object SampleConfluentKafkaDataframeWriterApp {
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
 
-    import ExamplesUtils._
     import spark.implicits._
+    import ExamplesUtils._
 
     implicit val encoder = getEncoder()
 
@@ -73,9 +73,12 @@ object SampleConfluentKafkaDataframeWriterApp {
     val topic = properties.getProperty(PARAM_TOPIC)
 
     import za.co.absa.abris.avro.AvroSerDe._
-
-    // providing access to Schema Registry is mandatory
-    dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))(sc)
+    if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
+      // providing access to Schema Registry is mandatory
+      dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))(sc)
+    } else {
+      dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_AVRO_SCHEMA))(sc)
+    }
   }
 
   private def loadProperties(path: String): Properties = {
