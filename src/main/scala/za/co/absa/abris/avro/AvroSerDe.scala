@@ -414,6 +414,15 @@ object AvroSerDe {
       toAvro(dataframe, schemaProcessor)(Some(schemaId))
     }
 
+    /**
+      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records with the id of the schema in Schema Registry attached to the beginning of the payload.
+      *
+      * Intended to be used when users want to force an Avro schema on the Dataframe, instead of having it inferred.
+      *
+      * The informed schema will be registered with Schema Registry in case the parameters for accessing it are provided an it is compatible with the currently registered version.
+      *
+      * The API will throw if Schema Registry access details are provided but the schema could not be registered due to either incompatibility, wrong credentials or Schema Registry unavailability.
+      */
     def toConfluentAvro(topic: String, schemaPath: String)(schemaRegistryConf: Map[String,String]): Dataset[Array[Byte]] = {
 
       if (schemaRegistryConf.isEmpty) {
