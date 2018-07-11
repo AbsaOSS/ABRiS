@@ -71,7 +71,7 @@ Now assume you have an Avro schema like this:
 If you use ```RETAIN_SELECTED_COLUMN_ONLY```, your final Dataframe will look like this:
 
 | username   |age |
-| ---------- |:--:|
+| ---------- |---:|
 | femel      | 35 |
 | user2      | 28 |
 | ...        |... |
