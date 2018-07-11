@@ -20,6 +20,7 @@ import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_ORIGINAL_SCHEMA
 import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
@@ -71,7 +72,9 @@ object SampleKafkaAvroFilterApp {
     println("Going to run filter: " + filter)
 
     deserialized.printSchema()
+    println(deserialized.schema.prettyJson)
     deserialized
+        //.select("value.map")
     //.filter(filter)
     .writeStream.format("console").start().awaitTermination()
   }
@@ -81,10 +84,10 @@ object SampleKafkaAvroFilterApp {
     import za.co.absa.abris.avro.AvroSerDe._
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromAvro(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))
+      stream.fromAvro("value", props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_ORIGINAL_SCHEMA)
     }
     else {
-      stream.fromAvro(props.getProperty(PARAM_AVRO_SCHEMA))
+      stream.fromAvro("value", props.getProperty(PARAM_AVRO_SCHEMA))(RETAIN_ORIGINAL_SCHEMA)
     }
   }
 }
