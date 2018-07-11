@@ -23,8 +23,12 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.{RETAIN_SELECTED_COLUMN_ONLY, SchemaRetentionPolicy}
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 
+/**
+  * This example shows how ABRiS can be used to read/write Avro records from/to Parquet files.
+  */
 object SampleAvroParquetExample {
 
   private val PARQUET_PATH = "testParquetDestination"
@@ -41,11 +45,16 @@ object SampleAvroParquetExample {
     spark.sparkContext.setLogLevel("info")
 
     writeAvroToParquet(PARQUET_PATH, 10, spark)
-    val parquetDF = readParquetAsAvro(PARQUET_PATH, spark)
+
+    // reads from the Parquet file and uses the data schema as the Dataframe schema
+    val parquetDF = readParquetAsAvro(PARQUET_PATH, RETAIN_SELECTED_COLUMN_ONLY, spark)
     
-    parquetDF.show()
+    parquetDF.select("*").show()
   }
 
+  /**
+    * Produces ''numRecords'' random entries and stored them into ''destination'' as Parquet.
+    */
   private def writeAvroToParquet(destination: String, numRecords: Int, spark: SparkSession) = {
     
     import spark.implicits._
@@ -55,22 +64,28 @@ object SampleAvroParquetExample {
         
     val rows = getRows(10)
     val dataframe = spark.sparkContext.parallelize(rows, 8).toDF()      
-      
+
+    dataframe.show()
+
     dataframe
       .toAvro(AVRO_SCHEMA)
       .write
       .mode(SaveMode.Overwrite)
       .parquet(destination)      
   }
-  
-  private def readParquetAsAvro(source: String, spark: SparkSession): Dataset[Row] = {
-    
+
+  /**
+    * Reads a Parquet Dataframe from ''source'', sets its schema as specified by ''schemaRetentionPolicy'' and returns it.
+    */
+  private def readParquetAsAvro(source: String, schemaRetentionPolicy: SchemaRetentionPolicy, spark: SparkSession): Dataset[Row] = {
+
     import za.co.absa.abris.avro.AvroSerDe._
-    
+
     spark
       .read
-      .parquet(source)            
-      .fromAvro(AVRO_SCHEMA)
+      .parquet(source)
+      // this option will extract the Avro record from "value" and make its schema the schema for the dataframe
+      .fromAvro("value", AvroSchemaUtils.load(AVRO_SCHEMA))(schemaRetentionPolicy)
   }
   
   private def loadProperties(path: String): Properties = {

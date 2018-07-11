@@ -37,8 +37,53 @@ Among the motivations for this project, it is possible to highlight:
 
 - Confluent's Avro payload requires specialized deserializers, since they send schema metadata with it, which makes the integration with Spark cumbersome.
 
+- In some use cases you may want to keep your Dataframe schema, adding your data as a nested structure, whereas in other cases you may want to use the schema for your data as the schema for the whole Dataframe.
 
 ## Usage
+
+### Schema retention policies
+
+Before using this library it is important to understand the concept behind ```za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies```.
+
+There are two policies: ```RETAIN_SELECTED_COLUMN_ONLY``` and ```RETAIN_ORIGINAL_SCHEMA```.
+
+In the first option, the schema used to define your data becomes the schema of the resulting Dataframe. In the second, the original schema for the Dataframe is kept, and your data is added to a target column as a nested structure.
+
+Taking Kafka as an example source, the resulting Dataframe contains the following fields: *key*, *value*, *topic*, *partition*, *offset*, *timestap* and *timestampType*. The field *value* contains the Avro payload.
+
+Now assume you have an Avro schema like this:
+```{
+       "type" : "record",
+       "name" : "userInfo",
+       "namespace" : "my.example",
+       "fields" : [{"name" : "username",
+                   "type" : "string",
+                   "default" : "NONE"},
+
+                   {"name" : "age",
+                   "type" : "int",
+                   "default" : -1}
+                  ]
+   }```
+
+If you use ```RETAIN_SELECTED_COLUMN_ONLY```, your final Dataframe will look like this:
+
+| username   |age |
+| ---------- |:--:|
+| femel      | 35 |
+| user2      | 28 |
+| ...        |... |
+
+which means that the Dataframe now has the schema of your data. On the other hand, if you use ```RETAIN_ORIGINAL_SCHEMA```, the final result would be like this:
+
+| key   |              value            | topic      | partition | offset | timestamp | timestampType |
+| ------|:-----------------------------:| ----------:| ---------:| ------:| ---------:| -------------:|
+| key 1 | {'name': 'femel', 'age': 35'} | test_topic |     1     |  21    | 2018-...  |  ...          |
+| key 2 | {'name': 'user2', 'age': 28'} | test_topic |     2     |  22    |  ...      |  ...          |
+| ...   | ...                           | test_topic |    ...    |  ...   |  ...      |  ...          |
+
+which means that the original schema was retained, and the Avro payload was extracted as a nested structure inside the destination (configurable) column *value*.
+
 
 ### Reading Avro binary records from Kafka as Spark structured streams (loading schema from file system) and performing regular SQL queries on them
 
@@ -46,7 +91,7 @@ Among the motivations for this project, it is possible to highlight:
 
 2. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-3. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance")```
+3. Invoke the library on your structured stream: ```... .fromAvro("column_containing_avro_data", "path_to_Avro_schema or org.apache.avro.Schema instance")(SchemaRetentionPolicy)```
 
 4. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
 
@@ -61,7 +106,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance") // invoke the library
+      .fromAvro("column_containing_avro_data", "path_to_Avro_schema or org.apache.avro.Schema instance")(RETAIN_SELECTED_COLUMN_ONLY) // invoke the library in this case setting the data schema as the Dataframe schema
 
     stream.filter("field_x % 2 == 0")
       .writeStream.format("console").start().awaitTermination()
@@ -83,7 +128,7 @@ val schemaRegistryConfs = Map(
 
 3. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-4. Invoke the library on your structured stream: ```... .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance")```
+4. Invoke the library on your structured stream: ```... .fromAvro("column_containing_avro_data", "path_to_Avro_schema or org.apache.avro.Schema instance")(SchemaRetentionPolicy)```
 
 5. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()```
 
@@ -102,7 +147,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .fromAvro("path_to_Avro_schema or org.apache.avro.Schema instance") // invoke the library
+      .fromAvro("column_containing_avro_data", "path_to_Avro_schema or org.apache.avro.Schema instance")(RETAIN_ORIGINAL_SCHEMA) // invoke the library adding the extracted Avro data to the column originally containing it.
 
     stream.filter("field_x % 2 == 0")
       .writeStream.format("console").start().awaitTermination()
@@ -124,7 +169,7 @@ val schemaRegistryConfs = Map(
 
 3. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-4. Invoke the library on your structured stream: ```... .fromConfluentAvro(None, Some(schemaRegistryConfs))```
+4. Invoke the library on your structured stream: ```... .fromConfluentAvro("column_containing_avro_data", None, Some(schemaRegistryConfs))(SchemaRetentionPolicy)```
 
 5. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
 
@@ -149,7 +194,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .fromConfluentAvro(None, Some(schemaRegistryConfs)) // invoke the library passing over parameters to access the Schema Registry
+      .fromConfluentAvro("column_containing_avro_data", None, Some(schemaRegistryConfs))(RETAIN_SELECTED_COLUMN_ONLY) // invoke the library passing over parameters to access the Schema Registry
 
     stream.filter("field_x % 2 == 0")
       .writeStream.format("console").start().awaitTermination()
@@ -161,7 +206,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 
 2. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-3. Invoke the library on your structured stream: ```... .fromConfluentAvro(Some(""path_to_avro_schema_in_some_file_system"), None)```
+3. Invoke the library on your structured stream: ```... .fromConfluentAvro("column_containing_avro_data", Some(""path_to_avro_schema_in_some_file_system"), None)(SchemaRetentionPolicy)```
 
 4. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
 
@@ -181,7 +226,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .fromConfluentAvro(Some("path_to_avro_schema_in_some_file_system"), None) // invoke the library passing over the path to the Avro schema
+      .fromConfluentAvro("column_containing_avro_data", Some("path_to_avro_schema_in_some_file_system"), None)(RETAIN_SELECTED_COLUMN_ONLY) // invoke the library passing over the path to the Avro schema
 
     stream.filter("field_x % 2 == 0")
       .writeStream.format("console").start().awaitTermination()
@@ -358,7 +403,7 @@ Dependency:
 <dependency>
     <groupId>za.co.absa</groupId>
 	<artifactId>abris</artifactId>
-	<version>1.0.0</version>
+	<version>2.0.0</version>
 </dependency>
 ```
 

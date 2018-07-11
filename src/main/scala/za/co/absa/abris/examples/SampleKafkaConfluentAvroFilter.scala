@@ -20,6 +20,7 @@ import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.{RETAIN_ORIGINAL_SCHEMA, RETAIN_SELECTED_COLUMN_ONLY}
 import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
@@ -37,7 +38,7 @@ object SampleKafkaConfluentAvroFilterApp {
 
   def main(args: Array[String]): Unit = {
 
-    // there is an example file at /src/test/resources/ConfluentAvroReadingExample.properties
+    // there is an example file at /src/test/resources/AvroReadingExample.properties
     if (args.length != 1) {
       println("No properties file specified.")
       System.exit(1)
@@ -81,10 +82,10 @@ object SampleKafkaConfluentAvroFilterApp {
     import za.co.absa.abris.avro.AvroSerDe._
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromConfluentAvro(None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))
+      stream.fromConfluentAvro("value", None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))(RETAIN_ORIGINAL_SCHEMA)
     }
     else {
-      stream.fromConfluentAvro(Some(props.getProperty(PARAM_AVRO_SCHEMA)), None)
+      stream.fromConfluentAvro("value", Some(props.getProperty(PARAM_AVRO_SCHEMA)), None)(RETAIN_SELECTED_COLUMN_ONLY)
     }
   }
 }
