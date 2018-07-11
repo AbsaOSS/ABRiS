@@ -404,8 +404,7 @@ Dependency:
     <groupId>za.co.absa</groupId>
 	<artifactId>abris</artifactId>
 	<version>2.0.0</version>
-</dependency>
-```
+</dependency>```
 
 ## Dependencies
 
