@@ -52,7 +52,8 @@ In the first option, the schema used to define your data becomes the schema of t
 Taking Kafka as an example source, the resulting Dataframe contains the following fields: *key*, *value*, *topic*, *partition*, *offset*, *timestap* and *timestampType*. The field *value* contains the Avro payload.
 
 Now assume you have an Avro schema like this:
-```{
+```
+{
        "type" : "record",
        "name" : "userInfo",
        "namespace" : "my.example",
@@ -64,7 +65,8 @@ Now assume you have an Avro schema like this:
                    "type" : "int",
                    "default" : -1}
                   ]
-   }```
+   }
+```
 
 If you use ```RETAIN_SELECTED_COLUMN_ONLY```, your final Dataframe will look like this:
 
@@ -404,7 +406,8 @@ Dependency:
     <groupId>za.co.absa</groupId>
 	<artifactId>abris</artifactId>
 	<version>2.0.0</version>
-</dependency>```
+</dependency>
+```
 
 ## Dependencies
 
