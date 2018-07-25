@@ -194,7 +194,7 @@ object AvroSerDe {
     @throws[InvalidParameterException]
     private def manageSchemaRegistration(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Int = {
 
-      val schemaId = AvroSchemaUtils.registerIfCompatibleSchema(topic, schema, schemaRegistryConf)
+      val schemaId = AvroSchemaUtils.registerIfCompatibleValueSchema(topic, schema, schemaRegistryConf)
 
       if (schemaId.isEmpty) {
         throw new InvalidParameterException(s"Schema could not be registered for topic '$topic'. Make sure that the Schema Registry " +
@@ -225,6 +225,20 @@ object AvroSerDe {
       toAvro(AvroSchemaUtils.load(schemaPath))
     }
 
+    /**
+      * Converts from Dataset[Row] into Dataset[Array[Byte]] containing Avro records.
+      *
+      * Intended to be used when there is not Spark schema available in the Dataframe but there is an expected Avro schema.
+      *
+      * It is important to keep in mind that the specification for a field in the schema MUST be the same at both ends, writer and reader.
+      * For some fields (e.g. strings), Spark can ignore the nullability specified in the SQL struct (SPARK-14139). This issue could lead
+      * to fields being ignored. Thus, it is important to check the final SQL schema after Spark has created the Dataframes.
+      *
+      * For instance, the Spark construct 'StructType("name", StringType, false)' translates to the Avro field {"name": "name", "type":"string"}.
+      * However, if Spark changes the nullability (StructType("name", StringType, TRUE)), the Avro field becomes a union: {"name":"name", "type": ["string", "null"]}.
+      *
+      * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
+      */
     def toAvro(schema: Schema): Dataset[Array[Byte]] = {
       val plainAvroSchema = schema.toString
       toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))(None)

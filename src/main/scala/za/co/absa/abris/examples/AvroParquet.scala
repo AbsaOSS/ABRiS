@@ -29,7 +29,7 @@ import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 /**
   * This example shows how ABRiS can be used to read/write Avro records from/to Parquet files.
   */
-object SampleAvroParquetExample {
+object AvroParquet {
 
   private val PARQUET_PATH = "testParquetDestination"
   private val AVRO_SCHEMA = "src\\test\\resources\\example_schema.avsc"

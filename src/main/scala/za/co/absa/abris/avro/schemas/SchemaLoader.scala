@@ -39,12 +39,37 @@ object SchemaLoader {
     try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()
   }
 
+  def loadFromSchemaRegistryForKeyAndValue(params: Map[String,String]): (Schema,Schema) = {
+
+    configureSchemaManager(params)
+
+    val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
+
+    if (topic == null) {
+      throw new IllegalArgumentException(s"Missing parameter: ${SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC}")
+    }
+
+    var specifiedKeyId   = params(SchemaManager.PARAM_KEY_SCHEMA_ID)
+    var specifiedValueId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
+
+    val keySchema   = loadFromSchemaRegistry(topic, specifiedKeyId, true)
+    val valueSchema = loadFromSchemaRegistry(topic, specifiedValueId, false)
+
+    (keySchema, valueSchema)
+  }
+
   def loadFromSchemaRegistry(params: Map[String,String]): Schema = {
     configureSchemaManager(params)
+
     val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
-    val subject = SchemaManager.getSubjectName(topic, false)
-    var paramId = params(SchemaManager.PARAM_SCHEMA_ID)
-    val id = getSchemaId(paramId, subject)
+    val specifiedSchemaId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
+
+    loadFromSchemaRegistry(topic, specifiedSchemaId, false)
+  }
+
+  private def loadFromSchemaRegistry(topic: String, schemaSpecifiedId: String, isKey: Boolean): Schema = {
+    val subject = SchemaManager.getSubjectName(topic, isKey)
+    val id = getSchemaId(schemaSpecifiedId, subject)
     SchemaManager.getBySubjectAndId(subject, id).get
   }
 

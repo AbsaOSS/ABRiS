@@ -20,16 +20,17 @@ import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_ORIGINAL_SCHEMA
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.{RETAIN_ORIGINAL_SCHEMA, RETAIN_SELECTED_COLUMN_ONLY}
 import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
 
-object SampleKafkaAvroFilterApp {
+object ConfluentKafkaAvroReader {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_AVRO_SCHEMA = "avro.schema"
+  private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
+  private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_TASK_FILTER = "task.filter"
   private val PARAM_LOG_LEVEL = "log.level"
   private val PARAM_OPTION_SUBSCRIBE = "option.subscribe"
@@ -46,11 +47,11 @@ object SampleKafkaAvroFilterApp {
 
     println("Loading properties from: " + args(0))
     val properties = ExamplesUtils.loadProperties(args(0))
-    
+
     for (key <- properties.keysIterator) {
       println(s"\t${key} = ${properties.getProperty(key)}")
     }
-    
+
     val spark = SparkSession
       .builder()
       .appName(properties.getProperty(PARAM_JOB_NAME))
@@ -58,9 +59,9 @@ object SampleKafkaAvroFilterApp {
       .getOrCreate()
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
-      
+
     import ExamplesUtils._
-    
+
     val stream = spark
       .readStream
       .format("kafka")
@@ -72,11 +73,9 @@ object SampleKafkaAvroFilterApp {
     println("Going to run filter: " + filter)
 
     deserialized.printSchema()
-    println(deserialized.schema.prettyJson)
     deserialized
-        //.select("value.map")
-    //.filter(filter)
-    .writeStream.format("console").start().awaitTermination()
+      //.filter(filter)
+      .writeStream.format("console").start().awaitTermination()
   }
 
   private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
@@ -84,10 +83,10 @@ object SampleKafkaAvroFilterApp {
     import za.co.absa.abris.avro.AvroSerDe._
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromAvro("value", props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromConfluentAvro("value", None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))(RETAIN_ORIGINAL_SCHEMA)
     }
     else {
-      stream.fromAvro("value", props.getProperty(PARAM_AVRO_SCHEMA))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromConfluentAvro("value", Some(props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA)), None)(RETAIN_SELECTED_COLUMN_ONLY)
     }
   }
 }

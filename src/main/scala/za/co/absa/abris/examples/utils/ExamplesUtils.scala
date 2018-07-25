@@ -3,7 +3,7 @@ package za.co.absa.abris.examples.utils
 import java.io.FileInputStream
 import java.util.Properties
 
-import org.apache.spark.sql.DataFrameWriter
+import org.apache.spark.sql.{DataFrameWriter, Row}
 import org.apache.spark.sql.streaming.DataStreamReader
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 
@@ -36,8 +36,8 @@ object ExamplesUtils {
     }
   }
 
-  implicit class WriterStreamOptions(stream: DataFrameWriter[Array[Byte]]) {
-    def addOptions(properties: Properties): DataFrameWriter[Array[Byte]] = {
+  implicit class WriterRowStreamOptions(stream: DataFrameWriter[Row]) {
+    def addOptions(properties: Properties): DataFrameWriter[Row] = {
       getKeys(properties)
         .foreach(keys => {          
           println(s"DataStreamReader: setting option: ${keys._2} = ${properties.getProperty(keys._1)}")
@@ -47,9 +47,20 @@ object ExamplesUtils {
     }
   }
 
+  implicit class WriterStreamOptions(stream: DataFrameWriter[Array[Byte]]) {
+    def addOptions(properties: Properties): DataFrameWriter[Array[Byte]] = {
+      getKeys(properties)
+        .foreach(keys => {
+          println(s"DataStreamReader: setting option: ${keys._2} = ${properties.getProperty(keys._1)}")
+          stream.option(keys._2, properties.getProperty(keys._1))
+        })
+      stream
+    }
+  }
+
   implicit class SchemaRegistryConfiguration(props: Properties) {
     def getSchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] = {
-      val keys = Set(SchemaManager.PARAM_SCHEMA_REGISTRY_URL, SchemaManager.PARAM_SCHEMA_ID)
+      val keys = Set(SchemaManager.PARAM_SCHEMA_REGISTRY_URL, SchemaManager.PARAM_VALUE_SCHEMA_ID, SchemaManager.PARAM_KEY_SCHEMA_ID)
       val confs = scala.collection.mutable.Map[String,String](SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(subscribeParamKey))
       for (propKey <- keys) yield {
         if (props.containsKey(propKey)) {
