@@ -72,6 +72,74 @@ private[avro] class AvroDecoder {
       })
   }
 
+  protected def fromConfluentAvroToRowWithKeys(dataframe: Dataset[Row], keyColName: String, valueColName: String, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+
+    if (schemaRegistryConf.isEmpty) {
+      throw new InvalidParameterException("Schema Registry configurations is required.")
+    }
+
+    val keyValueSchemas = AvroSchemaUtils.loadForKeyAndValue(schemaRegistryConf)
+
+    fromConfluentAvroToRowWithKeys(dataframe, keyColName, keyValueSchemas._1, valueColName, keyValueSchemas._2, schemaRegistryConf)
+  }
+
+  protected def fromConfluentAvroToRowWithKeys(dataframe: Dataset[Row], keyColName: String, keySchemaPath: String, valueColName: String, valueSchemaPath: String, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+
+    val keySchema = AvroSchemaUtils.load(keySchemaPath)
+    val valueSchema = AvroSchemaUtils.load(valueSchemaPath)
+
+    fromConfluentAvroToRowWithKeys(dataframe, keyColName, keySchema, valueColName, valueSchema, schemaRegistryConf)
+  }
+
+  protected def fromConfluentAvroToRowWithKeys(dataframe: Dataset[Row], keyColName: String, keyColSchema: Schema, valueColName: String, valueColSchema: Schema, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+
+    if (schemaRegistryConf.isEmpty) {
+      throw new InvalidParameterException("Schema Registry configurations is required.")
+    }
+
+    val originalSchema = dataframe.schema
+
+    // gets the index, from Dataframe's Spark schema, of the key and value columns
+    val keyColIndex   = originalSchema.fields.toList.indexWhere(_.name.toLowerCase == keyColName.toLowerCase)
+    val valueColIndex = originalSchema.fields.toList.indexWhere(_.name.toLowerCase == valueColName.toLowerCase)
+
+    // updates the schemas for the key and value columns
+    originalSchema.fields(keyColIndex)   = new StructField(keyColName, SparkAvroConversions.toSqlType(keyColSchema), false)
+    originalSchema.fields(valueColIndex) = new StructField(valueColName, SparkAvroConversions.toSqlType(valueColSchema), false)
+
+    // creates a row encoder for the updated schema
+    implicit val rowEncoder = AvroToRowEncoderFactory.createRowEncoder(originalSchema)
+
+    // gets key and value columns schemas as plain text so that they can be serialized
+    val keyColPlainSchema   = keyColSchema.toString
+    val valueColPlainSchema = valueColSchema.toString
+
+    dataframe
+      .mapPartitions(partition => {
+
+        val keyAvroReader = AvroReaderFactory.createConfiguredConfluentAvroReader(AvroSchemaUtils.parse(keyColPlainSchema), schemaRegistryConf)
+        val valueAvroReader = AvroReaderFactory.createConfiguredConfluentAvroReader(AvroSchemaUtils.parse(valueColPlainSchema), schemaRegistryConf)
+
+        val avroToRowConverter = new AvroToRowConverter(None)
+
+        partition.map(avroRecord => {
+
+          val keySparkType   = avroToRowConverter.convert(keyAvroReader.deserialize(avroRecord.get(keyColIndex).asInstanceOf[Array[Byte]]))
+          val valueSparkType = avroToRowConverter.convert(valueAvroReader.deserialize(avroRecord.get(valueColIndex).asInstanceOf[Array[Byte]]))
+
+          val array: Array[Any] = new Array(avroRecord.size)
+
+          for (i <- 0 until avroRecord.size) {
+            array(i) = avroRecord.get(i)
+          }
+          array(keyColIndex)   = keySparkType
+          array(valueColIndex) = valueSparkType
+
+          Row.fromSeq(array)
+        })
+      })
+  }
+
   /**
     * Converts Dataframes of binary Avro records into Dataframes of type Spark data.
     *
@@ -172,6 +240,64 @@ private[avro] class AvroDecoder {
   }
 
   /**
+    * Converts the binary Avro records contained in specified columns of the Dataframe into regular Rows with a
+    * SQL schema whose specification is translated from the Avro schema informed.
+    *
+    * Apart from the columns that will be changed to hold the new Spark schemas translated from the Avro ones, the
+    * rest of the schema for the Dataset will remain unchanged.
+    */
+  protected def fromAvroToRowRetainingStructure(dataframe: Dataset[Row], keyColName: String, keyColSchema: Schema, valueColName: String, valueColSchema: Schema): Dataset[Row] = {
+
+    val originalSchema = dataframe.schema
+
+    // gets the index, from Dataframe's Spark schema, of the key and value columns
+    val keyColIndex   = originalSchema.fields.toList.indexWhere(_.name.toLowerCase == keyColName.toLowerCase)
+    val valueColIndex = originalSchema.fields.toList.indexWhere(_.name.toLowerCase == valueColName.toLowerCase)
+
+    // updates the schemas for the key and value columns
+    originalSchema.fields(keyColIndex)   = new StructField(keyColName, SparkAvroConversions.toSqlType(keyColSchema), false)
+    originalSchema.fields(valueColIndex) = new StructField(valueColName, SparkAvroConversions.toSqlType(valueColSchema), false)
+
+    // creates a row encoder for the updated schema
+    implicit val rowEncoder = AvroToRowEncoderFactory.createRowEncoder(originalSchema)
+
+    // gets key and value columns schemas as plain text so that they can be serialized
+    val keyColPlainSchema   = keyColSchema.toString
+    val valueColPlainSchema = valueColSchema.toString
+
+    dataframe
+      .mapPartitions(partition => {
+
+        // creates converters for the key and value Avro records contained in the Dataframe columns
+        val keyColConverter  = new AvroToRowConverter(Some(AvroReaderFactory.createAvroReader(AvroSchemaUtils.parse(keyColPlainSchema))))
+        val valueColConverter = new AvroToRowConverter(Some(AvroReaderFactory.createAvroReader(AvroSchemaUtils.parse(valueColPlainSchema))))
+
+        partition.map(avroRecords => {
+
+          // gets the binary Avro data from the key and value columns
+          val keyRecord   = avroRecords.get(avroRecords.fieldIndex(keyColName)).asInstanceOf[Array[Byte]]
+          val valueRecord = avroRecords.get(avroRecords.fieldIndex(valueColName)).asInstanceOf[Array[Byte]]
+
+          // converts the Avro records into Spark Rows
+          val keySparkType   = keyColConverter.convert(avroRecords.get(keyColIndex).asInstanceOf[Array[Byte]])
+          val valueSparkType = valueColConverter.convert(avroRecords.get(valueColIndex).asInstanceOf[Array[Byte]])
+
+          // copies all the fields to the new column set
+          val columns: Array[Any] = new Array(avroRecords.size)
+          for (i <- 0 until avroRecords.size) {
+            columns(i) = avroRecords.get(i)
+          }
+
+          // updates the key and value columns values
+          columns(keyColIndex)   = keySparkType
+          columns(valueColIndex) = valueSparkType
+
+          Row.fromSeq(columns)
+        })
+      })
+  }
+
+  /**
     * Converts the binary Avro records contained in the Dataframe into regular Rows with a
     * SQL schema whose specification is translated from the Avro schema informed.
     */
@@ -212,6 +338,14 @@ private[avro] class AvroDecoder {
     * Converts the binary Avro records contained in the Dataframe into regular Rows with a
     * SQL schema whose specification is translated from the Avro schema informed.
     */
+  protected def fromAvroToRowRetainingStructure(dataframe: Dataset[Row], keyColName: String, keySchemaPath: String, valueColName: String, valueSchemaPath: String): Dataset[Row] = {
+    fromAvroToRowRetainingStructure(dataframe, keyColName, AvroSchemaUtils.load(keySchemaPath), valueColName, AvroSchemaUtils.load(valueSchemaPath))
+  }
+
+  /**
+    * Converts the binary Avro records contained in the Dataframe into regular Rows with a
+    * SQL schema whose specification is translated from the Avro schema informed.
+    */
   protected def fromAvroToRow(dataframe: Dataset[Row], schemaRegistryConf: Map[String,String]): Dataset[Row] = {
 
     val schema = AvroSchemaUtils.load(schemaRegistryConf)
@@ -228,6 +362,15 @@ private[avro] class AvroDecoder {
           avroDecoder.convert(avroRecord)
         })
       })
+  }
+
+  /**
+    * Converts the binary Avro records contained in the Dataframe into regular Rows with a
+    * SQL schema whose specification is translated from the Avro schema informed.
+    */
+  protected def fromAvroToRowWithKeysRetainingStructure(dataframe: Dataset[Row], keyColName: String, valueColName: String, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+    val keyValueSchemas = AvroSchemaUtils.loadForKeyAndValue(schemaRegistryConf)
+    fromAvroToRowRetainingStructure(dataframe, keyColName, keyValueSchemas._1, valueColName, keyValueSchemas._2)
   }
 
   /**

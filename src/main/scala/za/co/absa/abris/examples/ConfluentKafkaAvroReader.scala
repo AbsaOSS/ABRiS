@@ -25,11 +25,12 @@ import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
 
-object SampleKafkaConfluentAvroFilterApp {
+object ConfluentKafkaAvroReader {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_AVRO_SCHEMA = "avro.schema"
+  private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
+  private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_TASK_FILTER = "task.filter"
   private val PARAM_LOG_LEVEL = "log.level"
   private val PARAM_OPTION_SUBSCRIBE = "option.subscribe"
@@ -85,7 +86,7 @@ object SampleKafkaConfluentAvroFilterApp {
       stream.fromConfluentAvro("value", None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))(RETAIN_ORIGINAL_SCHEMA)
     }
     else {
-      stream.fromConfluentAvro("value", Some(props.getProperty(PARAM_AVRO_SCHEMA)), None)(RETAIN_SELECTED_COLUMN_ONLY)
+      stream.fromConfluentAvro("value", Some(props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA)), None)(RETAIN_SELECTED_COLUMN_ONLY)
     }
   }
 }

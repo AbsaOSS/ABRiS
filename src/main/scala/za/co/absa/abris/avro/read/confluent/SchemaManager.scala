@@ -38,7 +38,8 @@ object SchemaManager {
 
   val PARAM_SCHEMA_REGISTRY_TOPIC = "schema.registry.topic"
   val PARAM_SCHEMA_REGISTRY_URL = "schema.registry.url"
-  val PARAM_SCHEMA_ID = "schema.id"
+  val PARAM_VALUE_SCHEMA_ID = "value.schema.id"
+  val PARAM_KEY_SCHEMA_ID = "key.schema.id"
   val PARAM_SCHEMA_ID_LATEST_NAME = "latest"
 
   private var schemaRegistryClient: SchemaRegistryClient = _

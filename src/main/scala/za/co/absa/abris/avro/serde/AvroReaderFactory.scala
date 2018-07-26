@@ -56,4 +56,14 @@ private[avro] object AvroReaderFactory {
     reader.configureSchemaRegistry(configs)
     reader
   }
+
+  /**
+    * Creates an instance of [[ScalaConfluentKafkaAvroDeserializer]] and configures its Schema Registry access in case
+    * the parameters to do it are defined.
+    */
+  def createConfiguredConfluentAvroReader(schema: Schema, schemaRegistryConf: Map[String,String]): ScalaConfluentKafkaAvroDeserializer = {
+    val reader = new ScalaConfluentKafkaAvroDeserializer(None, Some(schema))
+    reader.configureSchemaRegistry(schemaRegistryConf)
+    reader
+  }
 }

@@ -97,7 +97,7 @@ which means that the original schema was retained, and the Avro payload was extr
 
 4. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()``` 
 
-Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaAvroFilterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.KafkaAvroReader```
 
 ```scala
     // import Spark Avro Dataframes
@@ -138,7 +138,7 @@ The library will automatically retrieve the Avro schema from Schema Registry and
 
 Although the Avro schema was retrieved from Schema Registry, this API expects Avro records to be "standard", not Confluent ones. For consuming Confluent Avro records please refer to the next example.
 
-Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaAvroFilterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.KafkaAvroReader```
 
 ```scala
     // import Spark Avro Dataframes
@@ -179,7 +179,7 @@ The library will automatically retrieve the Avro schema from Schema Registry and
 
 We strongly recommend you to read the documentation of ```za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer.deserialize()``` in order to better understand how the integration with the Confluent platform works.
 
-Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaConfluentAvroFilterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.ConfluentKafkaAvroReader```
 
 ```scala
     val schemaRegistryConfs = Map(
@@ -216,7 +216,7 @@ The Avro schema will be loaded from the file system and used to configure Spark 
 
 We strongly recommend you to read the documentation of ```za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer.deserialize()``` in order to better understand how the integration with the Confluent platform works.
 
-Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaConfluentAvroFilterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.ConfluentKafkaAvroReader```
 
 
 ```scala
@@ -244,7 +244,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 
 4. Send your data to Kafka as Avro records: ```... .write.format("kafka") ...```
 
-Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaDataframeWriterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.KafkaAvroWriter```
 
 ```scala
       import spark.implicits._
@@ -270,7 +270,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 
 Follow the same steps as above, however, when invoking the library, instead of informing the path to the Avro schema, you can just inform the expected name and namespace for the records, and the library will infer the complete schema from the Dataframe: ```dataframe.toAvro("schema_name", "schema_namespace")```
 
-Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleKafkaDataframeWriterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.KafkaAvroWriter```
 
 ```scala
       import spark.implicits._
@@ -299,7 +299,7 @@ Follow the same steps as above, however, when invoking the library, instead of i
 
 In this option it is mandatory to provide access to Schema Registry.
 
-Below is an example whose full version can be found at ```za.co.absa.abris.examples.SampleConfluentKafkaDataframeWriterApp```
+Below is an example whose full version can be found at ```za.co.absa.abris.examples.ConfluentKafkaAvroWriter```
 
 ```scala
       import spark.implicits._
@@ -325,6 +325,14 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       	.option("topic", topic)
       	.save()
 ```
+
+### Writing/reading keys and values as Avro from Kafka
+
+ABRiS also supports the simultaneous conversion of keys and values in Kafka Dataframes to/from Avro.
+
+The API usage is exactly the same, however, the entry point is different: ```za.co.absa.abris.avro.AvroSerDeWithKeyColumn```.
+
+You can find examples for both, reading and writing from and to Apache and Confluent Kafka in package ```za.co.absa.abris.examples.using-keys```.
 
 ## Other Features
 

@@ -50,17 +50,40 @@ object AvroSchemaUtils {
     SchemaLoader.loadFromSchemaRegistry(schemaRegistryConf)
   }
 
+  def loadForKeyAndValue(schemaRegistryConf: Map[String,String]): (Schema,Schema) = {
+    SchemaLoader.loadFromSchemaRegistryForKeyAndValue(schemaRegistryConf)
+  }
+
+  /**
+    * Register a new schema for a subject KEY if the schema is compatible with the latest available version.
+    *
+    * @return None if incompatible or if could not perform the registration.
+    */
+  def registerIfCompatibleKeySchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
+    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, true)
+  }
+
+  /**
+    * Register a new schema for a subject VALUE if the schema is compatible with the latest available version.
+    *
+    * @return None if incompatible or if could not perform the registration.
+    */
+  def registerIfCompatibleValueSchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
+    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, false)
+  }
+
   /**
     * Register a new schema for a subject if the schema is compatible with the latest available version.
     *
     * @return None if incompatible or if could not perform the registration.
     */
-  def registerIfCompatibleSchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
+  private def registerIfCompatibleSchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String], isKey: Boolean): Option[Int] = {
 
     configureSchemaManager(schemaRegistryConf)
 
-    val subject = SchemaManager.getSubjectName(topic, false)
+    val subject = SchemaManager.getSubjectName(topic, isKey)
     if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
+      logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
       SchemaManager.register(schema, subject)
     }
     else {

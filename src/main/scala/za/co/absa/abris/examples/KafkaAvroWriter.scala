@@ -28,11 +28,12 @@ import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
 
-object SampleKafkaDataframeWriterApp {
+object KafkaAvroWriter {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_AVRO_SCHEMA = "avro.schema"
+  private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
+  private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_AVRO_RECORD_NAME = "avro.record.name"
   private val PARAM_AVRO_RECORD_NAMESPACE = "avro.record.namespace"
   private val PARAM_INFER_SCHEMA = "infer.schema"
@@ -85,7 +86,7 @@ object SampleKafkaDataframeWriterApp {
     if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
       dataframe.toAvro(properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))
     } else {
-      dataframe.toAvro(properties.getProperty(PARAM_AVRO_SCHEMA))
+      dataframe.toAvro(properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
     }
   }
 
