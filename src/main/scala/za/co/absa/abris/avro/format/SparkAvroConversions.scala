@@ -110,7 +110,7 @@ object SparkAvroConversions {
     val record = rowToGenericRecord(row, sparkSchema, avroSchema)    
     toByteArray(record, avroSchema, schemaId)
   }
-  
+
   /**
    * Translates an Avro Schema into a Spark's StructType.
    * 

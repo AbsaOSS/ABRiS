@@ -83,7 +83,19 @@ private[avro] class AvroDecoder {
     fromConfluentAvroToRowWithKeys(dataframe, keyColName, keyValueSchemas._1, valueColName, keyValueSchemas._2, schemaRegistryConf)
   }
 
+  protected def fromConfluentAvroToRowWithKeys(dataframe: Dataset[Row], keyColName: String, keySchemaPath: String, valueColName: String, valueSchemaPath: String, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+
+    val keySchema = AvroSchemaUtils.load(keySchemaPath)
+    val valueSchema = AvroSchemaUtils.load(valueSchemaPath)
+
+    fromConfluentAvroToRowWithKeys(dataframe, keyColName, keySchema, valueColName, valueSchema, schemaRegistryConf)
+  }
+
   protected def fromConfluentAvroToRowWithKeys(dataframe: Dataset[Row], keyColName: String, keyColSchema: Schema, valueColName: String, valueColSchema: Schema, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+
+    if (schemaRegistryConf.isEmpty) {
+      throw new InvalidParameterException("Schema Registry configurations is required.")
+    }
 
     val originalSchema = dataframe.schema
 

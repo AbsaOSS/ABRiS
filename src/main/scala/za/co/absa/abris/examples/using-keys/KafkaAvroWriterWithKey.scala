@@ -89,7 +89,9 @@ object KafkaAvroWriterWithKey {
     import za.co.absa.abris.avro.AvroSerDeWithKeyColumn._
 
     if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
-      dataframe.toAvro(properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))
+      val name = properties.getProperty(PARAM_AVRO_RECORD_NAME)
+      val namespace = properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE)
+      dataframe.toAvro(name, namespace, name, namespace)
     } else {
       dataframe.toAvro(properties.getProperty(PARAM_KEY_AVRO_SCHEMA), properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
     }
