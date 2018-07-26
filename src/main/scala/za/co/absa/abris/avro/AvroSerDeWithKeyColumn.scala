@@ -40,6 +40,9 @@ import za.co.absa.abris.avro.serde.{AvroDecoder, AvroToRowEncoderFactory}
   * Also, it is possible to retain the whole Dataframe structure after parsing back from Avro as well as only the key and value columns.
   * To shift between these options, it is STRONGLY recommended that users of this library understand the concept behind
   * [[za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies]].
+  *
+  * IMPORTANT: This API was created into a separate file since it was added later and the refactoring of the previous one [[za.co.absa.abris.avro.AvroSerDe]]
+  * would be to big, thus, error-prone.
   */
 object AvroSerDeWithKeyColumn {
 
