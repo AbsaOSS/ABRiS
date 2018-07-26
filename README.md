@@ -332,7 +332,7 @@ ABRiS also supports the simultaneous conversion of keys and values in Kafka Data
 
 The API usage is exactly the same, however, the entry point is different: ```za.co.absa.abris.avro.AvroSerDeWithKeyColumn```.
 
-You can find examples for both, reading and writing from and to Apache and Confluent Kafka [here](../src/main/scala/za/co/absa/abris/examples/using-keys).
+You can find examples for both, reading and writing from and to Apache and Confluent Kafka in package ```za.co.absa.abris.examples.using-keys```.
 
 ## Other Features
 
