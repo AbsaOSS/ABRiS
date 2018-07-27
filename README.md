@@ -163,7 +163,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 val schemaRegistryConfs = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-  SchemaManager.PARAM_SCHEMA_ID             -> "current_value_schema_id" // set to "latest" if you want the latest schema version to used
+  SchemaManager.PARAM_VALUE_SCHEMA_ID             -> "current_value_schema_id" // set to "latest" if you want the latest schema version to used
 )
 ```
 
@@ -185,7 +185,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
     val schemaRegistryConfs = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-      SchemaManager.PARAM_SCHEMA_ID             -> "latest" // otherwise, just specify an id
+      SchemaManager.PARAM_VALUE_SCHEMA_ID             -> "latest" // otherwise, just specify an id
     )
       
     // import Spark Avro Dataframes
