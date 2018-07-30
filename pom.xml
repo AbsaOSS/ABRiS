@@ -28,6 +28,14 @@
 		</repository>
 	</distributionManagement>
 
+	<!-- Confluent repository since their dependencies are not available in Maven Central -->
+	<repositories>
+		<repository>
+			<id>confluent</id>
+			<url>http://packages.confluent.io/maven/</url>
+		</repository>
+	</repositories>
+
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
