@@ -423,7 +423,7 @@ Dependency:
 ```
 <dependency>
     <groupId>za.co.absa</groupId>
-	<artifactId>abris</artifactId>
+	<artifactId>abris_2.11</artifactId>
 	<version>2.0.0</version>
 </dependency>
 ```
