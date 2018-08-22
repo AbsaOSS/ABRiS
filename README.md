@@ -326,7 +326,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       	.save()
 ```
 
-### Writing/reading keys and values as Avro from Kafka
+### Writing/reading keys and values as Avro to/from Kafka
 
 ABRiS also supports the simultaneous conversion of keys and values in Kafka Dataframes to/from Avro.
 
@@ -344,6 +344,16 @@ val schemaRegistryConfs = Map(
 ```
 
 You can find examples for both, reading and writing from and to Apache and Confluent Kafka in package ```za.co.absa.abris.examples.using-keys```.
+
+### Writing/reading values as Avro and plain keys as String to/from Kafka
+
+ABRiS also supports writing to Kafka using plain keys while still converting the content of the *value* column (the payload) into Avro.
+
+The API usage is exactly the same as in the previous item (*Writing/reading keys and values as Avro to/from Kafka*), however, instead of invoking ```toAvro()``` on the DataFrame, the plain key feature requires users to invoke ```toAvroWithPlainKey()```. For the rest, the behavior is exactly the same.
+
+The keys will be converted to their string representation, thus, for instance, if it is an integer value, let's say 8, it will be retrieved as the string "8".
+
+There are two complete examples of this feature. One at ```za.co.absa.abris.examples.using_keys.KafkaAvroWriterWithPlainKey```, for regular Avro payload, and another one at ```za.co.abris.examples.using_keys.ConfluentKafkaAvroWriterWithPlainKey``` for Confluent Kafka.
 
 ## Other Features
 
@@ -424,7 +434,7 @@ Dependency:
 <dependency>
     <groupId>za.co.absa</groupId>
 	<artifactId>abris_2.11</artifactId>
-	<version>2.0.0</version>
+	<version>2.1.0</version>
 </dependency>
 ```
 
