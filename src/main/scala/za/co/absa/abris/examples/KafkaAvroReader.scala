@@ -59,9 +59,9 @@ object KafkaAvroReader {
       .getOrCreate()
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
-      
+
     import ExamplesUtils._
-    
+
     val stream = spark
       .readStream
       .format("kafka")
@@ -75,7 +75,6 @@ object KafkaAvroReader {
     deserialized.printSchema()
     println(deserialized.schema.prettyJson)
     deserialized
-        .select("key")
     //.filter(filter)
     .writeStream.format("console").start().awaitTermination()
   }

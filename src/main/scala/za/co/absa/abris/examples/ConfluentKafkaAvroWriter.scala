@@ -60,6 +60,7 @@ object ConfluentKafkaAvroWriter {
     do {
       val rows = getRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
       val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
+
       toAvro(dataframe, properties) // check the method content to understand how the library is invoked
         .write
         .format("kafka")
@@ -95,6 +96,7 @@ object ConfluentKafkaAvroWriter {
   private def getEncoder(): Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
+    println(sparkSchema)
     RowEncoder.apply(sparkSchema)
   }
 }

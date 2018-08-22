@@ -74,14 +74,14 @@ object ConfluentKafkaAvroReader {
 
     deserialized.printSchema()
     deserialized
+        //.selectExpr("cast (key as string)")
       //.filter(filter)
       .writeStream.format("console").start().awaitTermination()
   }
 
   private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
-    import ExamplesUtils._
     import za.co.absa.abris.avro.AvroSerDe._
-
+    import ExamplesUtils._
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
       stream.fromConfluentAvro("value", None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))(RETAIN_ORIGINAL_SCHEMA)
     }
