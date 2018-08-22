@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.keys
+package za.co.absa.abris.examples.using_keys
 
 import java.io.FileInputStream
 import java.util.Properties
