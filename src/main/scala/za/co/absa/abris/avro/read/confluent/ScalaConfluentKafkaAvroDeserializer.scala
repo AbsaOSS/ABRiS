@@ -70,7 +70,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     * 5. Although changes in the schema are supported, it is important to bear in mind that this class's main reason of
     *    existence is to parse GenericRecords that will be later converted into Spark Rows. This conversion relies on
     *    RowEncoders, which need to be instantiated once, outside this class. Thus, even though schema changes can be dealt
-    *    with here, they cannot be translated to new RowEncoders, which could generated from exceptions to inconsistencies
+    *    with here, they cannot be translated into new RowEncoders, which could generate from exceptions to inconsistencies
     *    in the final data.
     *
     *    The only way to overcome the issue described in 5. is to change Spark code itself, which would then be able to

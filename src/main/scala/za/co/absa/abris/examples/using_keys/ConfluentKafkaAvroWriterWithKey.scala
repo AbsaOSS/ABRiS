@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.keys
+package za.co.absa.abris.examples.using_keys
 
 import java.io.FileInputStream
 import java.util.Properties
@@ -25,11 +25,12 @@ import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 
 import scala.collection.JavaConversions._
 
-object KafkaAvroWriterWithKey {
+object ConfluentKafkaAvroWriterWithKey {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
@@ -42,9 +43,11 @@ object KafkaAvroWriterWithKey {
   private val PARAM_TEST_DATA_ENTRIES = "test.data.entries"
   private val PARAM_EXECUTION_REPEAT = "execution.repeat"
   private val PARAM_NUM_PARTITIONS = "num.partitions"
+  private val PARAM_TOPIC = "option.topic"
 
   def main(args: Array[String]): Unit = {
 
+    // ************ IMPORTANT ************
     // there is a sample properties file at /src/test/resources/DataframeWritingExample.properties
     if (args.length != 1) {
       println("No properties file specified.")
@@ -73,11 +76,8 @@ object KafkaAvroWriterWithKey {
 
     do {
       val rows = getRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
-
       val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
-      dataframe.printSchema()
-
-      toAvro(dataframe, properties)
+      toAvro(dataframe, properties) // check the method content to understand how the library is invoked
         .write
         .format("kafka")
         .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file
@@ -86,14 +86,19 @@ object KafkaAvroWriterWithKey {
   }
 
   private def toAvro(dataframe: Dataset[Row], properties: Properties) = {
+
     import za.co.absa.abris.avro.AvroSerDeWithKeyColumn._
 
+    val sc = Map(SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties.getProperty(SchemaManager.PARAM_SCHEMA_REGISTRY_URL))
+    val topic = properties.getProperty(PARAM_TOPIC)
+
+    // providing access to Schema Registry is mandatory
     if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
-      val name = properties.getProperty(PARAM_AVRO_RECORD_NAME)
-      val namespace = properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE)
-      dataframe.toAvro(name, namespace, name, namespace)
+      val schemaName = properties.getProperty(PARAM_AVRO_RECORD_NAME)
+      val schemaNamespace = properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE)
+      dataframe.toConfluentAvro(topic, schemaName, schemaNamespace, schemaName, schemaNamespace)(sc)
     } else {
-      dataframe.toAvro(properties.getProperty(PARAM_KEY_AVRO_SCHEMA), properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
+      dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_KEY_AVRO_SCHEMA), properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))(sc)
     }
   }
 
@@ -107,17 +112,16 @@ object KafkaAvroWriterWithKey {
     var count = 0
     ComplexRecordsGenerator
       .generateUnparsedRows(howMany)
-        .map(row => {
-          count = count + 1
-          Row(Row(count, s"whatever string $count"),row)
-        })
+      .map(row => {
+        count = count + 1
+        Row(Row(count, s"whatever string $count"),row)
+      })
 
   }
 
   private def getEncoder(properties: Properties): Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val payloadSparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    RowEncoder.apply(payloadSparkSchema)
 
     val avroSchemas = getKeyAndPayloadSchemas(properties)
 
