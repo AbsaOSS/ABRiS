@@ -27,7 +27,6 @@ class AvroWriterHolderSpec extends FlatSpec {
   it should "reuse Encoders" in {    
     val holder = new AvroWriterHolder()
     val encoder = holder.getEncoder(new ByteArrayOutputStream())
-    val m = Map()
     assert(encoder == holder.getEncoder(new ByteArrayOutputStream()))
   }
 }
