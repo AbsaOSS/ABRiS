@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,40 +16,22 @@
 
 package za.co.absa.abris.avro.format
 
-import java.lang.Boolean
-import java.lang.Double
-import java.lang.Float
-import java.lang.Long
-
-import scala.collection.JavaConverters._
+import java.lang.{Boolean, Double, Float, Long}
 
 import org.apache.avro.Schema
-import org.apache.avro.generic.GenericDatumReader
-import org.apache.avro.generic.IndexedRecord
-import org.apache.avro.io.DecoderFactory
-import org.scalatest.FlatSpec
-
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.examples.data.generation.AvroDataUtils
-import za.co.absa.abris.examples.data.generation.TestSchemas
-import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.types.DoubleType
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.types.StructField
-import org.apache.spark.sql.types.FloatType
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.types.ArrayType
 import org.apache.avro.Schema.Type
-import org.apache.spark.sql.types.MapType
-import org.apache.spark.sql.types.LongType
+import org.apache.avro.generic.{GenericRecord, IndexedRecord}
+import org.apache.avro.io.DecoderFactory
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.avro.generic.GenericRecord
-import scala.collection._
+import org.apache.spark.sql.types._
+import org.scalatest.FlatSpec
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.ScalaDatumReader
-import org.apache.avro.Schema.Field
-import scalaz.std.java.util.map
-import org.apache.spark.sql.SparkSession
+import za.co.absa.abris.examples.data.generation.{AvroDataUtils, TestSchemas}
+
+import scala.collection.JavaConverters._
+import scala.collection._
 
 class SparkAvroConversionsSpec extends FlatSpec {
   

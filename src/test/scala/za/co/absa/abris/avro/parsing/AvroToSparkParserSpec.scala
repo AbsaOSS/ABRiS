@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,20 @@
 
 package za.co.absa.abris.avro.parsing
 
-import java.lang.Double
-import java.lang.Float
-import java.lang.Long
-import java.lang.Boolean
-import java.util.ArrayList
-import java.util.HashMap
+import java.lang.{Boolean, Double, Float, Long}
+import java.nio.ByteBuffer
+import java.util.{ArrayList, Arrays, HashMap}
 
-import scala.collection._
+import org.apache.avro.generic.GenericRecord
+import org.apache.spark.sql.catalyst.expressions.GenericRow
+import org.scalatest.FlatSpec
+import za.co.absa.abris.avro.format.ScalaAvroRecord
+import za.co.absa.abris.examples.data.generation.{AvroDataUtils, FixedString, TestSchemas}
+
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.collection._
 import scala.collection.immutable.Map
-
-import org.apache.spark.sql.catalyst.expressions.GenericRow
-import org.scalatest._
-import org.scalatest.FlatSpec
-
-import za.co.absa.abris.examples.data.generation.AvroDataUtils
-import za.co.absa.abris.examples.data.generation.TestSchemas
-import java.util.Arrays
-import java.nio.ByteBuffer
-import org.apache.avro.generic.GenericRecord
-import org.apache.avro.generic.GenericFixed
-import za.co.absa.abris.examples.data.generation.FixedString
-import za.co.absa.abris.avro.format.ScalaAvroRecord
-import org.apache.spark.sql.SparkSession
 
 class AvroToSparkParserSpec extends FlatSpec {
 

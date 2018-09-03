@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 
 package com.databricks.spark.avro
 
-import org.apache.spark.sql.types.DataType
 import com.databricks.spark.avro.SchemaConverters.SchemaType
 import org.apache.avro.Schema
-import org.apache.spark.sql.types.StructType
 import org.apache.avro.SchemaBuilder.RecordBuilder
-import org.apache.avro.SchemaBuilder
+import org.apache.spark.sql.types.{DataType, StructType}
 
 /**
  * This class works as a bridge between Databricks' and the current library.

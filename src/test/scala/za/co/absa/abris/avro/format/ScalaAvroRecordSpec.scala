@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,16 @@
 
 package za.co.absa.abris.avro.format
 
-import java.lang.Double
-import java.lang.Float
-import java.lang.Long
-import java.lang.Boolean
-import java.util.ArrayList
-import java.util.HashMap
-
-import scala.collection._
-import scala.collection.JavaConverters._
-
-import org.scalatest.FlatSpec
-
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.examples.data.generation.TestSchemas
+import java.lang.{Boolean, Double, Float, Long}
 import java.nio.ByteBuffer
-import java.util.Arrays
-import za.co.absa.abris.examples.data.generation.FixedString
+import java.util.{ArrayList, Arrays, HashMap}
 
 import org.apache.spark.sql.Row
+import org.scalatest.FlatSpec
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.examples.data.generation.{FixedString, TestSchemas}
+
+import scala.collection._
 
 class ScalaAvroRecordSpec extends FlatSpec {
 

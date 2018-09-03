@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_ORIGINAL_SCHEMA
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
 import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
@@ -84,10 +84,10 @@ object KafkaAvroReader {
     import za.co.absa.abris.avro.AvroSerDe._
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromAvro("value", props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromAvro("value", props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_SELECTED_COLUMN_ONLY)
     }
     else {
-      stream.fromAvro("value", props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromAvro("value", props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))(RETAIN_SELECTED_COLUMN_ONLY)
     }
   }
 }

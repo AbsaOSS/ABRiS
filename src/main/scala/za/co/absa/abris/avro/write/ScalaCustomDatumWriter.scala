@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package za.co.absa.abris.avro.write
 
+import java.nio.ByteBuffer
 import java.util.Collection
-import scala.collection.Iterable
-import scala.collection.JavaConversions.asJavaIterator
+
 import org.apache.avro.Schema
-import org.apache.avro.specific.SpecificDatumWriter
-import java.util.Arrays
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.io.Encoder
-import java.nio.ByteBuffer
+import org.apache.avro.specific.SpecificDatumWriter
+
+import scala.collection.Iterable
+import scala.collection.JavaConversions.asJavaIterator
 
 /**
  * This class redefines Avro data writing methods that cope with collections and arrays in order to provide 
