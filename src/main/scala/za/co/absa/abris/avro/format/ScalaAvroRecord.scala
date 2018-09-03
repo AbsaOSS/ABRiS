@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,13 @@ package za.co.absa.abris.avro.format
 
 
 
-import org.apache.avro.AvroRuntimeException
-import org.apache.avro.Schema
-import org.apache.avro.Schema.Field
-import org.apache.avro.Schema.Type
-import org.apache.avro.generic.GenericData
-import org.apache.avro.generic.GenericRecord
-import org.apache.spark.sql.Row
-import scala.collection._
+import org.apache.avro.{AvroRuntimeException, Schema}
+import org.apache.avro.Schema.{Field, Type}
 import org.apache.avro.generic.GenericData.Fixed
-import scala.collection.JavaConversions._
+import org.apache.avro.generic.{GenericData, GenericRecord}
+import org.apache.spark.sql.Row
+
+import scala.collection._
 
 /**
  * In order to support Spark-compliant queryable nested structures, nested Avro records need to be converted into Spark Rows.

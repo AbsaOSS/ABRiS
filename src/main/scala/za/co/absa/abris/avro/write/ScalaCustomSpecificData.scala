@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package za.co.absa.abris.avro.write
 
 import org.apache.avro.generic.IndexedRecord
 import org.apache.spark.sql.catalyst.expressions.GenericRow
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
 
 object ScalaCustomSpecificData {
   private val INSTANCE = new ScalaCustomSpecificData()

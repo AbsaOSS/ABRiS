@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,15 @@
 
 package za.co.absa.abris.avro.read
 
-import java.lang.Float
-import java.lang.Long
-import java.lang.Integer
-import java.lang.Double
-import java.lang.String
-import java.lang.Boolean
+import java.lang.{Boolean, Double, Float, Long}
+import java.util._
 
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
-
-import org.scalatest.FlatSpec
-import java.util.ArrayList
-import java.util.Arrays
-import java.util.HashSet
-import za.co.absa.abris.examples.data.generation.TestSchemas
-import za.co.absa.abris.examples.data.generation.AvroDataUtils
-import scala.collection._
-import org.apache.spark.sql.Row
 import org.apache.avro.generic.GenericRecord
-import org.apache.avro.Schema.Field
-import java.util.HashMap
-import java.util.TreeMap
-import scala.collection.mutable.ListBuffer
+import org.scalatest.FlatSpec
+import za.co.absa.abris.examples.data.generation.{AvroDataUtils, TestSchemas}
+
+import scala.collection.JavaConverters._
+import scala.collection._
 
 class ScalaDatumReaderSpec extends FlatSpec {
 

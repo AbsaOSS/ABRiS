@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Barclays Africa Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,14 @@
 
 package za.co.absa.abris.avro.parsing
 
-import scala.collection.JavaConverters.asScalaBufferConverter
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.types.StructType
-import com.databricks.spark.avro.SchemaConverters
-import org.apache.spark.sql.catalyst.expressions.GenericRow
-import com.databricks.spark.avro.DatabricksAdapter
-import scala.collection.mutable.HashMap
 import za.co.absa.abris.avro.format.SparkAvroConversions
+
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.mutable.HashMap
 
 /**
  * This class provides methods to convert Avro's GenericRecords to Spark's GenericRowWithSchemas.
