@@ -260,7 +260,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       	.toAvro("path_to_existing_Avro_schema or org.apache.avro.Schema instance") // invoke library
       	.write
       	.format("kafka")    
-      	.option("kafka.bootstrap.servers", "localhost:9092"))
+      	.option("kafka.bootstrap.servers", "localhost:9092")
       	.option("topic", "test-topic")
       	.save()  
 ```
@@ -286,7 +286,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       	.toAvro("dest_schema_name", "dest_schema_namespace") // invoke library            
       	.write
       	.format("kafka")    
-      	.option("kafka.bootstrap.servers", "localhost:9092"))
+      	.option("kafka.bootstrap.servers", "localhost:9092")
       	.option("topic", "test-topic")
       	.save()         
 ```
