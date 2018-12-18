@@ -16,17 +16,16 @@
 
 package za.co.absa.abris.utils.avro;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Optional;
-
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-
 import za.co.absa.abris.utils.avro.data.annotations.NestedAvroData;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Optional;
 
 public class AvroPayloadConverter {
 	

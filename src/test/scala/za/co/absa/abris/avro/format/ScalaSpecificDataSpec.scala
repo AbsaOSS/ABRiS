@@ -16,9 +16,9 @@
 
 package za.co.absa.abris.avro.format
 
-import org.scalatest.FlatSpec
 import java.util.Arrays
 
+import org.scalatest.FlatSpec
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
 

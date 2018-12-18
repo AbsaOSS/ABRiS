@@ -16,18 +16,17 @@
 
 package za.co.absa.abris.utils.avro.kafka.write;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import za.co.absa.abris.utils.avro.AvroPayloadConverter;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import za.co.absa.abris.utils.avro.AvroPayloadConverter;
 
 public class KafkaAvroWriter<T> {
 

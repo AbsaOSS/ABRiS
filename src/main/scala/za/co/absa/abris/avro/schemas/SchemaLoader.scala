@@ -52,8 +52,8 @@ object SchemaLoader {
     var specifiedKeyId   = params(SchemaManager.PARAM_KEY_SCHEMA_ID)
     var specifiedValueId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
 
-    val keySchema   = loadFromSchemaRegistry(topic, specifiedKeyId, true)
-    val valueSchema = loadFromSchemaRegistry(topic, specifiedValueId, false)
+    val keySchema   = loadFromSchemaRegistry(topic, specifiedKeyId, true, params)
+    val valueSchema = loadFromSchemaRegistry(topic, specifiedValueId, false, params)
 
     (keySchema, valueSchema)
   }
@@ -64,11 +64,14 @@ object SchemaLoader {
     val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
     val specifiedSchemaId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
 
-    loadFromSchemaRegistry(topic, specifiedSchemaId, false)
+    loadFromSchemaRegistry(topic, specifiedSchemaId, false, params)
   }
 
-  private def loadFromSchemaRegistry(topic: String, schemaSpecifiedId: String, isKey: Boolean): Schema = {
-    val subject = SchemaManager.getSubjectName(topic, isKey)
+  private def loadFromSchemaRegistry(topic: String, schemaSpecifiedId: String, isKey: Boolean, params: Map[String,String]): Schema = {
+    val schemaName = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
+    val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
+
+    val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
     val id = getSchemaId(schemaSpecifiedId, subject)
     SchemaManager.getBySubjectAndId(subject, id).get
   }

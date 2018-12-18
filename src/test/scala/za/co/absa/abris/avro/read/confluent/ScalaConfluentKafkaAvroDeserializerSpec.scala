@@ -118,7 +118,11 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
 
     override def getSchemaMetadata(s: String, i: Int): SchemaMetadata = null
 
-    override def getBySubjectAndID(s: String, i: Int): Schema = schema
+    override def getBySubjectAndID(s: String, i: Int): Schema = getBySubjectAndId(s, i)
+
+    override def getById(x$1: Int): org.apache.avro.Schema = schema
+
+    override def getBySubjectAndId(x$1: String,x$2: Int): org.apache.avro.Schema = schema
 
     override def getLatestSchemaMetadata(s: String): SchemaMetadata = null
 
@@ -131,5 +135,12 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
     override def testCompatibility(s: String, schema: Schema) = true
 
     override def register(s: String, schema: Schema): Int = 8
+
+    override def deleteSchemaVersion(x$1: java.util.Map[String,String],x$2: String,x$3: String): Integer = ???
+    override def deleteSchemaVersion(x$1: String,x$2: String): Integer = ???
+    override def deleteSubject(x$1: java.util.Map[String,String],x$2: String): java.util.List[Integer] = ???
+    override def deleteSubject(x$1: String): java.util.List[Integer] = ???
+    override def getAllVersions(x$1: String): java.util.List[Integer] = ???
+    override def getId(x$1: String,x$2: org.apache.avro.Schema): Int = ???
   }
 }

@@ -16,16 +16,16 @@
 
 package za.co.absa.abris.utils.examples;
 
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-
 import za.co.absa.abris.utils.avro.AvroSchemaGenerator;
 import za.co.absa.abris.utils.avro.kafka.Settings;
 import za.co.absa.abris.utils.avro.kafka.write.KafkaAvroWriter;
 import za.co.absa.abris.utils.examples.utils.TestDataGenerator;
 import za.co.absa.abris.utils.examples.utils.TestDataGenerator.TestData;
+
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
 
 /**
  * Writes Avro data to Kafka using the utilities API.

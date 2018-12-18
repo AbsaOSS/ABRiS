@@ -17,14 +17,13 @@
 package za.co.absa.abris.examples.data.generation
 
 import java.io.ByteArrayOutputStream
+
 import org.apache.avro.Schema
-import org.apache.avro.generic.GenericRecord
-import org.apache.avro.generic.GenericRecordBuilder
-import org.apache.avro.io.DecoderFactory
-import org.apache.avro.io.EncoderFactory
+import org.apache.avro.generic.{GenericRecord, GenericRecordBuilder}
+import org.apache.avro.io.{DecoderFactory, EncoderFactory}
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.ScalaDatumReader
 import za.co.absa.abris.avro.write.ScalaCustomDatumWriter
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 
 /**
  * This class provides utilities for coping with Avro data.

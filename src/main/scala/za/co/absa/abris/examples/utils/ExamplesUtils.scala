@@ -19,8 +19,8 @@ package za.co.absa.abris.examples.utils
 import java.io.FileInputStream
 import java.util.Properties
 
-import org.apache.spark.sql.{DataFrameWriter, Row}
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
+import org.apache.spark.sql.{DataFrameWriter, Row}
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 
 import scala.collection.JavaConverters._

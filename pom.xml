@@ -60,7 +60,7 @@
 
 		<jackson.databind.version>2.6.1</jackson.databind.version>
 
-		<confluent.version>3.1.1</confluent.version>
+		<confluent.version>5.0.1</confluent.version>
 
 		<gpg.plugin.version>1.6</gpg.plugin.version>
 	</properties>

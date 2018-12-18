@@ -19,8 +19,8 @@ package za.co.absa.abris.examples
 import java.io.FileInputStream
 import java.util.Properties
 
-import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator

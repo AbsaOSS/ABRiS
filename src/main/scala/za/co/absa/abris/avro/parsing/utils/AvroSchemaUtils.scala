@@ -81,7 +81,7 @@ object AvroSchemaUtils {
 
     configureSchemaManager(schemaRegistryConf)
 
-    val subject = SchemaManager.getSubjectName(topic, isKey)
+    val subject = SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf)
     if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
       logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
       SchemaManager.register(schema, subject)

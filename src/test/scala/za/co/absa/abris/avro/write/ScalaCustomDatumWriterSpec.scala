@@ -16,9 +16,10 @@
 
 package za.co.absa.abris.avro.write
 
+import java.util.{Arrays, Collection}
+
 import org.scalatest.FlatSpec
-import java.util.Arrays
-import java.util.Collection
+
 import scala.collection.JavaConversions._
 
 class ScalaCustomDatumWriterSpec extends FlatSpec {

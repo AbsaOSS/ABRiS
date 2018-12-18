@@ -16,16 +16,16 @@
 
 package za.co.absa.abris.utils.avro;
 
+import org.apache.avro.Schema;
+import org.apache.avro.reflect.ReflectData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-
-import org.apache.avro.Schema;
-import org.apache.avro.reflect.ReflectData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class provides an utility method for generating Avro schemas from

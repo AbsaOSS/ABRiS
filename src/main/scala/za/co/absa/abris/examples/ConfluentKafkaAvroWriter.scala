@@ -68,14 +68,16 @@ object ConfluentKafkaAvroWriter {
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
 
-    import spark.implicits._
     import ExamplesUtils._
+    import spark.implicits._
 
     implicit val encoder = getEncoder()
 
     do {
       val rows = getRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
       val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
+
+      dataframe.show()
 
       toAvro(dataframe, properties) // check the method content to understand how the library is invoked
         .write
@@ -87,7 +89,10 @@ object ConfluentKafkaAvroWriter {
 
   private def toAvro(dataframe: Dataset[Row], properties: Properties) = {
 
-    val sc = Map(SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties.getProperty(SchemaManager.PARAM_SCHEMA_REGISTRY_URL))
+    val sc = Map(
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties.getProperty(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties.getProperty(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
+    )
     val topic = properties.getProperty(PARAM_TOPIC)
 
     import za.co.absa.abris.avro.AvroSerDe._

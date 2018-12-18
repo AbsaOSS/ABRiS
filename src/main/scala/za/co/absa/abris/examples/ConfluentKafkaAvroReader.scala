@@ -20,7 +20,7 @@ import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.{RETAIN_ORIGINAL_SCHEMA, RETAIN_SELECTED_COLUMN_ONLY}
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
 import za.co.absa.abris.examples.utils.ExamplesUtils
 
 import scala.collection.JavaConversions._
@@ -80,10 +80,10 @@ object ConfluentKafkaAvroReader {
   }
 
   private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
-    import za.co.absa.abris.avro.AvroSerDe._
     import ExamplesUtils._
+    import za.co.absa.abris.avro.AvroSerDe._
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromConfluentAvro("value", None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromConfluentAvro("value", None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))(RETAIN_SELECTED_COLUMN_ONLY)
     }
     else {
       stream.fromConfluentAvro("value", Some(props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA)), None)(RETAIN_SELECTED_COLUMN_ONLY)

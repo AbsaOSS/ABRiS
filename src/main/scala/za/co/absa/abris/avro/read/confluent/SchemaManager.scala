@@ -21,6 +21,7 @@ import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDe
 import org.apache.avro.Schema
 import org.apache.kafka.common.config.ConfigException
 import org.slf4j.LoggerFactory
+import za.co.absa.abris.avro.subject.SubjectNameStrategyAdapterFactory
 
 import scala.collection.JavaConverters._
 
@@ -42,6 +43,18 @@ object SchemaManager {
   val PARAM_KEY_SCHEMA_ID         = "key.schema.id"
   val PARAM_SCHEMA_ID_LATEST_NAME = "latest"
 
+  val PARAM_KEY_SCHEMA_NAMING_STRATEGY   = "key.schema.naming.strategy"
+  val PARAM_VALUE_SCHEMA_NAMING_STRATEGY = "value.schema.naming.strategy"
+
+  val PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "schema.name"
+  val PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "schema.namespace"
+
+  object SchemaStorageNamingStrategies extends Enumeration {
+    val TOPIC_NAME        = "topic.name"
+    val RECORD_NAME       = "record.name"
+    val TOPIC_RECORD_NAME = "topic.record.name"
+  }
+
   private var schemaRegistryClient: SchemaRegistryClient = _
 
   /**
@@ -50,12 +63,33 @@ object SchemaManager {
     *
     * This method returns the subject name based on the topic and to which part of the message it corresponds.
     */
-  def getSubjectName(topic: String, isKey: Boolean): String = {
-    if (isKey) {
-      topic + "-key"
-    } else {
-      topic + "-value"
+  def getSubjectName(topic: String, isKey: Boolean, schema: Schema, params: Map[String, String]): String = {
+    val adapter = getSubjectNamingStrategyAdapter(isKey, params)
+
+    if (adapter.validate(schema)) {
+      adapter.subjectName(topic, isKey, schema)
     }
+    else {
+      logger.error(s"Invalid configuration for naming strategy. Are you using RecordName or TopicRecordName? " +
+        s"If yes, are you providing SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY and " +
+        s"SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY in the configuration map?")
+      null
+    }
+  }
+
+  def getSubjectName(topic: String, isKey: Boolean, schemaNameAndSpace: (String,String), params: Map[String, String]): String = {
+    getSubjectName(topic, isKey, Schema.createRecord(schemaNameAndSpace._1, "", schemaNameAndSpace._2, false), params)
+  }
+
+  private def getSubjectNamingStrategyAdapter(isKey: Boolean, params: Map[String,String]) = {
+    val strategy = if (isKey) {
+      params.getOrElse(PARAM_KEY_SCHEMA_NAMING_STRATEGY, throw new IllegalArgumentException(s"Parameter not specified: '$PARAM_KEY_SCHEMA_NAMING_STRATEGY'"))
+    }
+    else {
+      params.getOrElse(PARAM_VALUE_SCHEMA_NAMING_STRATEGY, throw new IllegalArgumentException(s"Parameter not specified: '$PARAM_VALUE_SCHEMA_NAMING_STRATEGY'"))
+    }
+    logger.info(s"Creating adapter for schema naming strategy: $strategy")
+    SubjectNameStrategyAdapterFactory.build(strategy)
   }
 
   /**
@@ -73,8 +107,10 @@ object SchemaManager {
     * It will return None if the Schema Registry client is not configured.
     */
   def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getBySubjectAndID(subject, id)) else None
+    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getBySubjectAndId(subject, id)) else None
   }
+
+  def getById(id: Int): Option[Schema] = getBySubjectAndId(null, id)
 
   /**
     * Retrieves the id corresponding to the latest schema available in Schema Registry.

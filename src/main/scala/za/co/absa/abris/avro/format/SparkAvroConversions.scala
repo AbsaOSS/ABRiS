@@ -19,37 +19,19 @@ package za.co.absa.abris.avro.format
 
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import java.sql.Date
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 import java.util.HashMap
 
-import scala.collection._
-import org.apache.avro.Schema
-import org.apache.avro.SchemaBuilder
+import com.databricks.spark.avro.{DatabricksAdapter, SchemaConverters}
+import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.avro.generic.GenericData.Record
-import org.apache.avro.generic.GenericRecord
-import org.apache.avro.generic.IndexedRecord
+import org.apache.avro.generic.{GenericRecord, IndexedRecord}
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.types.ArrayType
-import org.apache.spark.sql.types.BinaryType
-import org.apache.spark.sql.types.BooleanType
-import org.apache.spark.sql.types.ByteType
-import org.apache.spark.sql.types.DataType
-import org.apache.spark.sql.types.DateType
-import org.apache.spark.sql.types.DecimalType
-import org.apache.spark.sql.types.DoubleType
-import org.apache.spark.sql.types.FloatType
-import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.types.LongType
-import org.apache.spark.sql.types.MapType
-import org.apache.spark.sql.types.ShortType
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.types.TimestampType
-import com.databricks.spark.avro.DatabricksAdapter
-import com.databricks.spark.avro.SchemaConverters
+import org.apache.spark.sql.types._
 import za.co.absa.abris.avro.read.confluent.ConfluentConstants
 import za.co.absa.abris.avro.write.AvroWriterHolder
+
+import scala.collection._
 
 
 /**
