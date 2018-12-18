@@ -98,7 +98,10 @@ object ExamplesUtils {
 
   implicit class SchemaRegistryConfiguration(props: Properties) {
     def getSchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] = {
-      val keys = Set(SchemaManager.PARAM_SCHEMA_REGISTRY_URL, SchemaManager.PARAM_VALUE_SCHEMA_ID, SchemaManager.PARAM_KEY_SCHEMA_ID)
+      val keys = Set(SchemaManager.PARAM_SCHEMA_REGISTRY_URL, SchemaManager.PARAM_VALUE_SCHEMA_ID,
+        SchemaManager.PARAM_KEY_SCHEMA_ID, SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
+        SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+
       val confs = scala.collection.mutable.Map[String,String](SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(subscribeParamKey))
       for (propKey <- keys) yield {
         if (props.containsKey(propKey)) {

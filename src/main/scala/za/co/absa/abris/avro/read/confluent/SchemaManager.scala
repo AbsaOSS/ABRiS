@@ -67,7 +67,9 @@ object SchemaManager {
     val adapter = getSubjectNamingStrategyAdapter(isKey, params)
 
     if (adapter.validate(schema)) {
-      adapter.subjectName(topic, isKey, schema)
+      val subjectName = adapter.subjectName(topic, isKey, schema)
+      logger.info(s"Subject name resolved to: $subjectName")
+      subjectName
     }
     else {
       logger.error(s"Invalid configuration for naming strategy. Are you using RecordName or TopicRecordName? " +
