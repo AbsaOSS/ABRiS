@@ -25,9 +25,7 @@ import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
-import za.co.absa.abris.examples.utils.ExamplesUtils
-
-import scala.collection.JavaConversions._
+import za.co.absa.abris.examples.utils.ExamplesUtils._
 
 object ConfluentKafkaAvroWriter {
 
@@ -46,35 +44,21 @@ object ConfluentKafkaAvroWriter {
 
   def main(args: Array[String]): Unit = {
 
-    // ************ IMPORTANT ************
     // there is a sample properties file at /src/test/resources/DataframeWritingExample.properties
-    if (args.length != 1) {
-      println("No properties file specified.")
-      System.exit(1)
-    }
+    checkArgs(args)
 
-    println("Loading properties from: " + args(0))
-    val properties = loadProperties(args(0))
+    val properties = loadProperties(args)
 
-    for (key <- properties.keysIterator) {
-      println(s"\t${key} = ${properties.getProperty(key)}")
-    }
-
-    val spark = SparkSession
-      .builder()
-      .appName(properties.getProperty(PARAM_JOB_NAME))
-      .master(properties.getProperty(PARAM_JOB_MASTER))
-      .getOrCreate()
+    val spark = getSparkSession(properties, PARAM_JOB_NAME, PARAM_JOB_MASTER, PARAM_LOG_LEVEL)
 
     spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
 
-    import ExamplesUtils._
     import spark.implicits._
 
-    implicit val encoder = getEncoder()
+    implicit val encoder: Encoder[Row] = getEncoder
 
     do {
-      val rows = getRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
+      val rows = createRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
       val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
 
       dataframe.show()
@@ -104,17 +88,11 @@ object ConfluentKafkaAvroWriter {
     }
   }
 
-  private def loadProperties(path: String): Properties = {
-    val properties = new Properties()
-    properties.load(new FileInputStream(path))
-    properties
-  }
-
-  private def getRows(howMany: Int): List[Row] = {
+  private def createRows(howMany: Int): List[Row] = {
     ComplexRecordsGenerator.generateUnparsedRows(howMany)
   }
 
-  private def getEncoder(): Encoder[Row] = {
+  private def getEncoder: Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
     println(sparkSchema)

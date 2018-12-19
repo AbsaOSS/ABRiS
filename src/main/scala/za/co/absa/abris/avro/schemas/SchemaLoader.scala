@@ -52,8 +52,8 @@ object SchemaLoader {
     var specifiedKeyId   = params(SchemaManager.PARAM_KEY_SCHEMA_ID)
     var specifiedValueId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
 
-    val keySchema   = loadFromSchemaRegistry(topic, specifiedKeyId, true, params)
-    val valueSchema = loadFromSchemaRegistry(topic, specifiedValueId, false, params)
+    val keySchema   = loadFromSchemaRegistry(topic, specifiedKeyId, isKey = true, params)
+    val valueSchema = loadFromSchemaRegistry(topic, specifiedValueId, isKey = false, params)
 
     (keySchema, valueSchema)
   }
@@ -64,7 +64,7 @@ object SchemaLoader {
     val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
     val specifiedSchemaId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
 
-    loadFromSchemaRegistry(topic, specifiedSchemaId, false, params)
+    loadFromSchemaRegistry(topic, specifiedSchemaId, isKey = false, params)
   }
 
   private def loadFromSchemaRegistry(topic: String, schemaSpecifiedId: String, isKey: Boolean, params: Map[String,String]): Schema = {
@@ -73,11 +73,17 @@ object SchemaLoader {
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
     val id = getSchemaId(schemaSpecifiedId, subject)
-    SchemaManager.getBySubjectAndId(subject, id).get
+    val schema = SchemaManager.getBySubjectAndId(subject, id)
+    if (schema.isDefined) {
+      schema.get
+    }
+    else {
+      throw new IllegalArgumentException(s"Cound not load schema for topic = '$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
+    }
   }
 
-  private def configureSchemaManager(params: Map[String,String]) = {
-    if (!SchemaManager.isSchemaRegistryConfigured()) {
+  private def configureSchemaManager(params: Map[String,String]): Unit = {
+    if (!SchemaManager.isSchemaRegistryConfigured) {
       SchemaManager.configureSchemaRegistry(params)
     }
   }
@@ -89,7 +95,7 @@ object SchemaLoader {
         latest.get
       }
       else {
-        throw new IllegalArgumentException(s"Could not find schema for subject '$subject'. Are you sure the subject exists?")
+        throw new IllegalArgumentException(s"Could not find schema for subject '$subject'. Are you sure Schema Registry is running and the subject exists?")
       }
     }
     else {

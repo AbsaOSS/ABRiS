@@ -28,7 +28,7 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
 
   before {
     SchemaManager.reset()
-    assertResult(false) {SchemaManager.isSchemaRegistryConfigured()}
+    assertResult(false) {SchemaManager.isSchemaRegistryConfigured}
   }
 
   it should "throw if no strategy is specified" in {
@@ -95,7 +95,7 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
 
   it should "not try to configure Schema Registry client if parameters are empty" in {
     SchemaManager.configureSchemaRegistry(Map[String,String]())
-    assertResult(false) {SchemaManager.isSchemaRegistryConfigured()} // should still be unconfigured
+    assertResult(false) {SchemaManager.isSchemaRegistryConfigured} // should still be unconfigured
   }
 
   it should "retrieve the null for TopicRecordName strategy if schema is null" in {

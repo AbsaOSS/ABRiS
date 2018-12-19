@@ -20,14 +20,44 @@ import java.io.FileInputStream
 import java.util.Properties
 
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
-import org.apache.spark.sql.{DataFrameWriter, Row}
+import org.apache.spark.sql.{DataFrameWriter, Row, SparkSession}
+import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.examples.KafkaAvroReader.{PARAM_JOB_MASTER, PARAM_JOB_NAME, PARAM_LOG_LEVEL}
 
 import scala.collection.JavaConverters._
+import scala.collection.JavaConversions._
 
 object ExamplesUtils {
 
   private val OPTION_PREFIX = "option."
+
+  def checkArgs(args: Array[String]): Unit = {
+    if (args.length != 1) {
+      println("No properties file specified.")
+      System.exit(1)
+    }
+  }
+
+  def getSparkSession(properties: Properties, jobNameProp: String, jobMasterProp: String, logLevelProp: String): SparkSession = {
+    val spark = SparkSession
+      .builder()
+      .appName(properties.getProperty(jobNameProp))
+      .master(properties.getProperty(jobMasterProp))
+      .getOrCreate()
+
+    spark.sparkContext.setLogLevel(properties.getProperty(logLevelProp))
+    spark
+  }
+
+  def loadProperties(args: Array[String]): Properties = {
+    println("Loading properties from: " + args(0))
+    val properties = ExamplesUtils.loadProperties(args(0))
+    for (key <- properties.keysIterator) {
+      println(s"\t$key = ${properties.getProperty(key)}")
+    }
+    properties
+  }
 
   def loadProperties(path: String): Properties = {
     val properties = new Properties()
@@ -37,7 +67,7 @@ object ExamplesUtils {
 
   private def getKeys(properties: Properties) = {
     properties.keySet().asScala
-      .filter(key => key.toString().startsWith(OPTION_PREFIX))      
+      .filter(key => key.toString.startsWith(OPTION_PREFIX))
       .map(key => (key.toString, key.toString.drop(OPTION_PREFIX.length())))
   }
 
@@ -97,17 +127,26 @@ object ExamplesUtils {
   }
 
   implicit class SchemaRegistryConfiguration(props: Properties) {
+
     def getSchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] = {
-      val keys = Set(SchemaManager.PARAM_SCHEMA_REGISTRY_URL, SchemaManager.PARAM_VALUE_SCHEMA_ID,
-        SchemaManager.PARAM_KEY_SCHEMA_ID, SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
-        SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+
+      val keys = Set(
+        SchemaManager.PARAM_SCHEMA_REGISTRY_URL,
+        SchemaManager.PARAM_KEY_SCHEMA_ID,
+        SchemaManager.PARAM_VALUE_SCHEMA_ID,
+        SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY,
+        SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
+        SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY,
+        SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
       val confs = scala.collection.mutable.Map[String,String](SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(subscribeParamKey))
+
       for (propKey <- keys) yield {
         if (props.containsKey(propKey)) {
           confs += propKey -> props.getProperty(propKey)
         }
       }
+
       Map[String,String](confs.toSeq:_*)
     }
   }

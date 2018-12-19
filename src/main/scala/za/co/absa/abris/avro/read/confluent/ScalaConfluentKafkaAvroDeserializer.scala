@@ -108,7 +108,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     * Schema Registry, otherwise, the reader schema passed on to the constructor will also the considered the writer's.
     */
   private def getWriterSchema(topic: Option[String], id: Int): Schema = {
-    if (topic.isDefined && SchemaManager.isSchemaRegistryConfigured()) {
+    if (topic.isDefined && SchemaManager.isSchemaRegistryConfigured) {
       SchemaManager.getById(id).get
     }
     else {

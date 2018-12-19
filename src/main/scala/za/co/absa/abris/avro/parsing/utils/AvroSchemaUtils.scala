@@ -29,7 +29,7 @@ object AvroSchemaUtils {
   private val logger = LoggerFactory.getLogger(AvroSchemaUtils.getClass)
 
   private def configureSchemaManager(schemaRegistryConf: Map[String,String]) = {
-    if (!SchemaManager.isSchemaRegistryConfigured()) {
+    if (!SchemaManager.isSchemaRegistryConfigured) {
       SchemaManager.configureSchemaRegistry(schemaRegistryConf)
     }
   }

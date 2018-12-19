@@ -119,18 +119,23 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 1. Gather Schema Registry configurations:
 
 ```scala
-val schemaRegistryConfs = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
-  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-  SchemaManager.PARAM_VALUE_SCHEMA_ID       -> "current_schema_id" // set to "latest" if you want the latest schema version to used
+val schemaRegistryConf = Map(
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "url_to_schema_registry",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC        -> "topic_name",
+  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // choose a subject name strategy
+  SchemaManager.PARAM_VALUE_SCHEMA_ID              -> "current_schema_id" // set to "latest" if you want the latest schema version to used  
 )
 ```
+
+In this step, the parameter ```SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY``` will contain the strategy to define the subject name. The 3 possible options are available in the Enumeration ```SchemaManager.SchemaStorageNamingStrategies```.
+
+The definition of each strategy can be found at Confluent's official documentation [here](https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#subject-name-strategy). 
 
 2. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
 
 3. Open a Kafka connection into a structured stream: ```spark.readStream.format("kafka"). ...```
 
-4. Invoke the library on your structured stream: ```... .fromAvro("column_containing_avro_data", "path_to_Avro_schema or org.apache.avro.Schema instance")(SchemaRetentionPolicy)```
+4. Invoke the library on your structured stream: ```... .fromAvro("column_containing_avro_data", schemaRegistryConf)(SchemaRetentionPolicy)```
 
 5. Pass on your query and start the stream: ```... .select("your query").start().awaitTermination()```
 
@@ -149,7 +154,7 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("subscribe", "test-topic")
-      .fromAvro("column_containing_avro_data", "path_to_Avro_schema or org.apache.avro.Schema instance")(RETAIN_ORIGINAL_SCHEMA) // invoke the library adding the extracted Avro data to the column originally containing it.
+      .fromAvro("column_containing_avro_data", schemaRegistryConf)(RETAIN_ORIGINAL_SCHEMA) // invoke the library adding the extracted Avro data to the column originally containing it.
 
     stream.filter("field_x % 2 == 0")
       .writeStream.format("console").start().awaitTermination()
@@ -163,9 +168,12 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
 val schemaRegistryConfs = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-  SchemaManager.PARAM_VALUE_SCHEMA_ID             -> "current_value_schema_id" // set to "latest" if you want the latest schema version to used
+  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // choose a subject name strategy
+  SchemaManager.PARAM_VALUE_SCHEMA_ID       -> "current_value_schema_id" // set to "latest" if you want the latest schema version to used
 )
 ```
+
+Refer to the previous section for more details on the subject naming strategy.
 
 2. Import the library: ```import za.co.absa.abris.avro.AvroSerDe._```
 
@@ -185,7 +193,8 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
     val schemaRegistryConfs = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-      SchemaManager.PARAM_VALUE_SCHEMA_ID             -> "latest" // otherwise, just specify an id
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
+      SchemaManager.PARAM_VALUE_SCHEMA_ID       -> "latest" // otherwise, just specify an id
     )
       
     // import Spark Avro Dataframes
@@ -309,7 +318,8 @@ Below is an example whose full version can be found at ```za.co.absa.abris.examp
       val dataframe = spark.parallelize( .....
 
       val schemaRegistryConfs = Map(
-        SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry"
+        SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "url_to_schema_registry",
+        SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME} // choose a subject name strategy for the payload               
       )
 
       val topic = "your_destination_topic"
@@ -332,14 +342,16 @@ ABRiS also supports the simultaneous conversion of keys and values in Kafka Data
 
 The API usage is exactly the same, however, the entry point is different: ```za.co.absa.abris.avro.AvroSerDeWithKeyColumn```.
 
-Also, when configuring Schema Registry parameters, one extra entry will be required, the id of the expected key schema:
+Also, when configuring Schema Registry parameters, extra entries are required for keys:
 
 ```scala
 val schemaRegistryConfs = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry",
-  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "topic_name",
-  SchemaManager.PARAM_VALUE_SCHEMA_ID       -> "current_value_schema_id", // set to "latest" if you want the latest schema version to used for the 'value' column
-  SchemaManager.PARAM_KEY_SCHEMA_ID         -> "current_key_schema_id" // set to "latest" if you want the same for the 'key' column
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "url_to_schema_registry",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC        -> "topic_name",
+  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // choose a subject name strategy for the payload
+  SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY   -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // choose a subject name strategy for the key
+  SchemaManager.PARAM_VALUE_SCHEMA_ID              -> "current_value_schema_id", // set to "latest" if you want the latest schema version to used for the 'value' column
+  SchemaManager.PARAM_KEY_SCHEMA_ID                -> "current_key_schema_id" // set to "latest" if you want the same for the 'key' column
 )
 ```
 
@@ -362,7 +374,11 @@ This library provides utility methods for registering schemas with topics into S
 
 ```scala
     val schemaRegistryConfs = Map(
-      SchemaManager.PARAM_SCHEMA_REGISTRY_URL   -> "url_to_schema_registry"
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL                  -> "url_to_schema_registry",
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY         -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // if you are retrieving value schema
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY           -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // if your are retrieving key schema
+      SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "schema_name", // if you're using RecordName or TopicRecordName strategies
+      SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace" // if you're using RecordName or TopicRecordName strategies
     )
     SchemaManager.configureSchemaRegistry(schemaRegistryConfs)
 
@@ -434,7 +450,7 @@ Dependency:
 <dependency>
     <groupId>za.co.absa</groupId>
 	<artifactId>abris_2.11</artifactId>
-	<version>2.1.0</version>
+	<version>2.2.0</version>
 </dependency>
 ```
 

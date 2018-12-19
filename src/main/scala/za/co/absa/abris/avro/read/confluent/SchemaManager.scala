@@ -90,7 +90,6 @@ object SchemaManager {
     else {
       params.getOrElse(PARAM_VALUE_SCHEMA_NAMING_STRATEGY, throw new IllegalArgumentException(s"Parameter not specified: '$PARAM_VALUE_SCHEMA_NAMING_STRATEGY'"))
     }
-    logger.info(s"Creating adapter for schema naming strategy: $strategy")
     SubjectNameStrategyAdapterFactory.build(strategy)
   }
 
@@ -109,7 +108,18 @@ object SchemaManager {
     * It will return None if the Schema Registry client is not configured.
     */
   def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getBySubjectAndId(subject, id)) else None
+    logger.info(s"Trying to get schema for subject '$subject' and id '$id'")
+    if (isSchemaRegistryConfigured) {
+      try {
+        Some(schemaRegistryClient.getBySubjectAndId(subject, id))
+      }
+      catch {
+        case e: Exception =>
+          e.printStackTrace()
+          None
+      }
+    }
+    else None
   }
 
   def getById(id: Int): Option[Schema] = getBySubjectAndId(null, id)
@@ -118,7 +128,18 @@ object SchemaManager {
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
     */
   def getLatestVersion(subject: String): Option[Int] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) else None
+    logger.info(s"Trying to get latest schema version id for subject '$subject'")
+    if (isSchemaRegistryConfigured) {
+      try {
+        Some(schemaRegistryClient.getLatestSchemaMetadata(subject).getId)
+      }
+      catch {
+        case e: Exception =>
+          e.printStackTrace()
+          None
+      }
+    }
+    else None
   }
 
   /**
@@ -127,28 +148,28 @@ object SchemaManager {
     * Afterwards the schema can be identified by this id.
     */
   def register(schema: Schema, subject: String): Option[Int] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.register(subject, schema)) else None
+    if (isSchemaRegistryConfigured) Some(schemaRegistryClient.register(subject, schema)) else None
   }
 
   /**
     * Checks if SchemaRegistry has been configured, i.e. if it is null
     */
-  def isSchemaRegistryConfigured(): Boolean = schemaRegistryClient != null
+  def isSchemaRegistryConfigured: Boolean = schemaRegistryClient != null
 
   /**
     * Configures the Schema Registry client.
     * When invoked, it expects at least the [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
     */
-  private def configureSchemaRegistry(config: AbstractKafkaAvroSerDeConfig) = {
+  private def configureSchemaRegistry(config: AbstractKafkaAvroSerDeConfig): Unit = {
     try {
-      val urls = config.getSchemaRegistryUrls()
-      val maxSchemaObject = config.getMaxSchemasPerSubject()
+      val urls = config.getSchemaRegistryUrls
+      val maxSchemaObject = config.getMaxSchemasPerSubject
 
       if (null == schemaRegistryClient) {
         schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject)
       }
     } catch {
-      case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage())
+      case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
     }
   }
 
@@ -159,7 +180,7 @@ object SchemaManager {
     *
     * Useful for tests using mocked SchemaRegistryClient instances.
     */
-  def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient) = {
+  def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient): Unit = {
     this.schemaRegistryClient = schemaRegistryClient
   }
 
@@ -194,5 +215,5 @@ object SchemaManager {
   /**
     * Resets this manager to its initial state, before being configured.
     */
-  def reset() = schemaRegistryClient = null
+  def reset(): Unit = schemaRegistryClient = null
 }
