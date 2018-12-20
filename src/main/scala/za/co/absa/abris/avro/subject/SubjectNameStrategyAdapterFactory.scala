@@ -20,7 +20,7 @@ import io.confluent.kafka.serializers.subject.{RecordNameStrategy, SubjectNameSt
 import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStrategies._
 
-private [avro] object SubjectNameStrategyAdapterFactory {
+private[avro] object SubjectNameStrategyAdapterFactory {
 
   private val logger = LoggerFactory.getLogger(this.getClass.getCanonicalName)
 
