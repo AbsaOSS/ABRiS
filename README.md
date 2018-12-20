@@ -444,6 +444,14 @@ writer.write(data, "destination_topic", dispatchWait);
 
 A complete application can be found at ```za.co.absa.abris.utils.examples.SimpleAvroDataGenerator``` under Java source.
 
+## IMPORTANT - Note on Schema Registry naming strategies
+The naming strategies RecordName and TopicRecordName allow a topic to receive different payloads, i.e. payloads containing different schemas that do not have to be compatible, as explained [here](https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#subject-name-strategy).
+
+However, currently, there is no way for Spark to change Dataframes schemas on the fly, thus, if incompatible schemas are used on the same topic, the job will fail. Also, it would be cumbersome to write jobs that shift between schemas.
+
+A possible solution would be for ABRiS to create an uber schema from all schemas expected to be part of a topic, which will be investigated in future releases.
+
+
 ## Maven dependency
 Dependency:
 ```
