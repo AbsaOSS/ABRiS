@@ -28,7 +28,7 @@ object AvroSchemaUtils {
 
   private val logger = LoggerFactory.getLogger(AvroSchemaUtils.getClass)
 
-  private def configureSchemaManager(schemaRegistryConf: Map[String,String]) = {
+  private def configureSchemaManager(schemaRegistryConf: Map[String,String]): Unit = {
     if (!SchemaManager.isSchemaRegistryConfigured) {
       SchemaManager.configureSchemaRegistry(schemaRegistryConf)
     }
@@ -60,7 +60,7 @@ object AvroSchemaUtils {
     * @return None if incompatible or if could not perform the registration.
     */
   def registerIfCompatibleKeySchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
-    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, true)
+    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, isKey = true)
   }
 
   /**
@@ -69,7 +69,7 @@ object AvroSchemaUtils {
     * @return None if incompatible or if could not perform the registration.
     */
   def registerIfCompatibleValueSchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
-    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, false)
+    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, isKey = false)
   }
 
   /**
@@ -82,9 +82,9 @@ object AvroSchemaUtils {
     configureSchemaManager(schemaRegistryConf)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf)
-    if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
+    if (subject.isDefined && (!SchemaManager.exists(subject.get) || SchemaManager.isCompatible(schema, subject.get))) {
       logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
-      SchemaManager.register(schema, subject)
+      SchemaManager.register(schema, subject.get)
     }
     else {
       logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
@@ -95,7 +95,7 @@ object AvroSchemaUtils {
   /**
    * Loads an Avro's plain schema from the path.
    */
-  def loadPlain(path: String) = {
+  def loadPlain(path: String): String = {
     SchemaLoader.loadFromFile(path)
   }
 }

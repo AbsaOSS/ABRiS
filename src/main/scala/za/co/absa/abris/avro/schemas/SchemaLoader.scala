@@ -72,13 +72,17 @@ object SchemaLoader {
     val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
-    val id = getSchemaId(schemaSpecifiedId, subject)
-    val schema = SchemaManager.getBySubjectAndId(subject, id)
+    if (subject.isEmpty) {
+      throw new IllegalArgumentException(s"Could not load subject for topic = '$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
+    }
+
+    val id = getSchemaId(schemaSpecifiedId, subject.get)
+    val schema = SchemaManager.getBySubjectAndId(subject.get, id)
     if (schema.isDefined) {
       schema.get
     }
     else {
-      throw new IllegalArgumentException(s"Cound not load schema for topic = '$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
+      throw new IllegalArgumentException(s"Could not load schema for topic = '$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
     }
   }
 

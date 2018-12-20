@@ -22,7 +22,7 @@ import org.apache.avro.Schema
 
 private[avro] class SubjectNameStrategyAdapter(strategy: SubjectNameStrategy[Schema]) {
 
-  def subjectName(topic: String, isKey: Boolean, schema: Schema) = strategy.subjectName(topic, isKey, schema)
+  def subjectName(topic: String, isKey: Boolean, schema: Schema): String = strategy.subjectName(topic, isKey, schema)
 
   def isAdapteeType(c: Class[_ <: SubjectNameStrategy[Schema]]) : Boolean = strategy.getClass == c
 

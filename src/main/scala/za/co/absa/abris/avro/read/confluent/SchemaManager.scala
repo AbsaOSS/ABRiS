@@ -63,23 +63,23 @@ object SchemaManager {
     *
     * This method returns the subject name based on the topic and to which part of the message it corresponds.
     */
-  def getSubjectName(topic: String, isKey: Boolean, schema: Schema, params: Map[String, String]): String = {
+  def getSubjectName(topic: String, isKey: Boolean, schema: Schema, params: Map[String, String]): Option[String] = {
     val adapter = getSubjectNamingStrategyAdapter(isKey, params)
 
     if (adapter.validate(schema)) {
       val subjectName = adapter.subjectName(topic, isKey, schema)
       logger.info(s"Subject name resolved to: $subjectName")
-      subjectName
+      Some(subjectName)
     }
     else {
       logger.error(s"Invalid configuration for naming strategy. Are you using RecordName or TopicRecordName? " +
         s"If yes, are you providing SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY and " +
         s"SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY in the configuration map?")
-      null
+      None
     }
   }
 
-  def getSubjectName(topic: String, isKey: Boolean, schemaNameAndSpace: (String,String), params: Map[String, String]): String = {
+  def getSubjectName(topic: String, isKey: Boolean, schemaNameAndSpace: (String,String), params: Map[String, String]): Option[String] = {
     getSubjectName(topic, isKey, Schema.createRecord(schemaNameAndSpace._1, "", schemaNameAndSpace._2, false), params)
   }
 
