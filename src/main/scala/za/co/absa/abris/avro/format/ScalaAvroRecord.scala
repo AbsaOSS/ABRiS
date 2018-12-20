@@ -18,10 +18,10 @@ package za.co.absa.abris.avro.format
 
 
 
-import org.apache.avro.{AvroRuntimeException, Schema}
 import org.apache.avro.Schema.{Field, Type}
 import org.apache.avro.generic.GenericData.Fixed
 import org.apache.avro.generic.{GenericData, GenericRecord}
+import org.apache.avro.{AvroRuntimeException, Schema}
 import org.apache.spark.sql.Row
 
 import scala.collection._

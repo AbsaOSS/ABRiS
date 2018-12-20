@@ -16,16 +16,9 @@
 
 package za.co.absa.abris.utils.examples.utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
-
 import za.co.absa.abris.utils.avro.data.annotations.NestedAvroData;
+
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class TestDataGenerator {

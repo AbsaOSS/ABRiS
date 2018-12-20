@@ -17,19 +17,15 @@
 package za.co.absa.abris.examples.data.generation
 
 import java.lang._
-
 import java.nio.ByteBuffer
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.collection.Map
-import scala.collection.Seq
-import scala.collection.immutable
-import scala.collection.mutable
-import scala.util.Random
+
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.Row
 import za.co.absa.abris.avro.parsing.AvroToSparkParser
+
+import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.collection.{Map, Seq, immutable, mutable}
+import scala.util.Random
 
 /**
  * This class provides methods to generate example/test data.

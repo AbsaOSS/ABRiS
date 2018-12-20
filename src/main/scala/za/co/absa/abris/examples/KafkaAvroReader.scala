@@ -21,9 +21,9 @@ import java.util.Properties
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
-import za.co.absa.abris.examples.utils.ExamplesUtils
+import za.co.absa.abris.examples.utils.ExamplesUtils._
 
-import scala.collection.JavaConversions._
+
 
 object KafkaAvroReader {
 
@@ -39,28 +39,13 @@ object KafkaAvroReader {
 
   def main(args: Array[String]): Unit = {
 
+    // check if properties file is present, exists if not
     // there is an example file at /src/test/resources/AvroReadingExample.properties
-    if (args.length != 1) {
-      println("No properties file specified.")
-      System.exit(1)
-    }
+    checkArgs(args)
 
-    println("Loading properties from: " + args(0))
-    val properties = ExamplesUtils.loadProperties(args(0))
-    
-    for (key <- properties.keysIterator) {
-      println(s"\t${key} = ${properties.getProperty(key)}")
-    }
-    
-    val spark = SparkSession
-      .builder()
-      .appName(properties.getProperty(PARAM_JOB_NAME))
-      .master(properties.getProperty(PARAM_JOB_MASTER))
-      .getOrCreate()
+    val properties = loadProperties(args)
 
-    spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
-
-    import ExamplesUtils._
+    val spark = getSparkSession(properties, PARAM_JOB_NAME, PARAM_JOB_MASTER, PARAM_LOG_LEVEL)
 
     val stream = spark
       .readStream
@@ -69,18 +54,20 @@ object KafkaAvroReader {
 
     val deserialized = configureExample(stream, properties)
 
-    val filter = properties.getProperty(PARAM_TASK_FILTER)
-    println("Going to run filter: " + filter)
+    // YOUR OPERATIONS CAN GO HERE
 
     deserialized.printSchema()
-    println(deserialized.schema.prettyJson)
+
     deserialized
-    //.filter(filter)
-    .writeStream.format("console").start().awaitTermination()
+    .writeStream
+      .format("console")
+      .start()
+      .awaitTermination()
   }
 
+
+
   private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
-    import ExamplesUtils._
     import za.co.absa.abris.avro.AvroSerDe._
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {

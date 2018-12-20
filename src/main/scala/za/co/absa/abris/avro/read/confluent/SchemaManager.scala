@@ -21,6 +21,7 @@ import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDe
 import org.apache.avro.Schema
 import org.apache.kafka.common.config.ConfigException
 import org.slf4j.LoggerFactory
+import za.co.absa.abris.avro.subject.SubjectNameStrategyAdapterFactory
 
 import scala.collection.JavaConverters._
 
@@ -42,6 +43,18 @@ object SchemaManager {
   val PARAM_KEY_SCHEMA_ID         = "key.schema.id"
   val PARAM_SCHEMA_ID_LATEST_NAME = "latest"
 
+  val PARAM_KEY_SCHEMA_NAMING_STRATEGY   = "key.schema.naming.strategy"
+  val PARAM_VALUE_SCHEMA_NAMING_STRATEGY = "value.schema.naming.strategy"
+
+  val PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "schema.name"
+  val PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "schema.namespace"
+
+  object SchemaStorageNamingStrategies extends Enumeration {
+    val TOPIC_NAME        = "topic.name"
+    val RECORD_NAME       = "record.name"
+    val TOPIC_RECORD_NAME = "topic.record.name"
+  }
+
   private var schemaRegistryClient: SchemaRegistryClient = _
 
   /**
@@ -50,12 +63,34 @@ object SchemaManager {
     *
     * This method returns the subject name based on the topic and to which part of the message it corresponds.
     */
-  def getSubjectName(topic: String, isKey: Boolean): String = {
-    if (isKey) {
-      topic + "-key"
-    } else {
-      topic + "-value"
+  def getSubjectName(topic: String, isKey: Boolean, schema: Schema, params: Map[String, String]): Option[String] = {
+    val adapter = getSubjectNamingStrategyAdapter(isKey, params)
+
+    if (adapter.validate(schema)) {
+      val subjectName = adapter.subjectName(topic, isKey, schema)
+      logger.info(s"Subject name resolved to: $subjectName")
+      Some(subjectName)
     }
+    else {
+      logger.error(s"Invalid configuration for naming strategy. Are you using RecordName or TopicRecordName? " +
+        s"If yes, are you providing SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY and " +
+        s"SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY in the configuration map?")
+      None
+    }
+  }
+
+  def getSubjectName(topic: String, isKey: Boolean, schemaNameAndSpace: (String,String), params: Map[String, String]): Option[String] = {
+    getSubjectName(topic, isKey, Schema.createRecord(schemaNameAndSpace._1, "", schemaNameAndSpace._2, false), params)
+  }
+
+  private def getSubjectNamingStrategyAdapter(isKey: Boolean, params: Map[String,String]) = {
+    val strategy = if (isKey) {
+      params.getOrElse(PARAM_KEY_SCHEMA_NAMING_STRATEGY, throw new IllegalArgumentException(s"Parameter not specified: '$PARAM_KEY_SCHEMA_NAMING_STRATEGY'"))
+    }
+    else {
+      params.getOrElse(PARAM_VALUE_SCHEMA_NAMING_STRATEGY, throw new IllegalArgumentException(s"Parameter not specified: '$PARAM_VALUE_SCHEMA_NAMING_STRATEGY'"))
+    }
+    SubjectNameStrategyAdapterFactory.build(strategy)
   }
 
   /**
@@ -73,14 +108,38 @@ object SchemaManager {
     * It will return None if the Schema Registry client is not configured.
     */
   def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getBySubjectAndID(subject, id)) else None
+    logger.info(s"Trying to get schema for subject '$subject' and id '$id'")
+    if (isSchemaRegistryConfigured) {
+      try {
+        Some(schemaRegistryClient.getBySubjectAndId(subject, id))
+      }
+      catch {
+        case e: Exception =>
+          e.printStackTrace()
+          None
+      }
+    }
+    else None
   }
+
+  def getById(id: Int): Option[Schema] = getBySubjectAndId(null, id)
 
   /**
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
     */
   def getLatestVersion(subject: String): Option[Int] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) else None
+    logger.info(s"Trying to get latest schema version id for subject '$subject'")
+    if (isSchemaRegistryConfigured) {
+      try {
+        Some(schemaRegistryClient.getLatestSchemaMetadata(subject).getId)
+      }
+      catch {
+        case e: Exception =>
+          e.printStackTrace()
+          None
+      }
+    }
+    else None
   }
 
   /**
@@ -89,28 +148,28 @@ object SchemaManager {
     * Afterwards the schema can be identified by this id.
     */
   def register(schema: Schema, subject: String): Option[Int] = {
-    if (isSchemaRegistryConfigured()) Some(schemaRegistryClient.register(subject, schema)) else None
+    if (isSchemaRegistryConfigured) Some(schemaRegistryClient.register(subject, schema)) else None
   }
 
   /**
     * Checks if SchemaRegistry has been configured, i.e. if it is null
     */
-  def isSchemaRegistryConfigured(): Boolean = schemaRegistryClient != null
+  def isSchemaRegistryConfigured: Boolean = schemaRegistryClient != null
 
   /**
     * Configures the Schema Registry client.
     * When invoked, it expects at least the [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
     */
-  private def configureSchemaRegistry(config: AbstractKafkaAvroSerDeConfig) = {
+  private def configureSchemaRegistry(config: AbstractKafkaAvroSerDeConfig): Unit = {
     try {
-      val urls = config.getSchemaRegistryUrls()
-      val maxSchemaObject = config.getMaxSchemasPerSubject()
+      val urls = config.getSchemaRegistryUrls
+      val maxSchemaObject = config.getMaxSchemasPerSubject
 
       if (null == schemaRegistryClient) {
         schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject)
       }
     } catch {
-      case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage())
+      case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
     }
   }
 
@@ -121,7 +180,7 @@ object SchemaManager {
     *
     * Useful for tests using mocked SchemaRegistryClient instances.
     */
-  def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient) = {
+  def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient): Unit = {
     this.schemaRegistryClient = schemaRegistryClient
   }
 
@@ -156,5 +215,5 @@ object SchemaManager {
   /**
     * Resets this manager to its initial state, before being configured.
     */
-  def reset() = schemaRegistryClient = null
+  def reset(): Unit = schemaRegistryClient = null
 }

@@ -16,6 +16,8 @@
 
 package za.co.absa.abris.avro.read.confluent
 
+import java.nio.ByteBuffer
+
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
@@ -23,7 +25,6 @@ import org.apache.avro.io.DecoderFactory
 import org.apache.kafka.common.errors.SerializationException
 import za.co.absa.abris.avro.format.ScalaAvroRecord
 import za.co.absa.abris.avro.read.ScalaDatumReader
-import java.nio.ByteBuffer
 
 /**
   * This class provides methods to deserialize Confluent binary Avro records into Spark Rows with schemas.
@@ -107,8 +108,8 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     * Schema Registry, otherwise, the reader schema passed on to the constructor will also the considered the writer's.
     */
   private def getWriterSchema(topic: Option[String], id: Int): Schema = {
-    if (topic.isDefined && SchemaManager.isSchemaRegistryConfigured()) {
-      SchemaManager.getBySubjectAndId(SchemaManager.getSubjectName(topic.get, false), id).get
+    if (topic.isDefined && SchemaManager.isSchemaRegistryConfigured) {
+      SchemaManager.getById(id).get
     }
     else {
       readerSchema.get

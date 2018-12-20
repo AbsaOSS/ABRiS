@@ -16,16 +16,15 @@
 
 package za.co.absa.abris.utils.avro;
 
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Optional;
-
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.generic.IndexedRecord;
-
 import za.co.absa.abris.ReflectionUtils;
 import za.co.absa.abris.utils.avro.data.annotations.NestedAvroData;
+
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Converts objects into Avro IndexedRecords.

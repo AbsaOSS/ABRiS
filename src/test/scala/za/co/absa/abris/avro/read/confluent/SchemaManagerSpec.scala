@@ -17,6 +17,7 @@
 package za.co.absa.abris.avro.read.confluent
 
 import io.confluent.common.config.ConfigException
+import org.apache.avro.Schema
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 
@@ -27,18 +28,88 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
 
   before {
     SchemaManager.reset()
-    assertResult(false) {SchemaManager.isSchemaRegistryConfigured()}
+    assertResult(false) {SchemaManager.isSchemaRegistryConfigured}
   }
 
-  it should "retrieve the correct subject name" in {
+  it should "throw if no strategy is specified" in {
+    val topic = "a_subject"
+    val conf = Map[String,String]()
+    val message1 = intercept[IllegalArgumentException] {SchemaManager.getSubjectName(topic, isKey = false, (null, null), conf)}
+    val message2 = intercept[IllegalArgumentException] {SchemaManager.getSubjectName(topic, isKey = true, (null, null), conf)}
+
+    assert(message1.getMessage.contains("not specified"))
+    assert(message2.getMessage.contains("not specified"))
+  }
+
+  it should "retrieve the correct subject name for TopicName strategy" in {
     val subject = "a_subject"
-    assert(subject + "-value" == SchemaManager.getSubjectName(subject, false))
-    assert(subject + "-key" == SchemaManager.getSubjectName(subject, true))
+    val conf = Map(
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME,
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
+    )
+    assert(subject + "-value" == SchemaManager.getSubjectName(subject, isKey = false, (null, null), conf).get)
+    assert(subject + "-key" == SchemaManager.getSubjectName(subject, isKey = true, (null, null), conf).get)
+  }
+
+  it should "retrieve the correct subject name for RecordName strategy" in {
+    val subject = "a_subject"
+    val conf = Map(
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME
+    )
+
+    val schemaName = "schema_name"
+    val schemaNamespace = "schema_namespace"
+
+    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).get)
+    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).get)
+  }
+
+  it should "retrieve None for RecordName strategy if schema is null" in {
+    val subject = "a_subject"
+    val conf = Map(
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME
+    )
+
+    val schemaName = null
+    val schemaNamespace = "namespace"
+
+    assert(SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
+    assert(SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
+  }
+
+  it should "retrieve the correct subject name for TopicRecordName strategy" in {
+    val topic = "a_subject"
+    val conf = Map(
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME
+    )
+
+    val schemaName = "schema_name"
+    val schemaNamespace = "schema_namespace"
+
+    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(topic, isKey = false, (schemaName, schemaNamespace), conf).get)
+    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(topic, isKey = true, (schemaName, schemaNamespace), conf).get)
+  }
+
+  it should "retrieve None for TopicRecordName strategy if schema is null" in {
+    val subject = "a_subject"
+    val conf = Map(
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME
+    )
+
+    val schemaName = null
+    val schemaNamespace = "namespace"
+
+    assert(SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
+    assert(SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
   }
 
   it should "not try to configure Schema Registry client if parameters are empty" in {
     SchemaManager.configureSchemaRegistry(Map[String,String]())
-    assertResult(false) {SchemaManager.isSchemaRegistryConfigured()} // should still be unconfigured
+    assertResult(false) {SchemaManager.isSchemaRegistryConfigured} // should still be unconfigured
   }
 
   it should "return None as schema if Schema Registry client is not configured" in {

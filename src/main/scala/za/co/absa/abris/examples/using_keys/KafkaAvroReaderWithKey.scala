@@ -19,11 +19,9 @@ package za.co.absa.abris.examples.using_keys
 import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.sql.{Dataset, Row}
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_ORIGINAL_SCHEMA
-import za.co.absa.abris.examples.utils.ExamplesUtils
-
-import scala.collection.JavaConversions._
+import za.co.absa.abris.examples.utils.ExamplesUtils._
 
 object KafkaAvroReaderWithKey {
 
@@ -40,27 +38,11 @@ object KafkaAvroReaderWithKey {
   def main(args: Array[String]): Unit = {
 
     // there is an example file at /src/test/resources/AvroReadingExample.properties
-    if (args.length != 1) {
-      println("No properties file specified.")
-      System.exit(1)
-    }
+    checkArgs(args)
 
-    println("Loading properties from: " + args(0))
-    val properties = ExamplesUtils.loadProperties(args(0))
+    val properties = loadProperties(args)
 
-    for (key <- properties.keysIterator) {
-      println(s"\t${key} = ${properties.getProperty(key)}")
-    }
-
-    val spark = SparkSession
-      .builder()
-      .appName(properties.getProperty(PARAM_JOB_NAME))
-      .master(properties.getProperty(PARAM_JOB_MASTER))
-      .getOrCreate()
-
-    spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
-
-    import ExamplesUtils._
+    val spark = getSparkSession(properties, PARAM_JOB_NAME, PARAM_JOB_MASTER, PARAM_LOG_LEVEL)
 
     val stream = spark
       .readStream
@@ -69,18 +51,19 @@ object KafkaAvroReaderWithKey {
 
     val deserialized = configureExample(stream, properties)
 
-    val filter = properties.getProperty(PARAM_TASK_FILTER)
-    println("Going to run filter: " + filter)
+    // YOUR OPERATIONS CAN GO HERE
 
     deserialized.printSchema()
-    println(deserialized.schema.prettyJson)
+
     deserialized
-      //.filter(filter) // WRITE YOUR OPERATIONS HERE
-      .writeStream.format("console").start().awaitTermination()
+      .writeStream
+      .format("console")
+      .start()
+      .awaitTermination()
   }
 
   private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
-    import ExamplesUtils._
+
     import za.co.absa.abris.avro.AvroSerDeWithKeyColumn._
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {

@@ -16,10 +16,10 @@
 
 package za.co.absa.abris.avro.schemas.impl
 
-import za.co.absa.abris.avro.schemas.SchemasProcessor
-import org.apache.spark.sql.types.StructType
 import org.apache.avro.Schema
+import org.apache.spark.sql.types.StructType
 import za.co.absa.abris.avro.format.SparkAvroConversions
+import za.co.absa.abris.avro.schemas.SchemasProcessor
 
 /**
  * This class can produce Avro schemas from a Spark schema.
