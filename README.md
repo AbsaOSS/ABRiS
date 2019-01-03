@@ -39,6 +39,16 @@ Among the motivations for this project, it is possible to highlight:
 
 - In some use cases you may want to keep your Dataframe schema, adding your data as a nested structure, whereas in other cases you may want to use the schema for your data as the schema for the whole Dataframe.
 
+### Coordinates for Maven POM dependency
+
+```xml
+<dependency>
+    <groupId>za.co.absa</groupId>
+    <artifactId>abris_2.11</artifactId>
+    <version>2.2.2</version>
+</dependency>
+```
+
 ## Usage
 
 ### Schema retention policies
@@ -450,17 +460,6 @@ The naming strategies RecordName and TopicRecordName allow a topic to receive di
 However, currently, there is no way for Spark to change Dataframes schemas on the fly, thus, if incompatible schemas are used on the same topic, the job will fail. Also, it would be cumbersome to write jobs that shift between schemas.
 
 A possible solution would be for ABRiS to create an uber schema from all schemas expected to be part of a topic, which will be investigated in future releases.
-
-
-## Maven dependency
-Dependency:
-```
-<dependency>
-    <groupId>za.co.absa</groupId>
-	<artifactId>abris_2.11</artifactId>
-	<version>2.2.0</version>
-</dependency>
-```
 
 ## Dependencies
 
