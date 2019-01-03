@@ -22,6 +22,7 @@ import org.apache.avro.specific.SpecificDatumReader
 import za.co.absa.abris.avro.format.ScalaSpecificData
 
 import scala.collection._
+import scala.collection.mutable.ListBuffer
 
 /**
  * Avro uses its own representations of Strings and Arrays, as well as a Java HashMap to back map records.
@@ -38,17 +39,27 @@ class ScalaDatumReader[T](writerSchema: Schema, readerSchema: Schema) extends Sp
    * This method was overriden to force all Strings to be read as Scala strings
    * instead of Avro's org.apache.avro.util.Utf8.
    */
-  override def readString(old: Object, expected: Schema, in: Decoder) = {
+  override def readString(old: Object, expected: Schema, in: Decoder): String = {
     in.readString()
   }
-  
+
+  /**
+    * This method was overriden to return a String since of [[org.apache.avro.generic.GenericData.EnumSymbol]]
+    * since enums are translated to StringType in Spark StructTypes.
+    */
+  override def readEnum(expected: Schema, in: Decoder): AnyRef = {
+    super
+      .readEnum(expected, in)
+      .toString
+  }
+
   /**
    * This method was overriden so that every collection is read as a Scala's
    * mutable.ListBuffer instead of Avro's GenericData.ARRAY. 
    */
-	override def newArray(old: Object, size: Int, schema: Schema) = {				
+	override def newArray(old: Object, size: Int, schema: Schema): ListBuffer[Any] = {
 		new mutable.ListBuffer[Any]()
-	}	
+	}
 
 	override def addToArray(array: Object, post: Long, e: Object) {
 	  array.asInstanceOf[mutable.ListBuffer[Any]].append(e)	
@@ -62,7 +73,7 @@ class ScalaDatumReader[T](writerSchema: Schema, readerSchema: Schema) extends Sp
     new mutable.HashMap[Any,Any]
   }	
   
-  override def addToMap(map: Object, key: Object, value: Object) {
+  override def addToMap(map: Object, key: Object, value: Object): Unit = {
     map.asInstanceOf[mutable.HashMap[Any,Any]].put(key, value)
   } 
 }
