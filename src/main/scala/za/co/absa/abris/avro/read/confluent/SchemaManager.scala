@@ -108,7 +108,7 @@ object SchemaManager {
     * It will return None if the Schema Registry client is not configured.
     */
   def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
-    logger.info(s"Trying to get schema for subject '$subject' and id '$id'")
+    logger.debug(s"Trying to get schema for subject '$subject' and id '$id'")
     if (isSchemaRegistryConfigured) {
       try {
         Some(schemaRegistryClient.getBySubjectAndId(subject, id))
