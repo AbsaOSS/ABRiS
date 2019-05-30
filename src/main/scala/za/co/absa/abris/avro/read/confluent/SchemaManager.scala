@@ -16,7 +16,7 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
+import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaMetadata, SchemaRegistryClient}
 import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDeserializerConfig}
 import org.apache.avro.Schema
 import org.apache.kafka.common.config.ConfigException
@@ -108,10 +108,29 @@ object SchemaManager {
     * It will return None if the Schema Registry client is not configured.
     */
   def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
-    logger.info(s"Trying to get schema for subject '$subject' and id '$id'")
+    logger.debug(s"Trying to get schema for subject '$subject' and id '$id'")
     if (isSchemaRegistryConfigured) {
       try {
         Some(schemaRegistryClient.getBySubjectAndId(subject, id))
+      }
+      catch {
+        case e: Exception =>
+          e.printStackTrace()
+          None
+      }
+    }
+    else None
+  }
+
+  /**
+    * Retrieves an Avro [[SchemaMetadata]] instance from a given subject and stored with a given version.
+    * It will return None if the Schema Registry client is not configured.
+    */
+  def getBySubjectAndVersion(subject: String, version: Int): Option[SchemaMetadata] = {
+    logger.debug(s"Trying to get schema for subject '$subject' and version '$version'")
+    if (isSchemaRegistryConfigured) {
+      try {
+        Some(schemaRegistryClient.getSchemaMetadata(subject, version))
       }
       catch {
         case e: Exception =>

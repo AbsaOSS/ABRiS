@@ -152,6 +152,101 @@ object AvroSerDeWithKeyColumn {
   }
 
   /**
+    * This class provides the method that converts binary Avro records from a Dataframe into Spark Rows on the fly.
+    *
+    * It loads binary data from a stream and feed them into an Avro/Spark decoder, returning the resulting rows.
+    *
+    * It requires the path to the Avro schema which defines the records to be read.
+    */
+  implicit class DataframeDeserializer(dataframe: Dataset[Row]) extends AvroDecoder {
+
+    /**
+      * Uses instantiated Avro [[org.apache.avro.Schema]]s for key and value.
+      */
+    def fromAvro(keySchema: Schema, valueSchema: Schema)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
+      val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
+      fromAvroToRowRetainingStructure(data, KEY_COLUMN_NAME, keySchema, VALUE_COLUMN_NAME, valueSchema)
+    }
+
+    /**
+      * Uses Avro [[org.apache.avro.Schema]]s stored in the local file system for both, key and value.
+      */
+    def fromAvro(keySchemaPath: String, valueSchemaPath: String)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
+      val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
+      fromAvroToRowRetainingStructure(data, KEY_COLUMN_NAME, keySchemaPath, VALUE_COLUMN_NAME, valueSchemaPath)
+    }
+
+    /**
+      * Loads the Avro schemas from Schema Registry for both, key and value.
+      */
+    def fromAvro(schemaRegistryConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
+      val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
+      fromAvroToRowWithKeysRetainingStructure(data, KEY_COLUMN_NAME, VALUE_COLUMN_NAME, schemaRegistryConf)
+    }
+
+    /**
+      * Loads the Avro schemas from Schema Registry for both, key and value.
+      *
+      * This method supports schema changes from Schema Registry. However, the conversion between Avro records and Spark
+      * rows relies on RowEncoders, which are defined before the job starts. Thus, although the schema changes are supported
+      * while reading, they are not translated to RowEncoders, which could take to errors in the final data.
+      *
+      * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
+      * operation is performed.
+      */
+    def fromConfluentAvro(confluentConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
+      val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
+      fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, VALUE_COLUMN_NAME, confluentConf)
+    }
+
+    /**
+      * Uses instantiated [[org.apache.avro.Schema]]s to perform the conversions for both, key and value.
+      *
+      * This method supports schema changes from Schema Registry. However, the conversion between Avro records and Spark
+      * rows relies on RowEncoders, which are defined before the job starts. Thus, although the schema changes are supported
+      * while reading, they are not translated to RowEncoders, which could take to errors in the final data.
+      *
+      * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
+      * operation is performed.
+      */
+    def fromConfluentAvro(keySchema: Schema, valueSchema: Schema, confluentConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
+      val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
+      fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, keySchema, VALUE_COLUMN_NAME, valueSchema, confluentConf)
+    }
+
+    /**
+      * Loads the Avro schemas from the local file system for both, key and value.
+      *
+      * This method supports schema changes from Schema Registry. However, the conversion between Avro records and Spark
+      * rows relies on RowEncoders, which are defined before the job starts. Thus, although the schema changes are supported
+      * while reading, they are not translated to RowEncoders, which could take to errors in the final data.
+      *
+      * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
+      * operation is performed.
+      */
+    def fromConfluentAvro(keySchemaPath: String, valueSchemaPath: String, confluentConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
+      val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
+      fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, keySchemaPath, VALUE_COLUMN_NAME, valueSchemaPath, confluentConf)
+    }
+
+    /**
+      * Gets the correct dataset based on the retention policy.
+      */
+    private def getData(retentionPolicy: SchemaRetentionPolicy, columns: String*): DataFrame = {
+      retentionPolicy match {
+        case RETAIN_SELECTED_COLUMN_ONLY => getDataFromColumns(KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
+        case RETAIN_ORIGINAL_SCHEMA => dataframe
+        case _ => throw new IllegalArgumentException(s"Invalid Schema Retention Policy: $retentionPolicy")
+      }
+    }
+
+    /**
+      * Loads specific columns from the dataset.
+      */
+    private def getDataFromColumns(columns: String*) = dataframe.select(columns.head, columns.tail: _*)
+  }
+
+  /**
     * This class provides methods to perform the translation from Dataframe Rows into Avro records on the fly.
     *
     * Users can either, inform the path to the destination Avro schema or inform record name and namespace and the schema
@@ -542,6 +637,27 @@ object AvroSerDeWithKeyColumn {
       val valueSchemaId = manageValueSchemaRegistration(topic, valueSchemaProcessor.getAvroSchema(), schemaRegistryConf)
 
       toAvroWithPlainStringKey(dataframe, valueSchemaProcessor)(None, Some(valueSchemaId))
+    }
+
+    /**
+      * Converts from Dataset[Row(key,value)] into Dataset[Row(String,Array[Byte])] containing Avro records. In other words, converts the keys to their String
+      * representations and values into Avro records.
+      *
+      * Intended to be used when users want to force an Avro schema on the Dataframe, instead of having it inferred.
+      *
+      * The schema forced upon the Dataframe will be acquired from the schema registry based on subject and subject version
+      *
+      * The API will throw if Schema Registry access details are provided but the schema could not enforced due to either incompatibility, wrong credentials or Schema Registry unavailability.
+      */
+    def toConfluentAvroWithPlainKey(topic: String, schemaVersion: Int)(schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+
+      if (schemaRegistryConf.isEmpty) {
+        throw new IllegalArgumentException("No Schema Registry connection parameters found. It is mandatory for this API entry to connect to Schema Registry so that" +
+          " the specified schema and its respective id can be retrieved to be sent along with the payload.")
+      }
+      val valueSchemaMetadata = AvroSchemaUtils.load(schemaVersion, schemaRegistryConf)
+      val valueSchemaProcessor = new AvroToSparkProcessor(valueSchemaMetadata.getSchema)
+      toAvroWithPlainStringKey(dataframe, valueSchemaProcessor)(None, Some(valueSchemaMetadata.getId))
     }
 
     /**
