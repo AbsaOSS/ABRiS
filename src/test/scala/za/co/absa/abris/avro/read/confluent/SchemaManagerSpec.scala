@@ -131,4 +131,13 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     assertThrows[IllegalArgumentException] {SchemaManager.configureSchemaRegistry(config1)}
     assertThrows[ConfigException] {SchemaManager.configureSchemaRegistry(config2)}
   }
+
+  it should "allow setting basic auth user info if provided" in {
+    val config = Map(
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://schema-registry.url",
+      SchemaManager.PARAM_SCHEMA_REGISTRY_BASIC_AUTH_SOURCE -> "URL"
+    )
+
+    SchemaManager.configureSchemaRegistry(config)
+  }
 }

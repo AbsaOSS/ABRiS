@@ -49,6 +49,9 @@ object SchemaManager {
   val PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "schema.name"
   val PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "schema.namespace"
 
+  val PARAM_SCHEMA_REGISTRY_BASIC_AUTH_SOURCE = "basic.auth.credentials.source"
+  val PARAM_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO = "schema.registry.basic.auth.user.info"
+
   object SchemaStorageNamingStrategies extends Enumeration {
     val TOPIC_NAME        = "topic.name"
     val RECORD_NAME       = "record.name"
@@ -166,7 +169,8 @@ object SchemaManager {
       val maxSchemaObject = config.getMaxSchemasPerSubject
 
       if (null == schemaRegistryClient) {
-        schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject)
+        val authConfig = config.originalsWithPrefix("").asScala filterKeys Set(PARAM_SCHEMA_REGISTRY_BASIC_AUTH_SOURCE)
+        schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject, authConfig.asJava)
       }
     } catch {
       case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
