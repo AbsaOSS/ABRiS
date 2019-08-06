@@ -16,10 +16,10 @@
 
 package za.co.absa.abris.avro.write
 
-import org.apache.avro.generic.IndexedRecord
-import org.apache.spark.sql.catalyst.expressions.{GenericRow, Rand}
-import org.apache.avro.{Schema, UnresolvedUnionException}
 import org.apache.avro.generic.GenericData.Record
+import org.apache.avro.generic.IndexedRecord
+import org.apache.avro.{Schema, UnresolvedUnionException}
+import org.apache.spark.sql.catalyst.expressions.GenericRow
 
 import scala.util.Try
 
