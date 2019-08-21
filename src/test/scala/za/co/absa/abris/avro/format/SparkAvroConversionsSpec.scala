@@ -18,7 +18,7 @@ package za.co.absa.abris.avro.format
 
 import java.lang.{Boolean, Double, Float, Long}
 
-import org.apache.avro.Schema
+import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.avro.Schema.Type
 import org.apache.avro.generic.{GenericRecord, IndexedRecord}
 import org.apache.avro.io.DecoderFactory
@@ -53,7 +53,8 @@ class SparkAvroConversionsSpec extends FlatSpec {
             StructField("int2", IntegerType, false),
             StructField("float1", FloatType, false)
           )
-        ), false)
+        ), false),
+        StructField("bytes", BinaryType, false)
       )
     )   
   
@@ -82,14 +83,15 @@ class SparkAvroConversionsSpec extends FlatSpec {
     array.append(4l)
     array.append(5l)
     
-    val data: Array[Any] = Array(1, 2l, map, array, Row("st1", "st2"), 6d, Row(7, 8f))    
+    val data: Array[Any] = Array(1, 2l, map, array, Row("st1", "st2"), 6d, Row(7, 8f), Array[Byte](42, 8, 9, 6))
     val row = new GenericRowWithSchema(data, structType)
     val avroSchema = SparkAvroConversions.toAvroSchema(structType, "name", "namespace")    
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
     val rowBytes = SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema)
     val record: GenericRecord = parse(rowBytes, avroSchema).asInstanceOf[GenericRecord]
-    for (i <- 0 until data.length) assert(record.get(i) == data(i)) 
-  }  
+    for (i <- 0 until (data.length -1)) assert(record.get(i) == data(i))
+    assert(record.get(7).asInstanceOf[Array[Byte]].sameElements(data(7).asInstanceOf[Array[Byte]]))
+  }
   
   it should "convert Avro schemas to SQL types" in {
     val schema = AvroSchemaUtils.parse(TestSchemas.COMPLEX_SCHEMA_SPEC)
@@ -114,7 +116,8 @@ class SparkAvroConversionsSpec extends FlatSpec {
     assert(schema.getField("struct2").schema().getType == Type.RECORD)
     assert(schema.getField("double1").schema().getType == Type.DOUBLE)
     assert(schema.getField("struct3").schema().getType == Type.RECORD)
-    
+    assert(schema.getField("bytes").schema().getType == Type.BYTES)
+
     val map1 = schema.getField("map1").schema()
     assert(map1.getValueType.getType == Type.INT)
     
@@ -129,7 +132,37 @@ class SparkAvroConversionsSpec extends FlatSpec {
     assert(struct3.getField("int2").schema().getType == Type.INT)
     assert(struct3.getField("float1").schema().getType == Type.FLOAT)
   }
-  
+
+  it should "convert fixed and bytes type" in {
+
+    val avroSchema = SchemaBuilder
+      .record("test_record")
+      .namespace("test_namespace")
+      .fields()
+        .name("fixed_name").`type`().fixed("fixed_name").size(3).noDefault()
+        .name("bytes_name").`type`().bytesType().noDefault()
+      .endRecord()
+
+    val sparkType = StructType(
+      Seq(
+        StructField("fixed_name", BinaryType, false),
+        StructField("bytes_name", BinaryType, false)
+      )
+    )
+
+    val testBytes = Array[Byte](42,0,1)
+    val row = new GenericRowWithSchema(Array[Any](testBytes, testBytes), structType)
+    val rowBytes = SparkAvroConversions.rowToBinaryAvro(row, sparkType, avroSchema)
+
+    val numberOfBytes = 6 // 3 is encoded as 6 because of avro zigzag encoding
+    val expectedResult = testBytes ++ (numberOfBytes +: testBytes)
+    assert(rowBytes.sameElements(expectedResult))
+
+    val record: GenericRecord = parse(rowBytes, avroSchema).asInstanceOf[GenericRecord]
+    assert(record.get(0).asInstanceOf[Array[Byte]].sameElements(testBytes))
+    assert(record.get(1).asInstanceOf[Array[Byte]].sameElements(testBytes))
+  }
+
   private def parse(bytes: Array[Byte], schema: Schema): IndexedRecord = {
     val decoder = DecoderFactory.get().binaryDecoder(bytes, null)    
     val reader = new ScalaDatumReader[IndexedRecord](schema)
