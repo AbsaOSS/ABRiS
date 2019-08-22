@@ -36,32 +36,37 @@
 	</repositories>
 
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<!--Maven-->
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.deploy.plugin>2.8.1</maven.deploy.plugin>
+		<maven.sources.version>3.0.1</maven.sources.version>
+		<gpg.plugin.version>1.6</gpg.plugin.version>
+		<surefire.version>3.0.0-M1</surefire.version>
 
+		<!--Tests-->
 		<mockito.version>1.8.5</mockito.version>
 		<scalatest.version>3.0.0</scalatest.version>
 		<scalatest.maven.version>1.0</scalatest.maven.version>
 		<scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
+		<!--Platforms-->
 		<spark.version>2.3.0</spark.version>
 		<kafka.spark.version>0-10</kafka.spark.version>
+		<confluent.version>5.1.0</confluent.version>
 
+		<!--Scala-->
 		<scala.version>2.11.8</scala.version>
 		<scala.compat.version>2.11</scala.compat.version>
 		<specs.version>2.4.16</specs.version>
 		<scalatest.version>3.0.1</scalatest.version>
 
+		<!--Libs-->
 		<databricks.spark.avro>4.0.0</databricks.spark.avro>
-
 		<avro.version>1.8.2</avro.version>
-
 		<jackson.databind.version>2.6.1</jackson.databind.version>
-
-		<confluent.version>5.1.0</confluent.version>
-
-		<gpg.plugin.version>1.6</gpg.plugin.version>
 	</properties>
 
     <scm>
@@ -341,6 +346,7 @@
 			<!-- disable surefire -->
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire.version}</version>
 				<configuration>
 					<skipTests>true</skipTests>
 				</configuration>
@@ -350,6 +356,7 @@
 			<plugin>
 				<groupId>org.scalatest</groupId>
 				<artifactId>scalatest-maven-plugin</artifactId>
+				<version>${scalatest.maven.version}</version>
 				<configuration>
 					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
 					<junitxml>.</junitxml>
@@ -392,6 +399,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
+						<version>${maven.sources.version}</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
