@@ -104,20 +104,20 @@ object SparkAvroConversions {
   }   
   
   private def rowToGenericRecord(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
-    val converter = getConverter(sparkSchema, avroSchema.getName, avroSchema.getNamespace)
+    val converter = getConverter(sparkSchema, avroSchema)
     converter(row).asInstanceOf[GenericRecord]
   }
   
-  private def getConverter(dataType: DataType, name: String, namespace: String): Any => Any = {
-    converterCache.getOrElseUpdate(new ConverterKey(dataType, name, namespace), SparkAvroConversions.createConverterToAvro(dataType, name, namespace)) 
+  private def getConverter(dataType: DataType, avroSchema: Schema): Any => Any = {
+    val key = ConverterKey(dataType, avroSchema.getName, avroSchema.getNamespace)
+    converterCache.getOrElseUpdate(key, SparkAvroConversions.createConverterToAvro(dataType, avroSchema))
   }  
   
   // Copied from Databricks, as any implementation would be very similar and this library already uses Databricks'.
   // This method is private inside "com.databricks.spark.avro.AvroOutputWriter".
   private def createConverterToAvro(
     dataType:        DataType,
-    structName:      String,
-    recordNamespace: String): (Any) => Any = {
+    schema:          Schema): (Any) => Any = {
     dataType match {
       case BinaryType => (item: Any) => item match {
         case null               => null
@@ -133,8 +133,7 @@ object SparkAvroConversions {
       case ArrayType(elementType, _) =>
         val elementConverter = createConverterToAvro(
           elementType,
-          structName,
-          DatabricksAdapter.getNewRecordNamespace(elementType, recordNamespace, structName))
+          schema)
         (item: Any) => {
           if (item == null) {
             null
@@ -153,8 +152,7 @@ object SparkAvroConversions {
       case MapType(StringType, valueType, _) =>
         val valueConverter = createConverterToAvro(
           valueType,
-          structName,
-          DatabricksAdapter.getNewRecordNamespace(valueType, recordNamespace, structName))
+          schema)
         (item: Any) => {
           if (item == null) {
             null
@@ -168,14 +166,9 @@ object SparkAvroConversions {
           }
         }
       case structType: StructType =>
-        val builder = SchemaBuilder.record(structName).namespace(recordNamespace)
-        val schema: Schema = SchemaConverters.convertStructToAvro(
-          structType, builder, recordNamespace)
-        val fieldConverters = structType.fields.map(field =>
-          createConverterToAvro(
-            field.dataType,
-            field.name,
-            DatabricksAdapter.getNewRecordNamespace(field.dataType, recordNamespace, field.name)))
+        val fieldConverters = for (i <- 0 until schema.getFields.size())
+          yield createConverterToAvro(structType.fields(i).dataType, schema.getFields.get(i).schema)
+
         (item: Any) => {
           if (item == null) {
             null
