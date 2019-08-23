@@ -16,8 +16,13 @@
 
 package za.co.absa.abris.avro.write
 
+import org.apache.avro.generic.GenericData.Record
 import org.apache.avro.generic.IndexedRecord
+import org.apache.avro.{Schema, UnresolvedUnionException}
 import org.apache.spark.sql.catalyst.expressions.GenericRow
+
+import scala.util.Try
+
 
 object ScalaCustomSpecificData {
   private val INSTANCE = new ScalaCustomSpecificData()
@@ -37,5 +42,22 @@ class ScalaCustomSpecificData extends za.co.absa.abris.avro.format.ScalaSpecific
     catch {
       case _: Throwable => record.asInstanceOf[GenericRow].get(position).asInstanceOf[Object] 
     }
-  }    
+  }
+
+  /**
+    * This is a hack. When a Record datum is created from a dataframe its schema namespace is defined by the location
+    * of the attribute in the dataframe schema as opposed to the avro schema that is to be imposed. This means when the
+    * logic tries to resolve the namespace of the datum (record) from the given types in the union it cannot find it.
+    * The below logic works by if all else fails trying to match the datum schema name with any of the union type names
+    * and if found returning that.
+    * @param union schema
+    * @param datum data
+    */
+  override def resolveUnion(union: Schema, datum: Object): Int = {
+    Try(super.resolveUnion(union, datum)).getOrElse {
+      val name = datum.asInstanceOf[Record].getSchema.getName.toLowerCase
+      val maybeIndex = Range(0, union.getTypes.size()).find(x => name.equals(union.getTypes.get(x).getName.toLowerCase))
+      maybeIndex.getOrElse(throw new UnresolvedUnionException(union, datum))
+    }
+  }
 }
