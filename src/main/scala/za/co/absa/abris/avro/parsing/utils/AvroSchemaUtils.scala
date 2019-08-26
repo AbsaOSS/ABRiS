@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.avro.parsing.utils
 
+import io.confluent.kafka.schemaregistry.client.SchemaMetadata
 import org.apache.avro.Schema
 import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.read.confluent.SchemaManager
@@ -48,6 +49,10 @@ object AvroSchemaUtils {
 
   def load(schemaRegistryConf: Map[String,String]): Schema = {
     SchemaLoader.loadFromSchemaRegistry(schemaRegistryConf)
+  }
+
+  def load(schemaVersion: Int, schemaRegistryConf: Map[String,String]): SchemaMetadata = {
+    SchemaLoader.loadFromSchemaRegistry(schemaVersion, schemaRegistryConf)
   }
 
   def loadForKeyAndValue(schemaRegistryConf: Map[String,String]): (Schema,Schema) = {

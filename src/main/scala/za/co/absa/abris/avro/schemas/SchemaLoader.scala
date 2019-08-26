@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.avro.schemas
 
+import io.confluent.kafka.schemaregistry.client.SchemaMetadata
 import org.apache.avro.Schema
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
@@ -67,6 +68,14 @@ object SchemaLoader {
     loadFromSchemaRegistry(topic, specifiedSchemaId, isKey = false, params)
   }
 
+  def loadFromSchemaRegistry(version: Int, params: Map[String,String]): SchemaMetadata = {
+    configureSchemaManager(params)
+
+    val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
+
+    loadFromSchemaRegistry(topic, isKey = false, params, version)
+  }
+
   private def loadFromSchemaRegistry(topic: String, schemaSpecifiedId: String, isKey: Boolean, params: Map[String,String]): Schema = {
     val schemaName = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
     val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
@@ -84,6 +93,21 @@ object SchemaLoader {
     else {
       throw new IllegalArgumentException(s"Could not load schema for topic = '$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
     }
+  }
+
+  private def loadFromSchemaRegistry(topic: String, isKey: Boolean, params: Map[String,String], version: Int): SchemaMetadata = {
+    val schemaName = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
+    val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
+
+    val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
+    if (subject.isEmpty) {
+      throw new IllegalArgumentException(s"Could not load subject for topic = '$topic', version = '$version', isKey = '$isKey' and params = '$params'")
+    }
+    SchemaManager
+        .getBySubjectAndVersion(subject.get, version)
+        .getOrElse(
+      throw new IllegalArgumentException(s"Could not load schema for topic = '$topic', version = '$version', isKey = '$isKey' and params = '$params'")
+    )
   }
 
   private def configureSchemaManager(params: Map[String,String]): Unit = {

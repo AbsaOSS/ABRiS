@@ -640,6 +640,27 @@ object AvroSerDeWithKeyColumn {
     }
 
     /**
+      * Converts from Dataset[Row(key,value)] into Dataset[Row(String,Array[Byte])] containing Avro records. In other words, converts the keys to their String
+      * representations and values into Avro records.
+      *
+      * Intended to be used when users want to force an Avro schema on the Dataframe, instead of having it inferred.
+      *
+      * The schema forced upon the Dataframe will be acquired from the schema registry based on subject and subject version
+      *
+      * The API will throw if Schema Registry access details are provided but the schema could not enforced due to either incompatibility, wrong credentials or Schema Registry unavailability.
+      */
+    def toConfluentAvroWithPlainKey(topic: String, schemaVersion: Int)(schemaRegistryConf: Map[String,String]): Dataset[Row] = {
+
+      if (schemaRegistryConf.isEmpty) {
+        throw new IllegalArgumentException("No Schema Registry connection parameters found. It is mandatory for this API entry to connect to Schema Registry so that" +
+          " the specified schema and its respective id can be retrieved to be sent along with the payload.")
+      }
+      val valueSchemaMetadata = AvroSchemaUtils.load(schemaVersion, schemaRegistryConf)
+      val valueSchemaProcessor = new AvroToSparkProcessor(valueSchemaMetadata.getSchema)
+      toAvroWithPlainStringKey(dataframe, valueSchemaProcessor)(None, Some(valueSchemaMetadata.getId))
+    }
+
+    /**
       * Converts a Dataset[Row] into a Dataset[Array[Byte]] containing Avro schemas generated according to the plain specification informed as a parameter.
       */
     private def toAvro(rows: Dataset[Row], keySchemas: SchemasProcessor, valueSchemas: SchemasProcessor)(keySchemaId: Option[Int], valueSchemaId: Option[Int]) = {
