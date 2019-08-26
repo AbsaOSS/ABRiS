@@ -45,7 +45,7 @@ Among the motivations for this project, it is possible to highlight:
 <dependency>
     <groupId>za.co.absa</groupId>
     <artifactId>abris_2.11</artifactId>
-    <version>2.2.2</version>
+    <version>2.2.3</version>
 </dependency>
 ```
 
