@@ -221,7 +221,7 @@ object SchemaManager {
     catch {
       case e: Exception => {
         if (e.getMessage.contains("Subject not found")) {
-          logger.error(s"Subject not registered: '$subject'")
+          logger.info(s"Subject not registered: '$subject'")
         }
         else {
           logger.error(s"Problems found while retrieving metadata for subject '$subject'", e)

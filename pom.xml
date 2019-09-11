@@ -1,10 +1,10 @@
 <!-- Copyright 2018 ABSA Group Limited ~ ~ Licensed under the
-	Apache License, Version 2.0 (the "License"); ~ you may not use this file 
-	except in compliance with the License. ~ You may obtain a copy of the License 
-	at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 ~ ~ Unless required by 
-	applicable law or agreed to in writing, software ~ distributed under the 
-	License is distributed on an "AS IS" BASIS, ~ WITHOUT WARRANTIES OR CONDITIONS 
-	OF ANY KIND, either express or implied. ~ See the License for the specific 
+	Apache License, Version 2.0 (the "License"); ~ you may not use this file
+	except in compliance with the License. ~ You may obtain a copy of the License
+	at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 ~ ~ Unless required by
+	applicable law or agreed to in writing, software ~ distributed under the
+	License is distributed on an "AS IS" BASIS, ~ WITHOUT WARRANTIES OR CONDITIONS
+	OF ANY KIND, either express or implied. ~ See the License for the specific
 	language governing permissions and ~ limitations under the License. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -65,6 +65,7 @@
 
 		<!--Libs-->
 		<databricks.spark.avro>4.0.0</databricks.spark.avro>
+        <spark.avro.version>2.4.4</spark.avro.version>
 		<avro.version>1.8.2</avro.version>
 		<jackson.databind.version>2.6.1</jackson.databind.version>
 	</properties>
@@ -98,191 +99,113 @@
 		</developer>
 	</developers>
 
-	<dependencies>
+    <dependencies>
 
 		<!-- Provides Avro schema to Spark StructType conversion -->
 		<dependency>
 			<groupId>com.databricks</groupId>
 			<artifactId>spark-avro_2.11</artifactId>
-		</dependency>
+            <version>${databricks.spark.avro}</version>
+        </dependency>
 
 		<!-- Tests -->
-		<dependency>
-			<groupId>org.specs2</groupId>
-			<artifactId>specs2-core_${scala.compat.version}</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.scalatest</groupId>
-			<artifactId>scalatest_${scala.compat.version}</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-core_${scala.compat.version}</artifactId>
+            <version>${specs.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.compat.version}</artifactId>
+            <version>${scalatest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
 
 		<!-- Avro -->
 		<dependency>
 			<groupId>org.apache.avro</groupId>
 			<artifactId>avro</artifactId>
-		</dependency>
+            <version>${avro.version}</version>
+        </dependency>
 
 		<!-- Spark -->
 		<dependency>
 			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql_${scala.compat.version}</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_${scala.compat.version}</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming_${scala.compat.version}</artifactId>
-		</dependency>
+            <artifactId>spark-sql_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-avro_${scala.compat.version}</artifactId>
+            <version>${spark.avro.version}</version>
+        </dependency>
 
-		<!-- Spark Kafka -->
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-		</dependency>
+        <!-- Spark Kafka -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
 
-		<!-- Jackson -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency>
+        <!-- Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.databind.version}</version>
+        </dependency>
 
-		<!-- Remote artifact deployment -->
-		<dependency>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-deploy-plugin</artifactId>
-		</dependency>
+        <!-- Remote artifact deployment -->
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>${maven.deploy.plugin}</version>
+        </dependency>
 
-		<!-- Confluent's Kafka and Schema Registry -->
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>kafka-avro-serializer</artifactId>
-		</dependency>
+        <!-- Confluent's Kafka and Schema Registry -->
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+            <version>${confluent.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>io.confluent</groupId>
 			<artifactId>kafka-schema-registry-client</artifactId>
-		</dependency>
+            <version>${confluent.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>io.confluent</groupId>
 			<artifactId>common-config</artifactId>
-		</dependency>
+            <version>${confluent.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>io.confluent</groupId>
 			<artifactId>common-utils</artifactId>
-		</dependency>
+            <version>${confluent.version}</version>
+        </dependency>
 
 	</dependencies>
-
-	<dependencyManagement>
-		<dependencies>
-			<!-- Provides Avro schema to Spark StructType conversion -->
-			<dependency>
-				<groupId>com.databricks</groupId>
-				<artifactId>spark-avro_${scala.compat.version}</artifactId>
-				<version>${databricks.spark.avro}</version>
-			</dependency>
-
-			<!-- Test -->
-			<dependency>
-				<groupId>org.scalatest</groupId>
-				<artifactId>scalatest_${scala.compat.version}</artifactId>
-				<version>${scalatest.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.specs2</groupId>
-				<artifactId>specs2-core_${scala.compat.version}</artifactId>
-				<version>${specs.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>${mockito.version}</version>
-			</dependency>
-
-			<!-- Avro -->
-			<dependency>
-				<groupId>org.apache.avro</groupId>
-				<artifactId>avro</artifactId>
-				<version>${avro.version}</version>
-			</dependency>
-
-			<!-- Spark -->
-			<dependency>
-				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-sql_${scala.compat.version}</artifactId>
-				<version>${spark.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-				<version>${spark.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
-				<version>${spark.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-core_${scala.compat.version}</artifactId>
-				<version>${spark.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.spark</groupId>
-				<artifactId>spark-streaming_${scala.compat.version}</artifactId>
-				<version>${spark.version}</version>
-			</dependency>
-
-			<!-- Jackson -->
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
-				<version>${jackson.databind.version}</version>
-			</dependency>
-
-			<!-- Remote artifact deployment -->
-			<dependency>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>${maven.deploy.plugin}</version>
-			</dependency>
-
-			<!-- Confluent's Kafka and Schema Registry -->
-			<dependency>
-				<groupId>io.confluent</groupId>
-				<artifactId>kafka-avro-serializer</artifactId>
-				<version>${confluent.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.confluent</groupId>
-				<artifactId>kafka-schema-registry-client</artifactId>
-				<version>${confluent.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.confluent</groupId>
-				<artifactId>common-config</artifactId>
-				<version>${confluent.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.confluent</groupId>
-				<artifactId>common-utils</artifactId>
-				<version>${confluent.version}</version>
-			</dependency>
-
-		</dependencies>
-	</dependencyManagement>
 
 	<build>
 		<sourceDirectory>src/main/scala</sourceDirectory>
