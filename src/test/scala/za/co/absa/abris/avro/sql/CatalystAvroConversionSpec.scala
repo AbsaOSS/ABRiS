@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.avro.sql
 
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.struct
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
@@ -54,7 +55,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   }
 
   override def beforeEach() {
-    SchemaManager.setConfiguredSchemaRegistry(new SchemaRegistryClientMock())
+    SchemaManager.setConfiguredSchemaRegistry(new MockSchemaRegistryClient())
   }
 
   it should "convert one type to avro an back" in {
@@ -190,6 +191,32 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
 
     val result = avroBytes
       .select(from_confluent_avro('bytes, schemaString) as 'result)
+      .select("result.*")
+
+    shouldEqualByData(dataframe, result)
+  }
+  private val schemaRegistryConfigForKey = Map(
+    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
+    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
+    SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.name",
+    SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
+    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test",
+    SchemaManager.PARAM_KEY_SCHEMA_ID -> "latest"
+  )
+
+  it should "convert all types of data to confluent avro an back using schema registry for key" in {
+
+    val dataframe: DataFrame = getTestingDataframe
+    val schemaString = ComplexRecordsGenerator.usedAvroSchema
+
+    val avroBytes = dataframe
+      .select(struct(dataframe.columns.head, dataframe.columns.tail: _*) as 'input)
+      .select(to_confluent_avro('input, schemaString, schemaRegistryConfigForKey) as 'bytes)
+
+    avroBytes.show() // force evaluation
+
+    val result = avroBytes
+      .select(from_confluent_avro('bytes, schemaRegistryConfigForKey) as 'result)
       .select("result.*")
 
     shouldEqualByData(dataframe, result)

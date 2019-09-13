@@ -16,6 +16,8 @@
 
 package za.co.absa.abris.avro.sql
 
+import java.security.InvalidParameterException
+
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.SparkException
@@ -44,7 +46,7 @@ case class AvroDataToCatalyst(
 
   @transient private lazy val avroSchema = (jsonFormatSchema, schemaRegistryConf) match {
     case (Some(schemaString), _) => new Schema.Parser().parse(schemaString)
-    case (_, Some(schemaRegistryConf)) => AvroSchemaUtils.load(schemaRegistryConf)
+    case (_, Some(schemaRegistryConf)) => loadSchemaFromRegistry(schemaRegistryConf)
     case _ => throw new SparkException("Schema or schema registry configuration must be provided")
   }
 
@@ -104,6 +106,27 @@ case class AvroDataToCatalyst(
     val reader = new ScalaConfluentKafkaAvroDeserializer(topic, schema)
     reader.configureSchemaRegistry(configs)
     reader
+  }
+
+  def loadSchemaFromRegistry(registryConfig: Map[String, String]): Schema = {
+
+    val valueStrategy = registryConfig.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
+    val keyStrategy = registryConfig.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
+
+    (valueStrategy, keyStrategy) match {
+      case (Some(valueStrategy), None) => AvroSchemaUtils.loadForValue(registryConfig)
+      case (None, Some(keyStrategy)) => AvroSchemaUtils.loadForKey(registryConfig)
+      case (Some(_), Some(_)) => {
+        throw new InvalidParameterException(
+          "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
+            "Only one of them supoused to be defined!")
+      }
+      case _ => {
+        throw new InvalidParameterException(
+          "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
+            "must be defined to use schema registry!")
+      }
+    }
   }
 
 }

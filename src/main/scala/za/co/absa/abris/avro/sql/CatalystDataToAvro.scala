@@ -70,18 +70,32 @@ case class CatalystDataToAvro(
 
   /**
    * Tries to manage schema registration in case credentials to access Schema Registry are provided.
-   *
-   * This method either works or throws an prependSchemaId.
    */
   @throws[InvalidParameterException]
   private def registerSchema(
       schema: Schema,
-      schemaRegistryConf: Map[String,String],
+      registryConfig: Map[String,String],
       prependSchemaId: Boolean): Option[Int] = {
 
-    val topic = schemaRegistryConf(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
+    val topic = registryConfig(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
 
-    val schemaId = AvroSchemaUtils.registerIfCompatibleValueSchema(topic, schema, schemaRegistryConf)
+    val valueStrategy = registryConfig.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
+    val keyStrategy = registryConfig.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
+
+    val schemaId = (valueStrategy, keyStrategy) match {
+      case (Some(valueStrategy), None) => AvroSchemaUtils.registerIfCompatibleValueSchema(topic, schema, registryConfig)
+      case (None, Some(keyStrategy)) => AvroSchemaUtils.registerIfCompatibleKeySchema(topic, schema, registryConfig)
+      case (Some(_), Some(_)) => {
+        throw new InvalidParameterException(
+          "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
+            "Only one of them supposed to be defined!")
+      }
+      case _ => {
+        throw new InvalidParameterException(
+          "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
+            "must be defined to use schema registry!")
+      }
+    }
 
     if (schemaId.isEmpty) {
       throw new InvalidParameterException(s"Schema could not be registered for topic '$topic'. " +

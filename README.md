@@ -122,6 +122,44 @@ def readAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): D
 ```
 The only difference is the expression name.
 
+### Reading Confluent Avro binary records using schema registry for key and value
+In a case that we are sending the avro data using kafka we may want to serialize both the key and the value of kafka message.
+The serialization of avro data is not really different when we are doing it for key or for value, but schema registry handle each of them slightly differently.
+Specifically the subject may depend on this.
+
+The way the library knows whether you are working with key or value is the schema naming strategy.
+Use ```SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY``` for a key and ```SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY``` for a value. If the configuration will contain both of them it will cause an error!
+
+This is one way how to create the configurations for key and value serialization:
+```scala
+val commonRegistryConfig = Map(
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081"
+)
+
+val keyRegistryConfig = commonRegistryConfig ++ Map(
+  SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
+  SchemaManager.PARAM_KEY_SCHEMA_ID -> "latest",
+  SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
+  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
+)
+
+val valueRegistryConfig = commonRegistryConfig ++ Map(
+  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name",
+  SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
+)
+```
+Let's assume that the avro binary data for key are in ```key``` column and the value data are in ```value``` column of the same DataFrame.
+
+```scala
+import za.co.absa.abris.avro.functions.from_confluent_avro
+
+val result: DataFrame  = dataFrame.select(
+    from_confluent_avro(col("key"), keyRegistryConfig) as 'key,
+    from_confluent_avro(col("value"), valueRegistryConfig) as 'value)
+```
+We just need to use the right configuration for the right column and that's it.
+
 ### Writing Avro records 
 ```scala
 import za.co.absa.abris.avro.functions.to_avro
@@ -208,6 +246,31 @@ def writeAvro(dataFrame: DataFrame, schemaString: String, schemaRegistryConfig: 
 }
 ```
 
+### Writing Confluent Avro binary records using schema registry for key and value
+As in reading example, for writing you also have to specify the naming strategy parameter to let ABRiS know if you are using value or key.
+
+```scala
+val commonRegistryConfig = Map(
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081",
+  SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
+  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
+)
+
+val keyRegistryConfig = commonRegistryConfig +
+  (SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.record.name")
+
+val valueRegistryConfig = commonRegistryConfig +
+  (SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name")
+```
+Let's assume that we have the data that we want to serialize in a DataFrame in key and value columns.
+
+```scala
+val result: DataFrame = dataFrame.select(
+  to_confluent_avro(col("key"), keyRegistryConfig) as 'key,
+  to_confluent_avro(col("value"), valueRegistryConfig) as 'value)
+```
+After serialization the data are again stored in columns key and value, but now they are in avro binary format.
 
 ## Other Features
 
