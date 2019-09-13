@@ -146,7 +146,7 @@ object SchemaManager {
   /**
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
     */
-  def getLatestVersionsId(subject: String): Option[Int] = {
+  def getLatestVersionId(subject: String): Option[Int] = {
     logger.info(s"Trying to get latest schema version id for subject '$subject'")
     if (isSchemaRegistryConfigured) {
       try {

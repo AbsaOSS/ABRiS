@@ -36,7 +36,7 @@ object functions {
    *
    */
   def from_avro(data: Column, jsonFormatSchema: String): Column = {
-    new Column(AvroDataToCatalyst(data.expr, Some(jsonFormatSchema), None, removeSchemaId = false))
+    new Column(AvroDataToCatalyst(data.expr, Some(jsonFormatSchema), None, confluentCompliant = false))
   }
 
   /**
@@ -49,7 +49,7 @@ object functions {
    *
    */
   def from_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
-    new Column(sql.AvroDataToCatalyst(data.expr, None, Some(schemaRegistryConf), removeSchemaId = false))
+    new Column(sql.AvroDataToCatalyst(data.expr, None, Some(schemaRegistryConf), confluentCompliant = false))
   }
 
   /**
@@ -64,7 +64,7 @@ object functions {
    *
    */
   def from_confluent_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
-    new Column(sql.AvroDataToCatalyst(data.expr, None, Some(schemaRegistryConf), removeSchemaId = true))
+    new Column(sql.AvroDataToCatalyst(data.expr, None, Some(schemaRegistryConf), confluentCompliant = true))
   }
 
   /**
@@ -78,7 +78,7 @@ object functions {
    *
    */
   def from_confluent_avro(data: Column, jsonFormatSchema: String): Column = {
-    new Column(sql.AvroDataToCatalyst(data.expr, Some(jsonFormatSchema), None, removeSchemaId = true))
+    new Column(sql.AvroDataToCatalyst(data.expr, Some(jsonFormatSchema), None, confluentCompliant = true))
   }
 
   /**
@@ -87,7 +87,7 @@ object functions {
    *
    */
   def to_avro(data: Column): Column = {
-    new Column(CatalystDataToAvro(data.expr, SchemaProvider(), None, prependSchemaId = false))
+    new Column(CatalystDataToAvro(data.expr, SchemaProvider(), None, confluentCompliant = false))
   }
 
   /**
@@ -97,7 +97,7 @@ object functions {
    * @param jsonFormatSchema schema used for conversion
    */
   def to_avro(data: Column, jsonFormatSchema: String): Column = {
-    new Column(sql.CatalystDataToAvro(data.expr, SchemaProvider(jsonFormatSchema), None, prependSchemaId = false))
+    new Column(sql.CatalystDataToAvro(data.expr, SchemaProvider(jsonFormatSchema), None, confluentCompliant = false))
   }
 
   /**
@@ -112,7 +112,7 @@ object functions {
     val namespace = schemaRegistryConf(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
     new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), prependSchemaId = false))
+      data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), confluentCompliant = false))
   }
 
   /**
@@ -124,7 +124,7 @@ object functions {
    */
   def to_avro(data: Column, jsonFormatSchema: String, schemaRegistryConf: Map[String,String]): Column = {
     new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(jsonFormatSchema), Some(schemaRegistryConf), prependSchemaId = false))
+      data.expr, SchemaProvider(jsonFormatSchema), Some(schemaRegistryConf), confluentCompliant = false))
   }
 
   /**
@@ -141,7 +141,7 @@ object functions {
     val namespace = schemaRegistryConf(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
     new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), prependSchemaId = true))
+      data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), confluentCompliant = true))
   }
 
   /**
@@ -154,7 +154,7 @@ object functions {
   def to_confluent_avro(data: Column, jsonFormatSchema: String, schemaRegistryConf: Map[String,String]): Column = {
 
     new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(jsonFormatSchema), Some(schemaRegistryConf), prependSchemaId = true))
+      data.expr, SchemaProvider(jsonFormatSchema), Some(schemaRegistryConf), confluentCompliant = true))
   }
 
   // scalastyle:on: method.name

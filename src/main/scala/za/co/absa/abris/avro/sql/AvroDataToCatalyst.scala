@@ -32,10 +32,10 @@ import za.co.absa.abris.avro.serde.{AvroReaderFactory, AvroToRowConverter}
 import scala.util.control.NonFatal
 
 case class AvroDataToCatalyst(
-    child: Expression,
-    jsonFormatSchema: Option[String],
-    schemaRegistryConf: Option[Map[String,String]],
-    removeSchemaId: Boolean)
+   child: Expression,
+   jsonFormatSchema: Option[String],
+   schemaRegistryConf: Option[Map[String,String]],
+   confluentCompliant: Boolean)
   extends UnaryExpression with ExpectsInputTypes {
 
   override def inputTypes: Seq[BinaryType.type] = Seq(BinaryType)
@@ -85,7 +85,7 @@ case class AvroDataToCatalyst(
   }
 
   def convertToGenericRecord(bytes: Array[Byte]): GenericRecord = {
-    if (removeSchemaId) {
+    if (confluentCompliant) {
       createConfiguredConfluentAvroReader(Option(avroSchema), schemaRegistryConf).deserialize(bytes)
     } else {
       val avroToRowConverter = new AvroToRowConverter(Some(AvroReaderFactory.createAvroReader(avroSchema)))

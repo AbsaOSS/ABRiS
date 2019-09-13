@@ -32,7 +32,7 @@ case class CatalystDataToAvro(
    child: Expression,
    schemaProvider: SchemaProvider,
    schemaRegistryConf: Option[Map[String,String]],
-   prependSchemaId: Boolean)
+   confluentCompliant: Boolean)
   extends UnaryExpression {
 
   override def dataType: DataType = BinaryType
@@ -44,7 +44,7 @@ case class CatalystDataToAvro(
     val avroData = serializer.serialize(input)
 
     val schemaId = schemaRegistryConf.flatMap(conf =>
-      registerSchema(schemaProvider.wrappedSchema(child), conf, prependSchemaId))
+      registerSchema(schemaProvider.wrappedSchema(child), conf, confluentCompliant))
 
     val record : IndexedRecord = avroData match {
       case ad: IndexedRecord => ad

@@ -108,7 +108,7 @@ object SchemaLoader {
 
   private def getSchemaId(paramId: String, subject: String): Int = {
     if (paramId == SchemaManager.PARAM_SCHEMA_ID_LATEST_NAME) {
-      val latest = SchemaManager.getLatestVersionsId(subject)
+      val latest = SchemaManager.getLatestVersionId(subject)
       if (latest.isDefined) {
         latest.get
       }
