@@ -361,18 +361,6 @@ Fixed is an alternative way of encoding binary data in Avro. Unlike bytes type t
 
 The corresponding data type in Spark is BinaryType, but the inferred schema will always use bytes type for this kind of data. If you want to use the fixed type you must provide the Avro schema.
 
-## Dependencies
-
-The environment dependencies are below. For the other dependencies, the library POM is configured with all dependencies scoped as ```compile```, thus, you can understand it as a self-contained piece of software. In case your environment already provides some of those dependencies, you can specify it in your project POM.
-
-- Scala 2.11
-
-- Spark 2.2.0
-
-- Spark SQL Kafka 0-10
-
-- Spark Streaming Kafka 0-8 or higher
-
 
 ## Performance
 

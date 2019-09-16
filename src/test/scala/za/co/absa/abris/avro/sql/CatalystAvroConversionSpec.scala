@@ -67,14 +67,11 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     val avroBytes = dataframe
       .select(to_avro('bytes, schemaString) as 'avroBytes)
 
-    avroBytes.show() // force evaluation
+    avroBytes.collect() // force evaluation
 
     val result = avroBytes
       .select(from_avro('avroBytes, schemaString) as 'result)
       .select("result.*")
-
-    dataframe.show()
-    result.show()
 
     shouldEqualByData(dataframe.select('bytes), result)
   }
@@ -117,7 +114,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     val avroBytes = dataframe
       .select(to_avro('bytes, schemaRegistryConfig) as 'avroBytes)
 
-    avroBytes.show() // force evaluation
+    avroBytes.collect() // force evaluation
 
     val result = avroBytes
       .select(from_avro('avroBytes, schemaRegistryConfig) as 'result)
@@ -135,7 +132,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
       .select(struct(dataframe.columns.head, dataframe.columns.tail: _*) as 'input)
       .select(to_avro('input, schemaString, schemaRegistryConfig) as 'bytes)
 
-    avroBytes.show() // force evaluation
+    avroBytes.collect() // force evaluation
 
     val result = avroBytes
       .select(from_avro('bytes, schemaRegistryConfig) as 'result)
@@ -152,7 +149,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
       .select(struct(dataframe.columns.head, dataframe.columns.tail: _*) as 'input)
       .select(to_avro('input, schemaRegistryConfig) as 'bytes)
 
-    avroBytes.show() // force evaluation
+    avroBytes.collect() // force evaluation
 
     val result = avroBytes
       .select(from_avro('bytes, schemaRegistryConfig) as 'result)
@@ -169,7 +166,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
       .select(struct(dataframe.columns.head, dataframe.columns.tail: _*) as 'input)
       .select(to_confluent_avro('input, schemaRegistryConfig) as 'bytes)
 
-    avroBytes.show() // force evaluation
+    avroBytes.collect() // force evaluation
 
     val result = avroBytes
       .select(from_confluent_avro('bytes, schemaRegistryConfig) as 'result)
@@ -187,7 +184,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
       .select(struct(dataframe.columns.head, dataframe.columns.tail: _*) as 'input)
       .select(to_confluent_avro('input, schemaString, schemaRegistryConfig) as 'bytes)
 
-    avroBytes.show() // force evaluation
+    avroBytes.collect() // force evaluation
 
     val result = avroBytes
       .select(from_confluent_avro('bytes, schemaString) as 'result)
@@ -213,7 +210,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
       .select(struct(dataframe.columns.head, dataframe.columns.tail: _*) as 'input)
       .select(to_confluent_avro('input, schemaString, schemaRegistryConfigForKey) as 'bytes)
 
-    avroBytes.show() // force evaluation
+    avroBytes.collect() // force evaluation
 
     val result = avroBytes
       .select(from_confluent_avro('bytes, schemaRegistryConfigForKey) as 'result)
