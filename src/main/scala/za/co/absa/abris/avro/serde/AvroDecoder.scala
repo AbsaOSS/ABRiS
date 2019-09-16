@@ -78,9 +78,10 @@ private[avro] class AvroDecoder {
       throw new InvalidParameterException("Schema Registry configurations is required.")
     }
 
-    val keyValueSchemas = AvroSchemaUtils.loadForKeyAndValue(schemaRegistryConf)
+    val valueSchema = AvroSchemaUtils.loadForValue(schemaRegistryConf)
+    val keySchema = AvroSchemaUtils.loadForKey(schemaRegistryConf)
 
-    fromConfluentAvroToRowWithKeys(dataframe, keyColName, keyValueSchemas._1, valueColName, keyValueSchemas._2, schemaRegistryConf)
+    fromConfluentAvroToRowWithKeys(dataframe, keyColName, keySchema, valueColName, valueSchema, schemaRegistryConf)
   }
 
   protected def fromConfluentAvroToRowWithKeys(dataframe: Dataset[Row], keyColName: String, keySchemaPath: String, valueColName: String, valueSchemaPath: String, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
@@ -167,7 +168,7 @@ private[avro] class AvroDecoder {
     }
 
     val dataSchema = if (schemaRegistryConf.isDefined) {
-      AvroSchemaUtils.load(schemaRegistryConf.get)
+      AvroSchemaUtils.loadForValue(schemaRegistryConf.get)
     }
     else {
       AvroSchemaUtils.load(schemaPath.get)
@@ -348,7 +349,7 @@ private[avro] class AvroDecoder {
     */
   protected def fromAvroToRow(dataframe: Dataset[Row], schemaRegistryConf: Map[String,String]): Dataset[Row] = {
 
-    val schema = AvroSchemaUtils.load(schemaRegistryConf)
+    val schema = AvroSchemaUtils.loadForValue(schemaRegistryConf)
     implicit val rowEncoder: ExpressionEncoder[Row] = AvroToRowEncoderFactory.createRowEncoder(schema)
 
     // has to convert into String and re-parse it inside the 'map' operation since Avro Schema instances are not serializable
@@ -369,8 +370,9 @@ private[avro] class AvroDecoder {
     * SQL schema whose specification is translated from the Avro schema informed.
     */
   protected def fromAvroToRowWithKeysRetainingStructure(dataframe: Dataset[Row], keyColName: String, valueColName: String, schemaRegistryConf: Map[String,String]): Dataset[Row] = {
-    val keyValueSchemas = AvroSchemaUtils.loadForKeyAndValue(schemaRegistryConf)
-    fromAvroToRowRetainingStructure(dataframe, keyColName, keyValueSchemas._1, valueColName, keyValueSchemas._2)
+    val valueSchema = AvroSchemaUtils.loadForValue(schemaRegistryConf)
+    val keySchema = AvroSchemaUtils.loadForKey(schemaRegistryConf)
+    fromAvroToRowRetainingStructure(dataframe, keyColName, keySchema, valueColName, valueSchema)
   }
 
   /**
@@ -381,7 +383,7 @@ private[avro] class AvroDecoder {
     */
   protected def fromAvroToRow(dataframe: Dataset[Row], schemaRegistryConf: Map[String,String], destinationColumn: String): Dataset[Row] = {
 
-    val schema = AvroSchemaUtils.load(schemaRegistryConf)
+    val schema = AvroSchemaUtils.loadForValue(schemaRegistryConf)
 
     val originalSchema = dataframe.schema
 

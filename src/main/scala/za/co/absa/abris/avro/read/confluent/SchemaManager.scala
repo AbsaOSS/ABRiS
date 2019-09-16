@@ -146,7 +146,7 @@ object SchemaManager {
   /**
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
     */
-  def getLatestVersion(subject: String): Option[Int] = {
+  def getLatestVersionId(subject: String): Option[Int] = {
     logger.info(s"Trying to get latest schema version id for subject '$subject'")
     if (isSchemaRegistryConfigured) {
       try {
@@ -220,8 +220,8 @@ object SchemaManager {
     }
     catch {
       case e: Exception => {
-        if (e.getMessage.contains("Subject not found")) {
-          logger.error(s"Subject not registered: '$subject'")
+        if (e.getMessage.contains("Subject not found") || e.getMessage.contains("No schema registered")) {
+          logger.info(s"Subject not registered: '$subject'")
         }
         else {
           logger.error(s"Problems found while retrieving metadata for subject '$subject'", e)

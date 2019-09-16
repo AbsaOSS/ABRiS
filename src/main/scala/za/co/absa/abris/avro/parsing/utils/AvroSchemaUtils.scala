@@ -38,25 +38,25 @@ object AvroSchemaUtils {
   /**
    * Parses a plain Avro schema into an org.apache.avro.Schema implementation.
    */
-  def parse(schema: String): Schema = new Schema.Parser().parse(schema)  
-  
+  def parse(schema: String): Schema = new Schema.Parser().parse(schema)
+
   /**
    * Loads an Avro org.apache.avro.Schema from the path.
    */
-  def load(path: String): Schema = {    
+  def load(path: String): Schema = {
     parse(loadPlain(path))
   }
 
-  def load(schemaRegistryConf: Map[String,String]): Schema = {
-    SchemaLoader.loadFromSchemaRegistry(schemaRegistryConf)
+  def loadForValue(schemaRegistryConf: Map[String,String]): Schema = {
+    SchemaLoader.loadFromSchemaRegistryValue(schemaRegistryConf)
+  }
+
+  def loadForKey(schemaRegistryConf: Map[String,String]): Schema = {
+    SchemaLoader.loadFromSchemaRegistryKey(schemaRegistryConf)
   }
 
   def load(schemaVersion: Int, schemaRegistryConf: Map[String,String]): SchemaMetadata = {
     SchemaLoader.loadFromSchemaRegistry(schemaVersion, schemaRegistryConf)
-  }
-
-  def loadForKeyAndValue(schemaRegistryConf: Map[String,String]): (Schema,Schema) = {
-    SchemaLoader.loadFromSchemaRegistryForKeyAndValue(schemaRegistryConf)
   }
 
   /**
