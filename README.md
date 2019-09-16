@@ -51,7 +51,7 @@ Among the motivations for this project, it is possible to highlight:
 
 ## Usage
 
-ABRiS API is in it's most basic form almost identical to spark built-in support for avro, but it provides additional functionality. Mainly it's support of schema registry and also seamless integration with confluent avro data format.
+ABRiS API is in it's most basic form almost identical to spark built-in support for Avro, but it provides additional functionality. Mainly it's support of schema registry and also seamless integration with confluent Avro data format.
 
 The API consists of four spark sql expressions: 
 * ```to_avro``` and ```from_avro``` used for normal avro payload
