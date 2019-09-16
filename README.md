@@ -53,19 +53,19 @@ Among the motivations for this project, it is possible to highlight:
 
 ABRiS API is in it's most basic form almost identical to spark built-in support for Avro, but it provides additional functionality. Mainly it's support of schema registry and also seamless integration with confluent Avro data format.
 
-The API consists of four spark sql expressions: 
-* ```to_avro``` and ```from_avro``` used for normal avro payload
-* ```to_confluent_avro``` and ```from_confluent_avro``` used for confluent avro data format
+The API consists of four Spark SQL expressions: 
+* ```to_avro``` and ```from_avro``` used for normal Avro payload
+* ```to_confluent_avro``` and ```from_confluent_avro``` used for Confluent Avro data format
 
 
 Full runable examples can be found in ```za.co.absa.abris.examples.sql``` package.
 
 ### Confluent Avro format    
-The format of avro binary data is defined in [avro specification](http://avro.apache.org/docs/current/spec.html). Confluent format extends it and prepends the schema id before the rest of binary data. The confluent expressions in this library expect this format and add the id after the avro data are generated or remove it before they are parsed.
+The format of Avro binary data is defined in [Avro specification](http://avro.apache.org/docs/current/spec.html). Confluent format extends it and prepends the schema id before the rest of binary data. The Confluent expressions in this library expect this format and add the id after the Avro data are generated or remove it before they are parsed.
 
-You can find more about confluent and schema registry in [confluent documentation](https://docs.confluent.io/current/schema-registry/index.html).
+You can find more about confluent and Schema Registry in [Confluent documentation](https://docs.confluent.io/current/schema-registry/index.html).
 
-### Reading Avro binary records with provided avro schema    
+### Reading Avro binary records with provided Avro schema    
 ```scala
 import za.co.absa.abris.avro.functions.from_avro
 
@@ -74,12 +74,12 @@ def readAvro(dataFrame: DataFrame, schemaString: String): DataFrame = {
   dataFrame.select(from_avro(col("value"), schemaString) as 'data).select("data.*")
 }
 ```
-In this example the avro binary data are in ```dataFrame``` inside column named value. The avro schema is provided as a string ```schemaString```.
+In this example the Avro binary data are in ```dataFrame``` inside column named value. The Avro schema is provided as a string ```schemaString```.
 
-After the avro data are converted to spark sql representation they are stored in column named data. This column is immediately flattened in the next select so the result will be a ```DataFrame``` containing only the deserialized avro data.  
+After the Avro data are converted to Spark SQL representation they are stored in column named data. This column is immediately flattened in the next select so the result will be a ```DataFrame``` containing only the deserialized avro data.  
 
-### Reading Avro binary records using schema registry
-If you want to use schema registry you need to provide a configuration:
+### Reading Avro binary records using Schema Registry
+If you want to use Schema Registry you need to provide a configuration:
 ```scala
 val schemaRegistryConfig = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_URL          -> "url_to_schema_registry",
@@ -97,9 +97,9 @@ def readAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): D
   dataFrame.select(from_avro(col("value"), schemaRegistryConfig) as 'data).select("data.*")
 }
 ```
-This part is almost same as in previous example only this time you send in the registry configuration instead of schema. Of course the schema already have to be in schema registry for this to work.
+This part is almost same as in previous example only this time you send in the registry configuration instead of schema. Of course the schema already have to be in Schema Registry for this to work.
 
-### Reading Confluent Avro binary records with provided avro schema    
+### Reading Confluent Avro binary records with provided Avro schema    
 ```scala
 import za.co.absa.abris.avro.functions.from_confluent_avro
 
@@ -108,10 +108,10 @@ def readAvro(dataFrame: DataFrame, schemaString: String): DataFrame = {
   dataFrame.select(from_confluent_avro(col("value"), schemaString) as 'data).select("data.*")
 }
 ```
-The main difference between ```from_confluent_avro``` and ```from_avro``` is in whether it expects the schema_id in the avro payload. The usage is identical to previous examples.
+The main difference between ```from_confluent_avro``` and ```from_avro``` is in whether it expects the schema_id in the Avro payload. The usage is identical to previous examples.
 
 ### Reading Confluent Avro binary records using schema registry
-Schema registry configuration is the same as in previous schema registry example.
+Schema Registry configuration is the same as in previous Schema Registry example.
 ```scala
 import za.co.absa.abris.avro.functions.from_confluent_avro
 
@@ -122,13 +122,13 @@ def readAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): D
 ```
 The only difference is the expression name.
 
-### Reading Confluent Avro binary records using schema registry for key and value
-In a case that we are sending the avro data using kafka we may want to serialize both the key and the value of kafka message.
-The serialization of avro data is not really different when we are doing it for key or for value, but schema registry handle each of them slightly differently.
+### Reading Confluent Avro binary records using Schema Registry for key and value
+In a case that we are sending the Avro data using Kafka we may want to serialize both the key and the value of Kafka message.
+The serialization of Avro data is not really different when we are doing it for key or for value, but Schema Registry handle each of them slightly differently.
 Specifically the subject may depend on this.
 
 The way the library knows whether you are working with key or value is the schema naming strategy.
-Use ```SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY``` for a key and ```SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY``` for a value. If the configuration will contain both of them it will cause an error!
+Use ```SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY``` for a key and ```SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY``` for a value. If the configuration will contain **both** of them it will **throw**!
 
 This is one way how to create the configurations for key and value serialization:
 ```scala
@@ -149,7 +149,7 @@ val valueRegistryConfig = commonRegistryConfig ++ Map(
   SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
 )
 ```
-Let's assume that the avro binary data for key are in ```key``` column and the value data are in ```value``` column of the same DataFrame.
+Let's assume that the Avro binary data for key are in ```key``` column and the value data are in ```value``` column of the same DataFrame.
 
 ```scala
 import za.co.absa.abris.avro.functions.from_confluent_avro
@@ -174,7 +174,7 @@ This is the simplest possible usage of ```to_avro``` expression. We just provide
 
 If you want to serialize more than one column you have to put them in a spark struct first, as you can see in the example.
 
-### Writing Avro records with provided avro schema 
+### Writing Avro records with provided Avro schema 
 ```scala
 import za.co.absa.abris.avro.functions.to_avro
 
@@ -184,10 +184,10 @@ def writeAvro(dataFrame: DataFrame, schemaString: String): DataFrame = {
   dataFrame.select(to_avro(allColumns, schemaString) as 'value)
 }
 ```
-If you provide the avro schema as a second argument the library will use it to convert spark data into avro. If the data types in spark DataFrame and in schema aren't compatible ti may cause problems.
+If you provide the Avro schema as a second argument the library will use it to convert Spark data into Avro. If the data types in Spark DataFrame and in schema aren't compatible it may cause problems.
 
 ### Writing Avro records using schema registry
-First we need to provide schema registry configuration:
+First we need to provide Schema Registry configuration:
 ```scala
 val schemaRegistryConfig = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_URL                  -> "url_to_schema_registry",
@@ -208,7 +208,7 @@ def writeAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): 
   dataFrame.select(to_avro(allColumns, schemaRegistryConfig) as 'value)
 }
 ```
-Since we didn't provide a schema it will be generated automatically and than stored in the schema registry.
+Since we didn't provide a schema it will be generated automatically and than stored in the Schema Registry.
 
 ### Writing Avro records using schema registry and providing a schema
 The only difference from previous example is that we have one additional parameter for the schema.
@@ -222,8 +222,8 @@ def writeAvro(dataFrame: DataFrame, schemaString: String, schemaRegistryConfig: 
 }
 ```
 
-### Writing Confluent Avro binary records using schema registry
-Schema registry configuration is the same as in previous examples.
+### Writing Confluent Avro binary records using Schema Registry
+Schema Registry configuration is the same as in previous examples.
 ```scala
 import za.co.absa.abris.avro.functions.to_confluent_avro
 
@@ -233,7 +233,7 @@ def writeAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): 
   dataFrame.select(to_confluent_avro(allColumns, schemaRegistryConfig) as 'value)
 }
 ```
-The main difference between ```from_confluent_avro``` and ```from_avro``` is in whether it prepends the schema_id in the avro payload. The usage is identical to previous examples.
+The main difference between ```from_confluent_avro``` and ```from_avro``` is in whether it prepends the schema_id in the Avro payload. The usage is identical to previous examples.
 
 ### Writing Confluent Avro binary records with provided avro schema    
 ```scala
@@ -246,7 +246,7 @@ def writeAvro(dataFrame: DataFrame, schemaString: String, schemaRegistryConfig: 
 }
 ```
 
-### Writing Confluent Avro binary records using schema registry for key and value
+### Writing Confluent Avro binary records using Schema Registry for key and value
 As in reading example, for writing you also have to specify the naming strategy parameter to let ABRiS know if you are using value or key.
 
 ```scala
@@ -270,7 +270,7 @@ val result: DataFrame = dataFrame.select(
   to_confluent_avro(col("key"), keyRegistryConfig) as 'key,
   to_confluent_avro(col("value"), valueRegistryConfig) as 'value)
 ```
-After serialization the data are again stored in columns key and value, but now they are in avro binary format.
+After serialization the data are again stored in columns key and value, but now they are in Avro binary format.
 
 ## Other Features
 
