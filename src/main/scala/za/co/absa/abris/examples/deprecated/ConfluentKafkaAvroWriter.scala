@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.sql
+package za.co.absa.abris.examples.deprecated
+
+import java.util.Properties
 
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.struct
 import org.apache.spark.sql.{Dataset, Encoder, Row}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -25,13 +26,11 @@ import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 import za.co.absa.abris.examples.utils.ExamplesUtils._
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable
-
-object NewKafkaAvroWriter {
+object ConfluentKafkaAvroWriter {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
+  private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
   private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_AVRO_RECORD_NAME = "avro.record.name"
   private val PARAM_AVRO_RECORD_NAMESPACE = "avro.record.namespace"
@@ -40,7 +39,6 @@ object NewKafkaAvroWriter {
   private val PARAM_TEST_DATA_ENTRIES = "test.data.entries"
   private val PARAM_EXECUTION_REPEAT = "execution.repeat"
   private val PARAM_NUM_PARTITIONS = "num.partitions"
-  private val PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY = "example.should.use.schema.registry"
   private val PARAM_TOPIC = "option.topic"
 
   def main(args: Array[String]): Unit = {
@@ -52,55 +50,40 @@ object NewKafkaAvroWriter {
 
     val spark = getSparkSession(properties, PARAM_JOB_NAME, PARAM_JOB_MASTER, PARAM_LOG_LEVEL)
 
+    spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
+
     import spark.implicits._
 
     implicit val encoder: Encoder[Row] = getEncoder
 
     do {
       val rows = createRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
-      val dataFrame = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
-      dataFrame.show(false)
-      toAvro(dataFrame, properties.asScala)
+      val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
+
+      dataframe.show()
+
+      toAvro(dataframe, properties) // check the method content to understand how the library is invoked
         .write
         .format("kafka")
-        .addOptions(properties) // 1. this method will add the properties starting with "option."
-        .save()                 // 2. security options can be set in the properties file
-
+        .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file
+        .save()
     } while (properties.getProperty(PARAM_EXECUTION_REPEAT).toBoolean)
   }
 
-  private def toAvro(dataFrame: Dataset[Row], properties: mutable.Map[String, String]) = {
+  private def toAvro(dataframe: Dataset[Row], properties: Properties) = {
 
-    val registryConfig = Map(
-      SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> properties(PARAM_TOPIC),
-      SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY),
-      SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAME),
-      SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAMESPACE)
+    val sc = Map(
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties.getProperty(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties.getProperty(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
     )
+    val topic = properties.getProperty(PARAM_TOPIC)
 
-    val source = scala.io.Source.fromFile(properties(PARAM_PAYLOAD_AVRO_SCHEMA))
-    val schemaString = try source.mkString finally source.close()
-
-    val useRegistry = properties(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean
-    val inferSchema = properties(PARAM_INFER_SCHEMA).trim().toBoolean
-
-    // to serialize all columns in dataFrame we need to put them in a spark struct
-    val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
-
-    import za.co.absa.abris.avro.functions._
-
-    if (!useRegistry && !inferSchema) {
-      dataFrame.select(to_avro(allColumns, schemaString) as 'value)
-
-    } else if (!useRegistry && inferSchema) {
-      dataFrame.select(to_avro(allColumns) as 'value)
-
-    } else if (useRegistry && !inferSchema) {
-      dataFrame.select(to_avro(allColumns, schemaString, registryConfig) as 'value)
-
-    } else { // useRegistry && inferSchema
-      dataFrame.select(to_avro(allColumns, registryConfig) as 'value)
+    import za.co.absa.abris.avro.AvroSerDe._
+    if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
+      // providing access to Schema Registry is mandatory
+      dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))(sc)
+    } else {
+      dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))(sc)
     }
   }
 
@@ -111,6 +94,7 @@ object NewKafkaAvroWriter {
   private def getEncoder: Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
+    println(sparkSchema)
     RowEncoder.apply(sparkSchema)
   }
 }

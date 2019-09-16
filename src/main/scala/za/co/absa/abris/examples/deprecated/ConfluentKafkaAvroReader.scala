@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.using_keys
+package za.co.absa.abris.examples.deprecated
 
 import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.sql.{Dataset, Row}
 import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.{RETAIN_ORIGINAL_SCHEMA, RETAIN_SELECTED_COLUMN_ONLY}
 import za.co.absa.abris.examples.utils.ExamplesUtils._
 
-import scala.collection.JavaConversions._
-
-object ConfluentKafkaAvroReaderWithKey {
+object ConfluentKafkaAvroReader {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
@@ -53,27 +51,24 @@ object ConfluentKafkaAvroReaderWithKey {
 
     val deserialized = configureExample(stream, properties)
 
-    // YOUR CODE CAN COME HERE
+    // YOUR OPERATIONS CAN GO HERE
 
     deserialized.printSchema()
 
     deserialized
       .writeStream
       .format("console")
-      .option("truncate", "false")
       .start()
       .awaitTermination()
   }
 
   private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
-
-    import za.co.absa.abris.avro.AvroSerDeWithKeyColumn._
-
+    import za.co.absa.abris.avro.AvroSerDe._
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromConfluentAvro(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromConfluentAvro("value", None, Some(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)))(RETAIN_ORIGINAL_SCHEMA)
     }
     else {
-      stream.fromConfluentAvro(props.getProperty(PARAM_KEY_AVRO_SCHEMA), props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA), props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_SELECTED_COLUMN_ONLY)
+      stream.fromConfluentAvro("value", Some(props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA)), None)(RETAIN_SELECTED_COLUMN_ONLY)
     }
   }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.sql
+package za.co.absa.abris.examples
 
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
@@ -23,7 +23,7 @@ import za.co.absa.abris.examples.utils.ExamplesUtils._
 
 import scala.collection.JavaConverters._
 
-object NewConfluentKafkaAvroReaderWithKey {
+object ConfluentKafkaAvroReaderWithKey {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
