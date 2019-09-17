@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.sql
+package za.co.absa.abris.examples
 
+import java.util.Properties
+
+import org.apache.avro.Schema
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{Dataset, Encoder, Row}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -28,11 +32,12 @@ import za.co.absa.abris.examples.utils.ExamplesUtils._
 import scala.collection.JavaConverters._
 
 
-object NewConfluentKafkaAvroWriter {
+object ConfluentKafkaAvroWriterWithKey {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
   private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
+  private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
   private val PARAM_AVRO_RECORD_NAME = "avro.record.name"
   private val PARAM_AVRO_RECORD_NAMESPACE = "avro.record.namespace"
   private val PARAM_INFER_SCHEMA = "infer.schema"
@@ -55,7 +60,7 @@ object NewConfluentKafkaAvroWriter {
 
     import spark.implicits._
 
-    implicit val encoder: Encoder[Row] = getEncoder
+    implicit val encoder: Encoder[Row] = getEncoder(properties)
 
     do {
       val rows = createRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
@@ -73,39 +78,70 @@ object NewConfluentKafkaAvroWriter {
 
   private def toAvro(dataFrame: Dataset[Row], properties: Map[String, String]) = {
 
-    val registryConfig = Map(
+    val commonRegistryConfig = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> properties(PARAM_TOPIC),
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY),
       SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAME),
       SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAMESPACE)
     )
 
-    val source = scala.io.Source.fromFile(properties(PARAM_PAYLOAD_AVRO_SCHEMA))
-    val schemaString = try source.mkString finally source.close()
+    val valueRegistryConfig = commonRegistryConfig +
+      (SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
+
+    val keyRegistryConfig = commonRegistryConfig +
+      (SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> properties(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY))
 
     val inferSchema = properties(PARAM_INFER_SCHEMA).trim().toBoolean
-
-    // to serialize all columns in dataFrame we need to put them in a spark struct
-    val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
 
     import za.co.absa.abris.avro.functions.to_confluent_avro
 
     if (inferSchema) {
-      dataFrame.select(to_confluent_avro(allColumns, registryConfig) as 'value)
+      dataFrame.select(
+        to_confluent_avro(col("key"), keyRegistryConfig) as 'key,
+        to_confluent_avro(col("value"), valueRegistryConfig) as 'value)
     } else {
-      dataFrame.select(to_confluent_avro(allColumns, schemaString, registryConfig) as 'value)
+      val valueSchema = loadSchemaFromFile(properties(PARAM_PAYLOAD_AVRO_SCHEMA))
+      val keySchema = loadSchemaFromFile(properties(PARAM_KEY_AVRO_SCHEMA))
+
+      dataFrame.select(
+        to_confluent_avro(col("key"), keySchema, keyRegistryConfig) as 'key,
+        to_confluent_avro(col("value"), valueSchema, valueRegistryConfig) as 'value)
     }
   }
 
   private def createRows(howMany: Int): List[Row] = {
-    ComplexRecordsGenerator.generateUnparsedRows(howMany)
+    var count = 0
+    ComplexRecordsGenerator
+      .generateUnparsedRows(howMany)
+      .map(row => {
+        count = count + 1
+        Row(Row(count, s"whatever string $count"),row)
+      })
   }
 
-  private def getEncoder: Encoder[Row] = {
+  private def getEncoder(properties: Properties): Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
-    val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    println(sparkSchema)
-    RowEncoder.apply(sparkSchema)
+    val payloadSparkSchema = SparkAvroConversions.toSqlType(avroSchema)
+
+    val avroSchemas = getKeyAndPayloadSchemas(properties)
+
+    val keySparkSchema = StructField("key", SparkAvroConversions.toSqlType(avroSchemas._1), nullable = false)
+    val valueSparkSchema = StructField("value", payloadSparkSchema, nullable = false)
+
+    val finalSchema = StructType(Array(keySparkSchema, valueSparkSchema))
+
+    RowEncoder.apply(finalSchema)
+  }
+
+  private def getKeyAndPayloadSchemas(properties: Properties): (Schema,Schema) = {
+    val keyAvroSchema = AvroSchemaUtils.load(properties.getProperty(PARAM_KEY_AVRO_SCHEMA))
+    val payloadAvroSchema = AvroSchemaUtils.load(properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
+
+    (keyAvroSchema, payloadAvroSchema)
+  }
+
+  private def loadSchemaFromFile(path: String): String = {
+    val source = scala.io.Source.fromFile(path)
+    try source.mkString finally source.close()
   }
 }

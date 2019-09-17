@@ -18,7 +18,6 @@ package za.co.absa.abris.performance
 
 import java.io.File
 
-import com.databricks.spark.avro.SchemaConverters
 import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types.StructType
@@ -34,7 +33,7 @@ import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator.Bean
 class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-  
+
   private var parentTestDir: File = _
   private val spark: SparkSession = SparkSession
     .builder()
@@ -42,63 +41,64 @@ class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
     .master("local[2]")
     .getOrCreate()
 
-  override def beforeAll() {    
+  override def beforeAll() {
     parentTestDir = new File("test")
     parentTestDir.mkdirs()
   }
 
-  override def afterAll() {    
-    spark.close()    
+  override def afterAll() {
+    spark.close()
     FileUtils.deleteDirectory(parentTestDir)
   }
 
   behavior of "Library Performance"
-    
-  it should "be more space-efficient than Kryo when serializing records" in {    
+
+  it should "be more space-efficient than Kryo when serializing records" in {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
-    val sparkSchema: StructType = SchemaConverters.toSqlType(avroSchema).dataType.asInstanceOf[StructType]    
-    
+    val sparkSchema: StructType = SparkAvroConversions.toSqlType(avroSchema)
+
     val numRecords = 50000
     val data = ComplexRecordsGenerator.generateRecords(numRecords)
-        
-    val avroResult = writeAvro(ComplexRecordsGenerator.lazilyConvertToRows(data), sparkSchema)     
+
+    val avroResult = writeAvro(ComplexRecordsGenerator.lazilyConvertToRows(data), sparkSchema)
     val kryoResult = writeKryo(ComplexRecordsGenerator.lazilyConvertToBeans(data))
-    
+
     val avroSize = FileUtils.sizeOf(avroResult).doubleValue()
-    val kryoSize = FileUtils.sizeOf(kryoResult).doubleValue()    
-    
+    val kryoSize = FileUtils.sizeOf(kryoResult).doubleValue()
+
     assert(avroSize <= kryoSize)
-    
-    val spaceSaving = round((1d - avroSize/kryoSize) * 100, 2)  
+
+    val spaceSaving = round((1d - avroSize/kryoSize) * 100, 2)
     val avroSizeKB = round(avroSize/1024, 0).toInt
     val kryoSizeKB = round(kryoSize/1024, 0).toInt
-    
-    println(s"******* Avro was ${spaceSaving}% more space-efficient than Kryo while writing ${numRecords} rows. (Kryo = ${kryoSizeKB}KB, Avro = ${avroSizeKB}KB)")    
+
+    println(s"******* Avro was ${spaceSaving}% more space-efficient than Kryo while writing ${numRecords} rows." +
+      s" (Kryo = ${kryoSizeKB}KB, Avro = ${avroSizeKB}KB)")
   }
 
-  it should "parse at least 100k records/second/core into Spark Rows" in {        
+  it should "parse at least 100k records/second/core into Spark Rows" in {
     val records = ComplexRecordsGenerator.generateRecords(100000)
     val avroParser = new AvroToSparkParser()
     val init = System.nanoTime()
     val numRows = ComplexRecordsGenerator.eagerlyConvertToRows(records).size
     val elapsed = System.nanoTime() - init
     println(s"******* AvroSparkParser processed ${numRows} records in ${elapsed/1000000} ms.")
-    assert(elapsed < 1e+9)    
-  }  
-  
-  it should " parse at least 5k rows/second/core into Avro records" in {    
+    assert(elapsed < 1e+9)
+  }
+
+  it should " parse at least 5k rows/second/core into Avro records" in {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    val rows = ComplexRecordsGenerator.generateUnparsedRows(5000)    
+    val rows = ComplexRecordsGenerator.generateUnparsedRows(5000)
     val init = System.nanoTime()
-    val numRecords = rows.map(row => {      
+    val numRecords = rows.map(row => {
       SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema)
     }).size
     val elapsed = System.nanoTime() - init
     println(s"******* AvroSparkParser processed ${numRecords} rows in ${elapsed/1000000} ms.")
     assert(elapsed < 1e+9)
-  }    
-  
+  }
+
   private def writeKryo(data: List[Bean]): File = {
     import spark.implicits._
     implicit val encoderAvro = Encoders.kryo[Bean]
@@ -106,8 +106,8 @@ class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
     val kryoDF = spark.sparkContext.parallelize(data, 1).toDF()
     kryoDF.write.mode(SaveMode.Overwrite).save(kryoDir.getAbsolutePath)
     kryoDir
-  }  
-  
+  }
+
   private def writeAvro(data: List[Row], schema: StructType): File = {
     import spark.implicits._
     implicit val encoderAvro = RowEncoder.apply(schema)
@@ -116,7 +116,7 @@ class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
     avroDF.write.mode(SaveMode.Overwrite).save(avroDir.getAbsolutePath)
     avroDir
   }
-  
+
   private def getAvroDestinationDir(): File = {
     getDestinationDir("avro")
   }
@@ -128,7 +128,7 @@ class SpaceTimeComplexitySpec extends FlatSpec with BeforeAndAfterAll {
   private def getDestinationDir(name: String): File = {
     new File(parentTestDir, name)
   }
-  
+
   private def round(value: Double, scale: Int): Double = {
     BigDecimal(value).setScale(scale, BigDecimal.RoundingMode.HALF_UP).toDouble
   }

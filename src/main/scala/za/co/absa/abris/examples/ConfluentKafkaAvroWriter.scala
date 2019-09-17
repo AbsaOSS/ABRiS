@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 ABSA Group Limited
+ * Copyright 2019 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,22 @@
 
 package za.co.absa.abris.examples
 
-import java.io.FileInputStream
-import java.util.Properties
-
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
+import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.{Dataset, Encoder, Row}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 import za.co.absa.abris.examples.utils.ExamplesUtils._
 
+import scala.collection.JavaConverters._
+
+
 object ConfluentKafkaAvroWriter {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
   private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_AVRO_RECORD_NAME = "avro.record.name"
   private val PARAM_AVRO_RECORD_NAMESPACE = "avro.record.namespace"
@@ -59,32 +59,42 @@ object ConfluentKafkaAvroWriter {
 
     do {
       val rows = createRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
-      val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
+      val dataFrame = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
 
-      dataframe.show()
+      dataFrame.show(false)
 
-      toAvro(dataframe, properties) // check the method content to understand how the library is invoked
+      toAvro(dataFrame, properties.asScala.toMap) // check the method content to understand how the library is invoked
         .write
         .format("kafka")
-        .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file
-        .save()
+        .addOptions(properties) // 1. this method will add the properties starting with "option."
+        .save()                 // 2. security options can be set in the properties file
     } while (properties.getProperty(PARAM_EXECUTION_REPEAT).toBoolean)
   }
 
-  private def toAvro(dataframe: Dataset[Row], properties: Properties) = {
+  private def toAvro(dataFrame: Dataset[Row], properties: Map[String, String]) = {
 
-    val sc = Map(
-      SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties.getProperty(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties.getProperty(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
+    val registryConfig = Map(
+      SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> properties(PARAM_TOPIC),
+      SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY),
+      SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAME),
+      SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAMESPACE)
     )
-    val topic = properties.getProperty(PARAM_TOPIC)
 
-    import za.co.absa.abris.avro.AvroSerDe._
-    if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
-      // providing access to Schema Registry is mandatory
-      dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_AVRO_RECORD_NAME), properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE))(sc)
+    val source = scala.io.Source.fromFile(properties(PARAM_PAYLOAD_AVRO_SCHEMA))
+    val schemaString = try source.mkString finally source.close()
+
+    val inferSchema = properties(PARAM_INFER_SCHEMA).trim().toBoolean
+
+    // to serialize all columns in dataFrame we need to put them in a spark struct
+    val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
+
+    import za.co.absa.abris.avro.functions.to_confluent_avro
+
+    if (inferSchema) {
+      dataFrame.select(to_confluent_avro(allColumns, registryConfig) as 'value)
     } else {
-      dataframe.toConfluentAvro(topic, properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))(sc)
+      dataFrame.select(to_confluent_avro(allColumns, schemaString, registryConfig) as 'value)
     }
   }
 

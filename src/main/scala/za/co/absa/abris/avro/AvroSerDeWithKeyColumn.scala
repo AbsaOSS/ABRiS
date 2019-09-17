@@ -84,6 +84,7 @@ object AvroSerDeWithKeyColumn {
     /**
       * Uses instantiated Avro [[org.apache.avro.Schema]]s for key and value.
       */
+    @deprecated
     def fromAvro(keySchema: Schema, valueSchema: Schema)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME,VALUE_COLUMN_NAME)
       fromAvroToRowRetainingStructure(data, KEY_COLUMN_NAME, keySchema, VALUE_COLUMN_NAME, valueSchema)
@@ -92,6 +93,7 @@ object AvroSerDeWithKeyColumn {
     /**
       * Uses Avro [[org.apache.avro.Schema]]s stored in the local file system for both, key and value.
       */
+    @deprecated
     def fromAvro(keySchemaPath: String, valueSchemaPath: String)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME,VALUE_COLUMN_NAME)
       fromAvroToRowRetainingStructure(data, KEY_COLUMN_NAME, keySchemaPath, VALUE_COLUMN_NAME, valueSchemaPath)
@@ -100,6 +102,7 @@ object AvroSerDeWithKeyColumn {
     /**
       * Loads the Avro schemas from Schema Registry for both, key and value.
       */
+    @deprecated
     def fromAvro(schemaRegistryConf: Map[String,String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME,VALUE_COLUMN_NAME)
       fromAvroToRowWithKeysRetainingStructure(data, KEY_COLUMN_NAME, VALUE_COLUMN_NAME, schemaRegistryConf)
@@ -115,6 +118,7 @@ object AvroSerDeWithKeyColumn {
       * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(confluentConf: Map[String,String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME,VALUE_COLUMN_NAME)
       fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, VALUE_COLUMN_NAME, confluentConf)
@@ -130,6 +134,7 @@ object AvroSerDeWithKeyColumn {
       * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(keySchema: Schema, valueSchema: Schema, confluentConf: Map[String,String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME,VALUE_COLUMN_NAME)
       fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, keySchema, VALUE_COLUMN_NAME, valueSchema, confluentConf)
@@ -145,6 +150,7 @@ object AvroSerDeWithKeyColumn {
       * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(keySchemaPath: String, valueSchemaPath: String, confluentConf: Map[String,String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME,VALUE_COLUMN_NAME)
       fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, keySchemaPath, VALUE_COLUMN_NAME, valueSchemaPath, confluentConf)
@@ -163,6 +169,7 @@ object AvroSerDeWithKeyColumn {
     /**
       * Uses instantiated Avro [[org.apache.avro.Schema]]s for key and value.
       */
+    @deprecated
     def fromAvro(keySchema: Schema, valueSchema: Schema)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
       fromAvroToRowRetainingStructure(data, KEY_COLUMN_NAME, keySchema, VALUE_COLUMN_NAME, valueSchema)
@@ -171,6 +178,7 @@ object AvroSerDeWithKeyColumn {
     /**
       * Uses Avro [[org.apache.avro.Schema]]s stored in the local file system for both, key and value.
       */
+    @deprecated
     def fromAvro(keySchemaPath: String, valueSchemaPath: String)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
       fromAvroToRowRetainingStructure(data, KEY_COLUMN_NAME, keySchemaPath, VALUE_COLUMN_NAME, valueSchemaPath)
@@ -179,6 +187,7 @@ object AvroSerDeWithKeyColumn {
     /**
       * Loads the Avro schemas from Schema Registry for both, key and value.
       */
+    @deprecated
     def fromAvro(schemaRegistryConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
       fromAvroToRowWithKeysRetainingStructure(data, KEY_COLUMN_NAME, VALUE_COLUMN_NAME, schemaRegistryConf)
@@ -194,6 +203,7 @@ object AvroSerDeWithKeyColumn {
       * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(confluentConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
       fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, VALUE_COLUMN_NAME, confluentConf)
@@ -209,6 +219,7 @@ object AvroSerDeWithKeyColumn {
       * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(keySchema: Schema, valueSchema: Schema, confluentConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
       fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, keySchema, VALUE_COLUMN_NAME, valueSchema, confluentConf)
@@ -224,6 +235,7 @@ object AvroSerDeWithKeyColumn {
       * Refer to the [[za.co.absa.abris.avro.read.confluent.ScalaConfluentKafkaAvroDeserializer]] deserialize() method documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(keySchemaPath: String, valueSchemaPath: String, confluentConf: Map[String, String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       val data = getData(retentionPolicy, KEY_COLUMN_NAME, VALUE_COLUMN_NAME)
       fromConfluentAvroToRowWithKeys(data, KEY_COLUMN_NAME, keySchemaPath, VALUE_COLUMN_NAME, valueSchemaPath, confluentConf)
@@ -369,6 +381,7 @@ object AvroSerDeWithKeyColumn {
       *
       * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
       */
+    @deprecated
     def toAvro(keySchemaPath: String, valueSchemaPath: String): Dataset[Row] = {
       toAvro(AvroSchemaUtils.load(keySchemaPath), AvroSchemaUtils.load(valueSchemaPath))
     }
@@ -388,6 +401,7 @@ object AvroSerDeWithKeyColumn {
       *
       * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
       */
+    @deprecated
     def toAvroWithPlainKey(valueSchemaPath: String): Dataset[Row] = {
       toAvroWithPlainKey(AvroSchemaUtils.load(valueSchemaPath))
     }
@@ -404,6 +418,7 @@ object AvroSerDeWithKeyColumn {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toAvro(keySchemaName: String, keySchemaNamespace: String, valueSchemaName: String, valueSchemaNamespace: String): Dataset[Row] = {
       checkDataframeSchema()
       toAvro(dataframe, new SparkToAvroProcessor(getKeySchemaFromDataframe(), keySchemaName, keySchemaNamespace),
@@ -422,6 +437,7 @@ object AvroSerDeWithKeyColumn {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toAvroWithPlainKey(valueSchemaName: String, valueSchemaNamespace: String): Dataset[Row] = {
       checkDataframeSchema()
       toAvroWithPlainStringKey(dataframe, new SparkToAvroProcessor(getValueSchemaFromDataframe(), valueSchemaName, valueSchemaNamespace))(None, None)
@@ -441,6 +457,7 @@ object AvroSerDeWithKeyColumn {
       *
       * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
       */
+    @deprecated
     def toAvro(keySchema: Schema, valueSchema: Schema): Dataset[Row] = {
       toAvro(dataframe, new AvroToSparkProcessor(keySchema.toString), new AvroToSparkProcessor(valueSchema.toString))(None, None)
     }
@@ -460,6 +477,7 @@ object AvroSerDeWithKeyColumn {
       *
       * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
       */
+    @deprecated
     def toAvroWithPlainKey(valueSchema: Schema): Dataset[Row] = {
       toAvroWithPlainStringKey(dataframe, new AvroToSparkProcessor(valueSchema.toString))(None, None)
     }
@@ -479,6 +497,7 @@ object AvroSerDeWithKeyColumn {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toAvro(topic: String, keySchemaName: String, keySchemaNamespace: String, valueSchemaName: String, valueSchemaNamespace: String)(schemaRegistryConf: Option[Map[String,String]] = None): Dataset[Row] = {
 
       checkDataframeSchema()
@@ -509,6 +528,7 @@ object AvroSerDeWithKeyColumn {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toAvroWithPlainKey(topic: String, valueSchemaName: String, valueSchemaNamespace: String)(schemaRegistryConf: Option[Map[String,String]] = None): Dataset[Row] = {
 
       checkDataframeSchema()
@@ -537,6 +557,7 @@ object AvroSerDeWithKeyColumn {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toConfluentAvro(topic: String, keySchemaName: String, keySchemaNamespace: String, valueSchemaName: String, valueSchemaNamespace: String)(schemaRegistryConf: Map[String,String]): Dataset[Row] = {
 
       if (schemaRegistryConf.isEmpty) {
@@ -570,6 +591,7 @@ object AvroSerDeWithKeyColumn {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toConfluentAvroWithPlainKey(topic: String, valueSchemaName: String, valueSchemaNamespace: String)(schemaRegistryConf: Map[String,String]): Dataset[Row] = {
 
       if (schemaRegistryConf.isEmpty) {
@@ -595,6 +617,7 @@ object AvroSerDeWithKeyColumn {
       *
       * The API will throw if Schema Registry access details are provided but the schema could not be registered due to either incompatibility, wrong credentials or Schema Registry unavailability.
       */
+    @deprecated
     def toConfluentAvro(topic: String, keySchemaPath: String, valueSchemaPath: String)(schemaRegistryConf: Map[String,String]): Dataset[Row] = {
 
       if (schemaRegistryConf.isEmpty) {
@@ -623,6 +646,7 @@ object AvroSerDeWithKeyColumn {
       *
       * The API will throw if Schema Registry access details are provided but the schema could not be registered due to either incompatibility, wrong credentials or Schema Registry unavailability.
       */
+    @deprecated
     def toConfluentAvroWithPlainKey(topic: String, valueSchemaPath: String)(schemaRegistryConf: Map[String,String]): Dataset[Row] = {
 
       if (schemaRegistryConf.isEmpty) {
@@ -649,6 +673,7 @@ object AvroSerDeWithKeyColumn {
       *
       * The API will throw if Schema Registry access details are provided but the schema could not enforced due to either incompatibility, wrong credentials or Schema Registry unavailability.
       */
+    @deprecated
     def toConfluentAvroWithPlainKey(topic: String, schemaVersion: Int)(schemaRegistryConf: Map[String,String]): Dataset[Row] = {
 
       if (schemaRegistryConf.isEmpty) {
@@ -663,6 +688,7 @@ object AvroSerDeWithKeyColumn {
     /**
       * Converts a Dataset[Row] into a Dataset[Array[Byte]] containing Avro schemas generated according to the plain specification informed as a parameter.
       */
+    @deprecated
     private def toAvro(rows: Dataset[Row], keySchemas: SchemasProcessor, valueSchemas: SchemasProcessor)(keySchemaId: Option[Int], valueSchemaId: Option[Int]) = {
 
       val resultingRowSchema = StructType(List(StructField(KEY_COLUMN_NAME, BinaryType, false),StructField(VALUE_COLUMN_NAME, BinaryType, false)))
@@ -696,6 +722,7 @@ object AvroSerDeWithKeyColumn {
       *
       * This method converts the key into a string by invoking .toString()
       */
+    @deprecated
     private def toAvroWithPlainStringKey(rows: Dataset[Row], valueSchemas: SchemasProcessor)(keySchemaId: Option[Int], valueSchemaId: Option[Int]) = {
 
       val resultingRowSchema = StructType(List(StructField(KEY_COLUMN_NAME, StringType, false),StructField(VALUE_COLUMN_NAME, BinaryType, false)))

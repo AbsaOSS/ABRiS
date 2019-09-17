@@ -64,7 +64,6 @@
 		<scalatest.version>3.0.1</scalatest.version>
 
 		<!--Libs-->
-		<databricks.spark.avro>4.0.0</databricks.spark.avro>
         <spark.avro.version>2.4.4</spark.avro.version>
 		<avro.version>1.8.2</avro.version>
 		<jackson.databind.version>2.6.1</jackson.databind.version>
@@ -100,14 +99,6 @@
 	</developers>
 
     <dependencies>
-
-		<!-- Provides Avro schema to Spark StructType conversion -->
-		<dependency>
-			<groupId>com.databricks</groupId>
-			<artifactId>spark-avro_2.11</artifactId>
-            <version>${databricks.spark.avro}</version>
-        </dependency>
-
 		<!-- Tests -->
         <dependency>
             <groupId>org.specs2</groupId>

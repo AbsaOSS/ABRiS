@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,27 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.sql
+package za.co.absa.abris.examples.deprecated.using_keys
 
+import java.io.FileInputStream
 import java.util.Properties
 
 import org.apache.avro.Schema
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{StructField, StructType}
-import org.apache.spark.sql.{Dataset, Encoder, Row}
+import org.apache.spark.sql.{Dataset, Encoder, Row, SparkSession}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
 import za.co.absa.abris.examples.utils.ExamplesUtils._
+import scala.collection.JavaConversions._
 
-import scala.collection.JavaConverters._
-
-
-object NewConfluentKafkaAvroWriterWithKey {
+object KafkaAvroWriterWithKey {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
+  private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_AVRO_RECORD_NAME = "avro.record.name"
   private val PARAM_AVRO_RECORD_NAMESPACE = "avro.record.namespace"
   private val PARAM_INFER_SCHEMA = "infer.schema"
@@ -45,7 +42,6 @@ object NewConfluentKafkaAvroWriterWithKey {
   private val PARAM_TEST_DATA_ENTRIES = "test.data.entries"
   private val PARAM_EXECUTION_REPEAT = "execution.repeat"
   private val PARAM_NUM_PARTITIONS = "num.partitions"
-  private val PARAM_TOPIC = "option.topic"
 
   def main(args: Array[String]): Unit = {
 
@@ -56,56 +52,35 @@ object NewConfluentKafkaAvroWriterWithKey {
 
     val spark = getSparkSession(properties, PARAM_JOB_NAME, PARAM_JOB_MASTER, PARAM_LOG_LEVEL)
 
-    spark.sparkContext.setLogLevel(properties.getProperty(PARAM_LOG_LEVEL))
-
     import spark.implicits._
+    import za.co.absa.abris.examples.utils.ExamplesUtils._
 
     implicit val encoder: Encoder[Row] = getEncoder(properties)
 
     do {
       val rows = createRows(properties.getProperty(PARAM_TEST_DATA_ENTRIES).trim().toInt)
-      val dataFrame = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
 
-      dataFrame.show(false)
+      val dataframe = spark.sparkContext.parallelize(rows, properties.getProperty(PARAM_NUM_PARTITIONS).toInt).toDF()
 
-      toAvro(dataFrame, properties.asScala.toMap) // check the method content to understand how the library is invoked
+      dataframe.printSchema()
+
+      toAvro(dataframe, properties)
         .write
         .format("kafka")
-        .addOptions(properties) // 1. this method will add the properties starting with "option."
-        .save()                 // 2. security options can be set in the properties file
+        .addOptions(properties) // 1. this method will add the properties starting with "option."; 2. security options can be set in the properties file
+        .save()
     } while (properties.getProperty(PARAM_EXECUTION_REPEAT).toBoolean)
   }
 
-  private def toAvro(dataFrame: Dataset[Row], properties: Map[String, String]) = {
+  private def toAvro(dataframe: Dataset[Row], properties: Properties) = {
+    import za.co.absa.abris.avro.AvroSerDeWithKeyColumn._
 
-    val commonRegistryConfig = Map(
-      SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> properties(PARAM_TOPIC),
-      SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
-      SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAME),
-      SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAMESPACE)
-    )
-
-    val valueRegistryConfig = commonRegistryConfig +
-      (SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> properties(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY))
-
-    val keyRegistryConfig = commonRegistryConfig +
-      (SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> properties(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY))
-
-    val inferSchema = properties(PARAM_INFER_SCHEMA).trim().toBoolean
-
-    import za.co.absa.abris.avro.functions.to_confluent_avro
-
-    if (inferSchema) {
-      dataFrame.select(
-        to_confluent_avro(col("key"), keyRegistryConfig) as 'key,
-        to_confluent_avro(col("value"), valueRegistryConfig) as 'value)
+    if (properties.getProperty(PARAM_INFER_SCHEMA).trim().toBoolean) {
+      val name = properties.getProperty(PARAM_AVRO_RECORD_NAME)
+      val namespace = properties.getProperty(PARAM_AVRO_RECORD_NAMESPACE)
+      dataframe.toAvro(name, namespace, name, namespace)
     } else {
-      val valueSchema = loadSchemaFromFile(properties(PARAM_PAYLOAD_AVRO_SCHEMA))
-      val keySchema = loadSchemaFromFile(properties(PARAM_KEY_AVRO_SCHEMA))
-
-      dataFrame.select(
-        to_confluent_avro(col("key"), keySchema, keyRegistryConfig) as 'key,
-        to_confluent_avro(col("value"), valueSchema, valueRegistryConfig) as 'value)
+      dataframe.toAvro(properties.getProperty(PARAM_KEY_AVRO_SCHEMA), properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
     }
   }
 
@@ -113,10 +88,11 @@ object NewConfluentKafkaAvroWriterWithKey {
     var count = 0
     ComplexRecordsGenerator
       .generateUnparsedRows(howMany)
-      .map(row => {
-        count = count + 1
-        Row(Row(count, s"whatever string $count"),row)
-      })
+        .map(row => {
+          count = count + 1
+          Row(Row(count, s"whatever string $count"),row)
+        })
+
   }
 
   private def getEncoder(properties: Properties): Encoder[Row] = {
@@ -138,10 +114,5 @@ object NewConfluentKafkaAvroWriterWithKey {
     val payloadAvroSchema = AvroSchemaUtils.load(properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
 
     (keyAvroSchema, payloadAvroSchema)
-  }
-
-  private def loadSchemaFromFile(path: String): String = {
-    val source = scala.io.Source.fromFile(path)
-    try source.mkString finally source.close()
   }
 }

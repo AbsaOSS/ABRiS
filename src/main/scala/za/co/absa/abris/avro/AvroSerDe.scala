@@ -50,6 +50,7 @@ object AvroSerDe {
     /**
       * Converts using an instantiated Schema.
       */
+    @deprecated
     def fromAvro(column: String, schema: Schema)(schemaRetentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       schemaRetentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromAvroToRow(getBatchDataFromColumn(column), schema)
@@ -61,6 +62,7 @@ object AvroSerDe {
     /**
       * Loads the schema from a file.
       */
+    @deprecated
     def fromAvro(column: String, schemaPath: String)(schemaRetentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       schemaRetentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromAvroToRow(getBatchDataFromColumn(column), schemaPath)
@@ -72,6 +74,7 @@ object AvroSerDe {
     /**
       * Loads the schema from Schema Registry.
       */
+    @deprecated
     def fromAvro(column: String, schemaRegistryConf: Map[String,String])(schemaRetentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       schemaRetentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromAvroToRow(getBatchDataFromColumn(column), schemaRegistryConf)
@@ -88,6 +91,7 @@ object AvroSerDe {
       * Refer to the [[ScalaConfluentKafkaAvroDeserializer.deserialize()]] documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(column: String, schemaPath: Option[String], schemaRegistryConf: Option[Map[String,String]])(schemaRetentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       schemaRetentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromConfluentAvroToRow(getBatchDataFromColumn(column), schemaPath, schemaRegistryConf)
@@ -111,6 +115,7 @@ object AvroSerDe {
     /**
       * Converts used an instantiated Schema.
       */
+    @deprecated
     def fromAvro(column: String, schema: Schema)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       retentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromAvroToRow(getStreamDataFromColumn(column), schema)
@@ -122,6 +127,7 @@ object AvroSerDe {
     /**
       * Loads the schema from a file system.
       */
+    @deprecated
     def fromAvro(column: String, schemaPath: String)(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       retentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromAvroToRow(getStreamDataFromColumn(column), schemaPath)
@@ -133,6 +139,7 @@ object AvroSerDe {
     /**
       * Loads the schema from Schema Registry.
       */
+    @deprecated
     def fromAvro(column: String, schemaRegistryConf: Map[String,String])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       retentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromAvroToRow(getStreamDataFromColumn(column), schemaRegistryConf)
@@ -149,6 +156,7 @@ object AvroSerDe {
       * Refer to the [[ScalaConfluentKafkaAvroDeserializer.deserialize()]] documentation to better understand how this
       * operation is performed.
       */
+    @deprecated
     def fromConfluentAvro(column: String, schemaPath: Option[String], confluentConf: Option[Map[String,String]])(retentionPolicy: SchemaRetentionPolicy): Dataset[Row] = {
       retentionPolicy match {
         case RETAIN_SELECTED_COLUMN_ONLY => fromConfluentAvroToRow(getStreamDataFromColumn(column), schemaPath, confluentConf)
@@ -221,6 +229,7 @@ object AvroSerDe {
      *
      * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
      */
+    @deprecated
     def toAvro(schemaPath: String): Dataset[Array[Byte]] = {
       toAvro(AvroSchemaUtils.load(schemaPath))
     }
@@ -239,6 +248,7 @@ object AvroSerDe {
       *
       * The difference in the specifications will prevent the field from being correctly loaded by Avro readers, leading to data loss.
       */
+    @deprecated
     def toAvro(schema: Schema): Dataset[Array[Byte]] = {
       val plainAvroSchema = schema.toString
       toAvro(dataframe, new AvroToSparkProcessor(plainAvroSchema))(None)
@@ -259,6 +269,7 @@ object AvroSerDe {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toAvro(topic: String, schemaName: String, schemaNamespace: String)(schemaRegistryConf: Option[Map[String,String]] = None): Dataset[Array[Byte]] = {
 
       checkDataframeSchema()
@@ -286,6 +297,7 @@ object AvroSerDe {
       * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
       * already used by Spark.
       */
+    @deprecated
     def toConfluentAvro(topic: String, schemaName: String, schemaNamespace: String)(schemaRegistryConf: Map[String,String]): Dataset[Array[Byte]] = {
 
       if (schemaRegistryConf.isEmpty) {
@@ -311,6 +323,7 @@ object AvroSerDe {
       *
       * The API will throw if Schema Registry access details are provided but the schema could not be registered due to either incompatibility, wrong credentials or Schema Registry unavailability.
       */
+    @deprecated
     def toConfluentAvro(topic: String, schemaPath: String)(schemaRegistryConf: Map[String,String]): Dataset[Array[Byte]] = {
 
       if (schemaRegistryConf.isEmpty) {
@@ -341,6 +354,7 @@ object AvroSerDe {
      * Differently than the other API, this one does not suffer from the schema changing issue, since the final Avro schema will be derived from the schema
      * already used by Spark.
      */
+    @deprecated
     def toAvro(schemaName: String, schemaNamespace: String): Dataset[Array[Byte]] = {
       checkDataframeSchema()
       toAvro(dataframe, new SparkToAvroProcessor(dataframe.schema, schemaName, schemaNamespace))(None)
@@ -349,6 +363,7 @@ object AvroSerDe {
     /**
      * Converts a Dataset[Row] into a Dataset[Array[Byte]] containing Avro schemas generated according to the plain specification informed as a parameter.
      */
+    @deprecated
     private def toAvro(rows: Dataset[Row], schemas: SchemasProcessor)(schemaId: Option[Int]): Dataset[Array[Byte]] = {
       implicit val recEncoder: Encoder[Array[Byte]] = Encoders.BINARY
       rows.mapPartitions(partition => {

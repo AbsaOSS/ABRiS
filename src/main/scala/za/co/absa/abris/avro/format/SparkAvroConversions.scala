@@ -22,11 +22,11 @@ import java.nio.ByteBuffer
 import java.sql.{Date, Timestamp}
 import java.util.HashMap
 
-import com.databricks.spark.avro.{DatabricksAdapter, SchemaConverters}
-import org.apache.avro.{Schema, SchemaBuilder}
+import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData.Record
 import org.apache.avro.generic.{GenericRecord, IndexedRecord}
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types._
 import za.co.absa.abris.avro.read.confluent.ConfluentConstants
 import za.co.absa.abris.avro.write.AvroWriterHolder
@@ -39,9 +39,9 @@ import scala.collection._
  */
 object SparkAvroConversions {
 
-  private case class ConverterKey(sparkSchema: DataType, recordName: String, recordNamespace: String) 
+  private case class ConverterKey(sparkSchema: DataType, recordName: String, recordNamespace: String)
   private val converterCache = new mutable.HashMap[ConverterKey, Any => Any]()
-  
+
   private def avroWriterHolder = new AvroWriterHolder()
 
   /**
@@ -54,7 +54,7 @@ object SparkAvroConversions {
 
   /**
    * Converts an Avro record into an Array[Byte].
-   * 
+   *
    * Uses Avro's Java API under the hood.
    */
   def toByteArray(record: IndexedRecord, schema: Schema, schemaId: Option[Int] = None): Array[Byte] = {
@@ -65,16 +65,16 @@ object SparkAvroConversions {
     }
 
     val encoder = avroWriterHolder.getEncoder(outStream)
-    try {                 
+    try {
       avroWriterHolder.getWriter(schema).write(record, encoder)
       encoder.flush()
       outStream.flush()
       outStream.toByteArray()
-    } finally {      
+    } finally {
       outStream.close()
-    }    
-  }  
-  
+    }
+  }
+
   /**
    * Converts a Spark's SQL type into an Avro schema, using specific names and namespaces for the schema.
    */
@@ -82,37 +82,40 @@ object SparkAvroConversions {
       structType: StructType,
       schemaName: String,
       schemaNamespace: String): Schema = {
-    val build = SchemaBuilder.record(schemaName).namespace(schemaNamespace)    
-    DatabricksAdapter.convertStructToAvro(structType, build, schemaNamespace)
+    SchemaConverters.toAvroType(structType, false, schemaName, schemaNamespace)
   }
-  
+
   /**
    * Converts a Spark Row into an Avro's binary record.
    */
-  def rowToBinaryAvro(row: Row, sparkSchema: StructType, avroSchema: Schema, schemaId: Option[Int] = None) = {
-    val record = rowToGenericRecord(row, sparkSchema, avroSchema)    
+  def rowToBinaryAvro(
+      row: Row,
+      sparkSchema: StructType,
+      avroSchema: Schema,
+      schemaId: Option[Int] = None): Array[Byte] = {
+    val record = rowToGenericRecord(row, sparkSchema, avroSchema)
     toByteArray(record, avroSchema, schemaId)
   }
 
   /**
    * Translates an Avro Schema into a Spark's StructType.
-   * 
+   *
    * Relies on Databricks Spark-Avro library to do the job.
    */
   def toSqlType(schema: Schema): StructType = {
-    DatabricksAdapter.toSqlType(schema).dataType.asInstanceOf[StructType]
-  }   
-  
+    SchemaConverters.toSqlType(schema).dataType.asInstanceOf[StructType]
+  }
+
   private def rowToGenericRecord(row: Row, sparkSchema: StructType, avroSchema: Schema) = {
     val converter = getConverter(sparkSchema, avroSchema)
     converter(row).asInstanceOf[GenericRecord]
   }
-  
+
   private def getConverter(dataType: DataType, avroSchema: Schema): Any => Any = {
     val key = ConverterKey(dataType, avroSchema.getName, avroSchema.getNamespace)
     converterCache.getOrElseUpdate(key, SparkAvroConversions.createConverterToAvro(dataType, avroSchema))
-  }  
-  
+  }
+
   // Copied from Databricks, as any implementation would be very similar and this library already uses Databricks'.
   // This method is private inside "com.databricks.spark.avro.AvroOutputWriter".
   private def createConverterToAvro(
@@ -173,7 +176,7 @@ object SparkAvroConversions {
           if (item == null) {
             null
           } else {
-            val record = new Record(schema)            
+            val record = new Record(schema)
             val convertersIterator = fieldConverters.iterator
             val fieldNamesIterator = dataType.asInstanceOf[StructType].fieldNames.iterator
             val rowIterator = item.asInstanceOf[Row].toSeq.iterator
@@ -186,5 +189,5 @@ object SparkAvroConversions {
           }
         }
     }
-  }  
+  }
 }

@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples.using_keys
+package za.co.absa.abris.examples.deprecated
 
 import java.util.Properties
 
 import org.apache.spark.sql.streaming.DataStreamReader
 import org.apache.spark.sql.{Dataset, Row}
-import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_ORIGINAL_SCHEMA
+import za.co.absa.abris.avro.schemas.policy.SchemaRetentionPolicies.RETAIN_SELECTED_COLUMN_ONLY
 import za.co.absa.abris.examples.utils.ExamplesUtils._
 
-object KafkaAvroReaderWithKey {
+
+
+object KafkaAvroReader {
 
   private val PARAM_JOB_NAME = "job.name"
   private val PARAM_JOB_MASTER = "job.master"
@@ -37,6 +39,7 @@ object KafkaAvroReaderWithKey {
 
   def main(args: Array[String]): Unit = {
 
+    // check if properties file is present, exists if not
     // there is an example file at /src/test/resources/AvroReadingExample.properties
     checkArgs(args)
 
@@ -56,21 +59,22 @@ object KafkaAvroReaderWithKey {
     deserialized.printSchema()
 
     deserialized
-      .writeStream
+    .writeStream
       .format("console")
       .start()
       .awaitTermination()
   }
 
-  private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
 
-    import za.co.absa.abris.avro.AvroSerDeWithKeyColumn._
+
+  private def configureExample(stream: DataStreamReader,props: Properties): Dataset[Row] = {
+    import za.co.absa.abris.avro.AvroSerDe._
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      stream.fromAvro(props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromAvro("value", props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE))(RETAIN_SELECTED_COLUMN_ONLY)
     }
     else {
-      stream.fromAvro(props.getProperty(PARAM_KEY_AVRO_SCHEMA), props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))(RETAIN_ORIGINAL_SCHEMA)
+      stream.fromAvro("value", props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))(RETAIN_SELECTED_COLUMN_ONLY)
     }
   }
 }
