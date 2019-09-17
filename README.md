@@ -59,6 +59,7 @@ The API consists of four Spark SQL expressions:
 
 Full runable examples can be found in ```za.co.absa.abris.examples.sql``` package.
 
+### Deprecation Note
 Old ABRiS API is deprecated, but is still included in the library. Documentation for old API is in [ABRiS 2.2.3.](https://github.com/AbsaOSS/ABRiS/tree/v2.2.3)
 
 ### Confluent Avro format    
