@@ -117,7 +117,7 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
   }
 
   it should "return None as latest version if Schema Registry client is not configured" in {
-    assertResult(None) {SchemaManager.getLatestVersion("subject")}
+    assertResult(None) {SchemaManager.getLatestVersionId("subject")}
   }
 
   it should "return None as registered schema id if Schema Registry client is not configured" in {

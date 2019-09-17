@@ -62,15 +62,32 @@ object TestSchemas {
      "name": "native_complete",
      "fields":[                  
          {"name": "bytes", "type": "bytes" },
-         { "name": "string",      "type": ["string", "null"] },     
+         { "name": "string",      "type": ["string", "null"] },
          { "name": "int",         "type": ["int",    "null"] },
          { "name": "long",        "type": ["long",   "null"] },
  		     { "name": "double",      "type": ["double", "null"] },
  		     { "name": "float",       "type": ["float",  "null"] },
- 		     { "name": "boolean",     "type": ["boolean","null"] }, 		      		     
- 		     { "name": "array", "type": {"type": "array", "items": "string"} }, 		     
+ 		     { "name": "boolean",     "type": ["boolean","null"] },
+ 		     { "name": "array", "type": {"type": "array", "items": "string"} },
  		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}},
- 		     {"name": "fixed",  "type": {"type": "fixed", "size": 13, "name": "fixed"}}
+ 		     {"name": "fixed",  "type": {"type": "fixed", "size": 40, "name": "fixed"}}
+     ]
+  }"""
+
+  val NATIVE_COMPLETE_SCHEMA_WITHOUT_FIXED = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "native_complete",
+     "fields":[
+         {"name": "bytes", "type": "bytes" },
+         { "name": "string",      "type": ["string", "null"] },
+         { "name": "int",         "type": ["int",    "null"] },
+         { "name": "long",        "type": ["long",   "null"] },
+ 		     { "name": "double",      "type": ["double", "null"] },
+ 		     { "name": "float",       "type": ["float",  "null"] },
+ 		     { "name": "boolean",     "type": ["boolean","null"] },
+ 		     { "name": "array", "type": {"type": "array", "items": "string"} },
+ 		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
      ]
   }"""
 
@@ -79,7 +96,7 @@ object TestSchemas {
      "type": "record",
      "name": "native",
      "fields":[                  
-         { "name": "string",      "type": ["string", "null"] },     
+         { "name": "string",      "type": ["string", "null"] },
          { "name": "int",         "type": ["int",    "null"] },
          { "name": "long",        "type": ["long",   "null"] },
  		     { "name": "double",      "type": ["double", "null"] },

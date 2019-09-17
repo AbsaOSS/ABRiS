@@ -49,4 +49,9 @@ private[avro] class AvroToRowConverter(reader: Option[ScalaDatumReader[ScalaAvro
   def convert[T](avroRecord: GenericRecord)(implicit tag: ClassTag[T]): Row = {
     avroParser.parse(avroRecord)
   }
+
+  def convertToGenericRecord[T](avroRecord: Array[Byte])(implicit tag: ClassTag[T]): GenericRecord = {
+    val decoder = DecoderFactory.get().binaryDecoder(avroRecord, null)
+    reader.get.read(null, decoder)
+  }
 }

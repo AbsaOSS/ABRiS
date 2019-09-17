@@ -23,7 +23,7 @@ import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import org.apache.spark.sql.{DataFrameWriter, Row, SparkSession}
 import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.examples.KafkaAvroReader.{PARAM_JOB_MASTER, PARAM_JOB_NAME, PARAM_LOG_LEVEL}
+import za.co.absa.abris.examples.deprecated.KafkaAvroReader.{PARAM_JOB_MASTER, PARAM_JOB_NAME, PARAM_LOG_LEVEL}
 
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
@@ -74,7 +74,7 @@ object ExamplesUtils {
   implicit class ReaderStreamOptions(stream: DataStreamReader) {
     def addOptions(properties: Properties): DataStreamReader = {
       getKeys(properties)
-        .foreach(keys => {          
+        .foreach(keys => {
           println(s"DataStreamReader: setting option: ${keys._2} = ${properties.getProperty(keys._1)}")
           stream.option(keys._2, properties.getProperty(keys._1))
         })
@@ -85,7 +85,7 @@ object ExamplesUtils {
   implicit class WriterRowOptions(stream: DataFrameWriter[Row]) {
     def addOptions(properties: Properties): DataFrameWriter[Row] = {
       getKeys(properties)
-        .foreach(keys => {          
+        .foreach(keys => {
           println(s"DataFrameWriter: setting option: ${keys._2} = ${properties.getProperty(keys._1)}")
           stream.option(keys._2, properties.getProperty(keys._1))
         })

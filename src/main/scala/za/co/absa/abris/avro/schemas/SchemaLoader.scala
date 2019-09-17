@@ -40,32 +40,22 @@ object SchemaLoader {
     try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()
   }
 
-  def loadFromSchemaRegistryForKeyAndValue(params: Map[String,String]): (Schema,Schema) = {
-
-    configureSchemaManager(params)
-
-    val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
-
-    if (topic == null) {
-      throw new IllegalArgumentException(s"Missing parameter: ${SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC}")
-    }
-
-    var specifiedKeyId   = params(SchemaManager.PARAM_KEY_SCHEMA_ID)
-    var specifiedValueId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
-
-    val keySchema   = loadFromSchemaRegistry(topic, specifiedKeyId, isKey = true, params)
-    val valueSchema = loadFromSchemaRegistry(topic, specifiedValueId, isKey = false, params)
-
-    (keySchema, valueSchema)
-  }
-
-  def loadFromSchemaRegistry(params: Map[String,String]): Schema = {
+  def loadFromSchemaRegistryValue(params: Map[String,String]): Schema = {
     configureSchemaManager(params)
 
     val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
     val specifiedSchemaId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
 
     loadFromSchemaRegistry(topic, specifiedSchemaId, isKey = false, params)
+  }
+
+  def loadFromSchemaRegistryKey(params: Map[String,String]): Schema = {
+    configureSchemaManager(params)
+
+    val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
+    val specifiedSchemaId = params(SchemaManager.PARAM_KEY_SCHEMA_ID)
+
+    loadFromSchemaRegistry(topic, specifiedSchemaId, isKey = true, params)
   }
 
   def loadFromSchemaRegistry(version: Int, params: Map[String,String]): SchemaMetadata = {
@@ -118,7 +108,7 @@ object SchemaLoader {
 
   private def getSchemaId(paramId: String, subject: String): Int = {
     if (paramId == SchemaManager.PARAM_SCHEMA_ID_LATEST_NAME) {
-      val latest = SchemaManager.getLatestVersion(subject)
+      val latest = SchemaManager.getLatestVersionId(subject)
       if (latest.isDefined) {
         latest.get
       }

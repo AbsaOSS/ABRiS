@@ -41,6 +41,6 @@ private[avro] object AvroToRowEncoderFactory {
   }
 
   def createRowEncoder(schemaRegistryConf: Map[String,String]): ExpressionEncoder[Row] = {
-    createRowEncoder(AvroSchemaUtils.load(schemaRegistryConf))
+    createRowEncoder(AvroSchemaUtils.loadForValue(schemaRegistryConf))
   }
 }

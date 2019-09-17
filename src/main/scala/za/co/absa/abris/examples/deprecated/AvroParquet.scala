@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.examples
+package za.co.absa.abris.examples.deprecated
 
 import java.io.FileInputStream
 import java.util.Properties
@@ -33,7 +33,7 @@ object AvroParquet {
 
   private val PARQUET_PATH = "testParquetDestination"
   private val AVRO_SCHEMA = "src\\test\\resources\\example_schema.avsc"
-  
+
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
@@ -41,14 +41,14 @@ object AvroParquet {
       .appName("AvroParquetTest")
       .master("local[2]")
       .getOrCreate()
-      
+
     spark.sparkContext.setLogLevel("info")
 
     writeAvroToParquet(PARQUET_PATH, 10, spark)
 
     // reads from the Parquet file and uses the data schema as the Dataframe schema
     val parquetDF = readParquetAsAvro(PARQUET_PATH, RETAIN_SELECTED_COLUMN_ONLY, spark)
-    
+
     parquetDF.select("*").show()
   }
 
@@ -56,14 +56,14 @@ object AvroParquet {
     * Produces ''numRecords'' random entries and stored them into ''destination'' as Parquet.
     */
   private def writeAvroToParquet(destination: String, numRecords: Int, spark: SparkSession) = {
-    
+
     import spark.implicits._
     import za.co.absa.abris.avro.AvroSerDe._
-    
+
     implicit val encoder = getEncoder()
-        
+
     val rows = getRows(10)
-    val dataframe = spark.sparkContext.parallelize(rows, 8).toDF()      
+    val dataframe = spark.sparkContext.parallelize(rows, 8).toDF()
 
     dataframe.show()
 
@@ -71,7 +71,7 @@ object AvroParquet {
       .toAvro(AVRO_SCHEMA)
       .write
       .mode(SaveMode.Overwrite)
-      .parquet(destination)      
+      .parquet(destination)
   }
 
   /**
@@ -87,7 +87,7 @@ object AvroParquet {
       // this option will extract the Avro record from "value" and make its schema the schema for the dataframe
       .fromAvro("value", AvroSchemaUtils.load(AVRO_SCHEMA))(schemaRetentionPolicy)
   }
-  
+
   private def loadProperties(path: String): Properties = {
     val properties = new Properties()
     properties.load(new FileInputStream(path))
@@ -102,5 +102,5 @@ object AvroParquet {
     val avroSchema = AvroSchemaUtils.load(AVRO_SCHEMA)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
     RowEncoder.apply(sparkSchema)
-  }        
+  }
 }
