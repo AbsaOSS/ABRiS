@@ -10,7 +10,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>za.co.absa</groupId>
-	<artifactId>abris_2.11</artifactId>
+	<artifactId>abris_2.12</artifactId>
 	<version>3.0.1-SNAPSHOT</version>
 	<name>abris</name>
 	<description>Provides seamless integration between Avro and Spark Structured APIs.</description>
@@ -41,31 +41,31 @@
 		<!--Maven-->
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.deploy.plugin>2.8.1</maven.deploy.plugin>
+		<maven.deploy.plugin.version>2.8.1</maven.deploy.plugin.version>
 		<maven.sources.version>3.0.1</maven.sources.version>
 		<gpg.plugin.version>1.6</gpg.plugin.version>
 		<surefire.version>3.0.0-M1</surefire.version>
+        <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
 
 		<!--Tests-->
 		<mockito.version>1.8.5</mockito.version>
-		<scalatest.version>3.0.0</scalatest.version>
-		<scalatest.maven.version>1.0</scalatest.maven.version>
+		<scalatest.version>3.0.8</scalatest.version>
+		<scalatest.maven.version>2.0.0</scalatest.maven.version>
 		<scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
 		<!--Platforms-->
-		<spark.version>2.3.0</spark.version>
+		<spark.version>2.4.4</spark.version>
 		<kafka.spark.version>0-10</kafka.spark.version>
 		<confluent.version>5.1.0</confluent.version>
 
 		<!--Scala-->
-		<scala.version>2.11.8</scala.version>
-		<scala.compat.version>2.11</scala.compat.version>
-		<specs.version>2.4.16</specs.version>
-		<scalatest.version>3.0.1</scalatest.version>
+		<scala.version>2.12.10</scala.version>
+		<scala.compat.version>2.12</scala.compat.version>
+		<specs.version>4.7.1</specs.version>
 
 		<!--Libs-->
         <spark.avro.version>2.4.4</spark.avro.version>
-		<avro.version>1.8.2</avro.version>
+		<avro.version>1.9.1</avro.version>
 		<jackson.databind.version>2.6.1</jackson.databind.version>
 	</properties>
 
@@ -167,13 +167,6 @@
             <version>${jackson.databind.version}</version>
         </dependency>
 
-        <!-- Remote artifact deployment -->
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <version>${maven.deploy.plugin}</version>
-        </dependency>
-
         <!-- Confluent's Kafka and Schema Registry -->
         <dependency>
             <groupId>io.confluent</groupId>
@@ -212,7 +205,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.8.1</version>
+				<version>${maven.deploy.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>default-deploy</id>
@@ -231,6 +224,7 @@
 				<version>${scala.maven.plugin.version}</version>
 				<configuration>
 					<scalaVersion>${scala.version}</scalaVersion>
+                    <scalaCompatVersion>${scala.compat.version}</scalaCompatVersion>
 				</configuration>
 				<executions>
 					<execution>
@@ -287,21 +281,6 @@
 			</plugin>
 
 		</plugins>
-
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.scalatest</groupId>
-					<artifactId>scalatest-maven-plugin</artifactId>
-					<version>${scalatest.maven.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-gpg-plugin</artifactId>
-					<version>${gpg.plugin.version}</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 
 	<profiles>
@@ -342,6 +321,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>${nexus.staging.plugin.version}</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>

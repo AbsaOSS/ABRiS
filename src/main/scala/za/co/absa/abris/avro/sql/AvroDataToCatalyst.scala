@@ -21,7 +21,7 @@ import java.security.InvalidParameterException
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.SparkException
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.format.SparkAvroConversions
@@ -70,18 +70,8 @@ case class AvroDataToCatalyst(
 
   override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
     val expr = ctx.addReferenceObj("this", this)
-    nullSafeCodeGen(ctx, ev, eval => {
-      val result = ctx.freshName("result")
-      val dt = ctx.boxedType(dataType)
-      s"""
-        $dt $result = ($dt) $expr.nullSafeEval($eval);
-        if ($result == null) {
-          ${ev.isNull} = true;
-        } else {
-          ${ev.value} = $result;
-        }
-      """
-    })
+    defineCodeGen(ctx, ev, input =>
+      s"(${CodeGenerator.boxedType(dataType)})$expr.nullSafeEval($input)")
   }
 
   def convertToGenericRecord(bytes: Array[Byte]): GenericRecord = {
