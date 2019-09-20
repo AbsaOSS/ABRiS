@@ -44,10 +44,14 @@ Among the motivations for this project, it is possible to highlight:
 ```xml
 <dependency>
     <groupId>za.co.absa</groupId>
-    <artifactId>abris_2.11</artifactId>
-    <version>3.0.0</version>
+    <artifactId>abris_2.12</artifactId>
+    <version>3.0.1</version>
 </dependency>
 ```
+## Supported Spark versions
+On spark 2.4.x Abris should work without any further requirements.
+
+On Spark 2.3.x you must declare dependency on ```org.apache.avro:avro:1.8.0``` or higher. (Spark 2.3.x uses Avro 1.7.x so you must overwrite this because Abris needs Avro 1.8.0+.)
 
 ## Usage
 
