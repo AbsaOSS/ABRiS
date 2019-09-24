@@ -21,7 +21,7 @@ import java.security.InvalidParameterException
 import org.apache.avro.Schema
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.streaming.DataStreamReader
-import org.apache.spark.sql.types.{BinaryType, MapType, StringType, StructField, StructType}
+import org.apache.spark.sql.types.{ArrayType, BinaryType, StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Encoder, Row}
 import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.format.SparkAvroConversions
@@ -679,7 +679,9 @@ object AvroSerDeWithKeyColumn {
       val includeHeader = rows.toDF().schema.exists(_.name == "headers")
       val resultingRowSchema =
         if (includeHeader)
-          StructType(List(StructField(KEY_COLUMN_NAME, StringType, false),StructField(VALUE_COLUMN_NAME, BinaryType, false),StructField("headers", MapType(StringType, StringType), false)))
+          StructType(List(StructField(KEY_COLUMN_NAME, StringType, false),StructField(VALUE_COLUMN_NAME, BinaryType, false), StructField("headers", ArrayType(StructType(Array(
+            StructField("key", StringType),
+            StructField("value", BinaryType)))), false)))
         else
           StructType(List(StructField(KEY_COLUMN_NAME, StringType, false),StructField(VALUE_COLUMN_NAME, BinaryType, false)))
 
