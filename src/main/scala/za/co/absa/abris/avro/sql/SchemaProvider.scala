@@ -17,27 +17,29 @@
 package za.co.absa.abris.avro.sql
 
 import org.apache.avro.{Schema, SchemaBuilder}
-import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.avro.SchemaConverters.toAvroType
+import org.apache.spark.sql.catalyst.expressions.Expression
 
 /**
  * This class encapsulate logic and data necessary to get an Avro Schema from various sources
  *
  * Abris library doesn't support serialization of primitive types, therefore if there is only one primitive type
  * it must be internally wrapped in record before it is serialized and the schema must be changed to match.
+ * The binary avro format for wrapped and bare type is identical, therefore this shouldn't cause any problems
+ * on the other end.
  *
  * @param schemaGenerator function that generates schema
  */
 class SchemaProvider private(private val schemaGenerator: Expression => (Schema, Schema))
   extends Serializable {
 
-  @transient private var cachedUnwrappedSchema: Schema = _
+  @transient private var cachedOriginalSchema: Schema = _
   @transient private var cachedWrappedSchema: Schema = _
 
   private def lazyLoadSchemas(expression: Expression): Unit = {
-    if (cachedUnwrappedSchema == null) {
+    if (cachedOriginalSchema == null) {
       val schemas = schemaGenerator(expression)
-      cachedUnwrappedSchema = schemas._1
+      cachedOriginalSchema = schemas._1
       cachedWrappedSchema = schemas._2
     }
   }
@@ -47,9 +49,9 @@ class SchemaProvider private(private val schemaGenerator: Expression => (Schema,
    * @param expression catalyst expression
    * @return unwrapped schema (it can be just one type without any record)
    */
-  def unwrappedSchema(expression: Expression): Schema = {
+  def originalSchema(expression: Expression): Schema = {
     lazyLoadSchemas(expression)
-    cachedUnwrappedSchema
+    cachedOriginalSchema
   }
 
   /**
@@ -65,34 +67,30 @@ class SchemaProvider private(private val schemaGenerator: Expression => (Schema,
 
 object SchemaProvider {
 
+  val DEFAULT_SCHEMA_NAME = "defaultName"
+  val DEFAULT_SCHEMA_NAMESPACE = "defaultNamespace"
+
   def apply(schemaString: String): SchemaProvider = {
 
     new SchemaProvider((_: Expression) => {
       val schema = new Schema.Parser().parse(schemaString)
-
-      def unwrapSparkSchemaIfNeeded(schema: Schema) = {
-        if (schema.getFields.size() == 1) {
-          schema.getFields.get(0).schema()
-        } else {
-          schema
-        }
-      }
-
-      (unwrapSparkSchemaIfNeeded(schema), schema)
+      (schema, wrapSchema(schema, DEFAULT_SCHEMA_NAME, DEFAULT_SCHEMA_NAMESPACE))
     })
   }
 
   def apply(): SchemaProvider = {
-    apply("default", "default")
+    apply(None, None)
   }
 
-  def apply(name: String, namespace: String): SchemaProvider = {
+  def apply(name: Option[String], namespace: Option[String]): SchemaProvider = {
 
     new SchemaProvider((expression: Expression) => {
+      val schemaName = name.getOrElse(DEFAULT_SCHEMA_NAME)
+      val schemaNamespace = namespace.getOrElse(DEFAULT_SCHEMA_NAMESPACE)
 
-      val schema = toAvroType(expression.dataType, expression.nullable, name, namespace)
+      val schema = toAvroType(expression.dataType, expression.nullable, schemaName, schemaNamespace)
 
-      (schema, wrapSchema(schema, name, namespace))
+      (schema, wrapSchema(schema, schemaName, schemaNamespace))
     })
   }
 

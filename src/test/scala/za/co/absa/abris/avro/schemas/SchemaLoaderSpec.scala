@@ -19,10 +19,10 @@ package za.co.absa.abris.avro.schemas
 import java.io.File
 
 import org.apache.commons.io.FileUtils
-import org.scalatest.{BeforeAndAfter, FlatSpec}
+import org.scalatest.FlatSpec
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
-class SchemaLoaderSpec extends FlatSpec with BeforeAndAfter {
+class SchemaLoaderSpec extends FlatSpec {
 
   private val testDir = new File("testDirSchemaLoader")
 
@@ -33,6 +33,10 @@ class SchemaLoaderSpec extends FlatSpec with BeforeAndAfter {
     val schemaFileName = "testSchemaName"
     val destination = writeIntoFS(expectedSchema, schemaFileName)
     val loadedSchema = SchemaLoader.loadFromFile(destination.getAbsolutePath)
+
+    FileUtils.deleteQuietly(new File(destination.getAbsolutePath))
+    FileUtils.deleteDirectory(testDir)
+
     assert(expectedSchema == loadedSchema)
   }
 

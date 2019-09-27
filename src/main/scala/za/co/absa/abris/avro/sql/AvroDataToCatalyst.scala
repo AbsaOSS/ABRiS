@@ -16,18 +16,20 @@
 
 package za.co.absa.abris.avro.sql
 
+import java.nio.ByteBuffer
 import java.security.InvalidParameterException
 
 import org.apache.avro.Schema
-import org.apache.avro.generic.GenericRecord
+import org.apache.avro.generic.GenericDatumReader
+import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
+import org.apache.kafka.common.errors.SerializationException
 import org.apache.spark.SparkException
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, ExprCode}
+import org.apache.spark.sql.avro.SchemaConverters
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
-import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.read.confluent.{ScalaConfluentKafkaAvroDeserializer, SchemaManager}
-import za.co.absa.abris.avro.serde.{AvroReaderFactory, AvroToRowConverter}
+import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManager}
 
 import scala.util.control.NonFatal
 
@@ -40,9 +42,11 @@ case class AvroDataToCatalyst(
 
   override def inputTypes: Seq[BinaryType.type] = Seq(BinaryType)
 
-  override lazy val dataType: DataType = SparkAvroConversions.toSqlType(avroSchema)
+  override lazy val dataType: DataType = SchemaConverters.toSqlType(avroSchema).dataType
 
   override def nullable: Boolean = true
+
+  @transient private lazy val reader = new GenericDatumReader[Any](avroSchema)
 
   @transient private lazy val avroSchema = (jsonFormatSchema, schemaRegistryConf) match {
     case (Some(schemaString), _) => new Schema.Parser().parse(schemaString)
@@ -50,13 +54,15 @@ case class AvroDataToCatalyst(
     case _ => throw new SparkException("Schema or schema registry configuration must be provided")
   }
 
+  @transient private var decoder: BinaryDecoder = _
+
   override def nullSafeEval(input: Any): Any = {
     val binary = input.asInstanceOf[Array[Byte]]
     try {
-      val genericRecord = convertToGenericRecord(binary)
+      val intermediateData = decode(binary)
 
       val deserializer = new AvroDeserializer(avroSchema, dataType)
-      deserializer.deserialize(genericRecord)
+      deserializer.deserialize(intermediateData)
 
     } catch {
       // There could be multiple possible exceptions here, e.g. java.io.IOException,
@@ -74,31 +80,36 @@ case class AvroDataToCatalyst(
       s"(${CodeGenerator.boxedType(dataType)})$expr.nullSafeEval($input)")
   }
 
-  def convertToGenericRecord(bytes: Array[Byte]): GenericRecord = {
+  private def decode(payload: Array[Byte]): Any = {
+
     if (confluentCompliant) {
-      createConfiguredConfluentAvroReader(Option(avroSchema), schemaRegistryConf).deserialize(bytes)
+      decoder = getConfluentDecoder(payload)
     } else {
-      val avroToRowConverter = new AvroToRowConverter(Some(AvroReaderFactory.createAvroReader(avroSchema)))
-      avroToRowConverter.convertToGenericRecord(bytes)
+      decoder = getVanillaDecoder(payload, 0, payload.length)
     }
+
+    reader.read(null, decoder)
   }
 
-  /**
-   * Creates an instance of [[ScalaConfluentKafkaAvroDeserializer]] and configures its Schema Registry access in case
-   * the parameters to do it are defined.
-   */
-  def createConfiguredConfluentAvroReader(schema: Option[Schema], schemaRegistryConf: Option[Map[String,String]]):
-      ScalaConfluentKafkaAvroDeserializer = {
+  private def getConfluentDecoder(payload: Array[Byte]): BinaryDecoder = {
 
-    val configs = schemaRegistryConf.getOrElse(Map[String,String]())
-    val topic = configs.get(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
+    val buffer = ByteBuffer.wrap(payload)
+    if (buffer.get() != ConfluentConstants.MAGIC_BYTE) {
+      throw new SerializationException("Unknown magic byte!")
+    }
 
-    val reader = new ScalaConfluentKafkaAvroDeserializer(topic, schema)
-    reader.configureSchemaRegistry(configs)
-    reader
+    buffer.getInt() // schema id, currently not used
+
+    val start = buffer.position() + buffer.arrayOffset()
+    val length = buffer.limit() - 1 - ConfluentConstants.SCHEMA_ID_SIZE_BYTES
+
+    getVanillaDecoder(buffer.array(), start, length)
   }
 
-  def loadSchemaFromRegistry(registryConfig: Map[String, String]): Schema = {
+  private def getVanillaDecoder(payload: Array[Byte], offset: Int, length: Int) =
+    DecoderFactory.get().binaryDecoder(payload, offset, length, decoder)
+
+  private def loadSchemaFromRegistry(registryConfig: Map[String, String]): Schema = {
 
     val valueStrategy = registryConfig.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
     val keyStrategy = registryConfig.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
@@ -106,16 +117,14 @@ case class AvroDataToCatalyst(
     (valueStrategy, keyStrategy) match {
       case (Some(valueStrategy), None) => AvroSchemaUtils.loadForValue(registryConfig)
       case (None, Some(keyStrategy)) => AvroSchemaUtils.loadForKey(registryConfig)
-      case (Some(_), Some(_)) => {
+      case (Some(_), Some(_)) =>
         throw new InvalidParameterException(
           "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
             "Only one of them supoused to be defined!")
-      }
-      case _ => {
+      case _ =>
         throw new InvalidParameterException(
           "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
             "must be defined to use schema registry!")
-      }
     }
   }
 
