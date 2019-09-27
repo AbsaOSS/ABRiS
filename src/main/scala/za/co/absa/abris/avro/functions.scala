@@ -108,8 +108,8 @@ object functions {
    * @param schemaRegistryConf schema registry configuration
    */
   def to_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
-    val name = schemaRegistryConf(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-    val namespace = schemaRegistryConf(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+    val name = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY)
+    val namespace = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
     new Column(sql.CatalystDataToAvro(
       data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), confluentCompliant = false))
@@ -130,15 +130,15 @@ object functions {
   /**
    * Converts a column into binary of avro format, store the used schema in schema registry and prepend the schema id
    * to avro payload (according to confluent avro format)
-   * Schema is generated automatically.
+   * Schema is generated automatically from spark catalyst data type.
    *
    * @param data column to be converted to avro
    * @param schemaRegistryConf schema registry configuration
    */
   def to_confluent_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
 
-    val name = schemaRegistryConf(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-    val namespace = schemaRegistryConf(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+    val name = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY)
+    val namespace = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
     new Column(sql.CatalystDataToAvro(
       data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), confluentCompliant = true))
