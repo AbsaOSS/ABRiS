@@ -85,7 +85,7 @@ case class AvroDataToCatalyst(
     if (confluentCompliant) {
       decoder = getConfluentDecoder(payload)
     } else {
-      decoder = DecoderFactory.get().binaryDecoder(payload, 0, payload.length, decoder)
+      decoder = getVanillaDecoder(payload, 0, payload.length)
     }
 
     reader.read(null, decoder)
@@ -103,8 +103,11 @@ case class AvroDataToCatalyst(
     val start = buffer.position() + buffer.arrayOffset()
     val length = buffer.limit() - 1 - ConfluentConstants.SCHEMA_ID_SIZE_BYTES
 
-    DecoderFactory.get().binaryDecoder(buffer.array(), start, length, decoder)
+    getVanillaDecoder(buffer.array(), start, length)
   }
+
+  private def getVanillaDecoder(payload: Array[Byte], offset: Int, length: Int) =
+    DecoderFactory.get().binaryDecoder(payload, offset, length, decoder)
 
   private def loadSchemaFromRegistry(registryConfig: Map[String, String]): Schema = {
 

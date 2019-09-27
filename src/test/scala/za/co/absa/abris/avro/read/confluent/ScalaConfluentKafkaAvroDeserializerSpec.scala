@@ -93,7 +93,7 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
     * That class was not used directly since that is tightly coupled to Schema Registry client
     * through [[io.confluent.kafka.serializers.AbstractKafkaAvroSerDe]] and an integration would unnecessarily
     * bloat this unit test, since in case of any change in the Confluent header,
-    * the deserializer under test is expected fail anyway.
+    * the deserializer under test is expected to fail anyway.
     */
 
   private def addConfluentHeader(record: GenericRecord, schema: Schema, schemaId: Int): Array[Byte] = {
