@@ -38,7 +38,7 @@ case class CatalystDataToAvro(
   override def dataType: DataType = BinaryType
 
   @transient private lazy val serializer: AvroSerializer =
-    new AvroSerializer(child.dataType, schemaProvider.unwrappedSchema(child), child.nullable)
+    new AvroSerializer(child.dataType, schemaProvider.originalSchema(child), child.nullable)
 
   override def nullSafeEval(input: Any): Any = {
     val avroData = serializer.serialize(input)
@@ -85,16 +85,14 @@ case class CatalystDataToAvro(
     val schemaId = (valueStrategy, keyStrategy) match {
       case (Some(valueStrategy), None) => AvroSchemaUtils.registerIfCompatibleValueSchema(topic, schema, registryConfig)
       case (None, Some(keyStrategy)) => AvroSchemaUtils.registerIfCompatibleKeySchema(topic, schema, registryConfig)
-      case (Some(_), Some(_)) => {
+      case (Some(_), Some(_)) =>
         throw new InvalidParameterException(
           "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
             "Only one of them supposed to be defined!")
-      }
-      case _ => {
+      case _ =>
         throw new InvalidParameterException(
           "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
             "must be defined to use schema registry!")
-      }
     }
 
     if (schemaId.isEmpty) {

@@ -366,21 +366,3 @@ A possible solution would be for ABRiS to create an uber schema from all schemas
 Fixed is an alternative way of encoding binary data in Avro. Unlike bytes type the fixed type doesn't store the length of the data in the payload, but in Avro schema itself.
 
 The corresponding data type in Spark is BinaryType, but the inferred schema will always use bytes type for this kind of data. If you want to use the fixed type you must provide the Avro schema.
-
-
-## Performance
-
-### Setup
-
-- Windows 7 Enterprise 64-bit 
-
-- Intel i5-3550 3.3GHz
-
-- 16 GB RAM
-
-
-Tests serializing 50k records using a fairly complex schemas show that Avro records can be up to 16% smaller than Kryo ones, i.e. converting Dataframes into Avro records save up to 16% more space than converting them into case classes and using Kryo as a serializer.
-
-In local tests with a single core, the library was able to parse, per second, up to 100k Avro records into Spark rows per second, and up to 5k Spark rows into Avro records.
-
-The tests can be found at ```za.co.absa.abris.performance.SpaceTimeComplexitySpec```.

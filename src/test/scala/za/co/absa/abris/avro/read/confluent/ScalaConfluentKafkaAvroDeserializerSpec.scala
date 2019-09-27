@@ -19,9 +19,8 @@ package za.co.absa.abris.avro.read.confluent
 import java.io.ByteArrayOutputStream
 import java.lang.{Boolean, Double, Float, Long}
 import java.nio.ByteBuffer
-import java.util
 
-import io.confluent.kafka.schemaregistry.client.{SchemaMetadata, SchemaRegistryClient}
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.io.EncoderFactory
@@ -37,6 +36,9 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
 
   private val plainSchema = TestSchemas.NATIVE_SCHEMA_SPEC
   private val schema = AvroSchemaUtils.parse(plainSchema)
+
+  private val SCHEMA_ID = 8
+  private val SCHEMA_SUBJECT = "FooBarBaz"
 
   private val testData = Map[String, Object](
     "string" ->  "A Test String",
@@ -61,16 +63,19 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
 
   it should "deserialize Confluent's Avro records assuming constructor Schema was used by both, writer and reader" in {
     val deserializer = new ScalaConfluentKafkaAvroDeserializer(None, Some(schema))
-    val deserializedRecord = deserializer.deserialize(addConfluentHeader(avroRecord, schema))
+    val deserializedRecord = deserializer.deserialize(addConfluentHeader(avroRecord, schema, 42))
     for (testDataEntry <- testData) {
       assert(testDataEntry._2 == deserializedRecord.get(testDataEntry._1))
     }
   }
 
   it should "deserialize Confluent's Avro records retrieving schema from Schema Registry using topic" in {
+    val schemaRegistryClient = new MockSchemaRegistryClient()
+    val schemaId = schemaRegistryClient.register(SCHEMA_SUBJECT, schema)
+
     val deserializer = new ScalaConfluentKafkaAvroDeserializer(Some("any_topic_since_this_is_mocked"), None)
-    SchemaManager.setConfiguredSchemaRegistry(new MockedSchemaRegistryClient)
-    val deserializedRecord = deserializer.deserialize(addConfluentHeader(avroRecord, schema))
+    SchemaManager.setConfiguredSchemaRegistry(schemaRegistryClient)
+    val deserializedRecord = deserializer.deserialize(addConfluentHeader(avroRecord, schema, schemaId))
     for (testDataEntry <- testData) {
       assert(testDataEntry._2 == deserializedRecord.get(testDataEntry._1))
     }
@@ -85,62 +90,29 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
   /**
     * The section below was extracted from: [[io.confluent.kafka.serializers.AbstractKafkaAvroSerializer]].deserialize()
     *
-    * That class was not used directly since that is tightly coupled to Schema Registry client through [[io.confluent.kafka.serializers.AbstractKafkaAvroSerDe]]
-    * and an integration would unnecessarily bloat this unit test, since in case of any change in the Confluent header,
-    * the deserializer under test is expected fail anyway.
+    * That class was not used directly since that is tightly coupled to Schema Registry client
+    * through [[io.confluent.kafka.serializers.AbstractKafkaAvroSerDe]] and an integration would unnecessarily
+    * bloat this unit test, since in case of any change in the Confluent header,
+    * the deserializer under test is expected to fail anyway.
     */
 
-  private def addConfluentHeader(record: GenericRecord, schema: Schema): Array[Byte] = {
-    val out = getConfluentHeaderStream
+  private def addConfluentHeader(record: GenericRecord, schema: Schema, schemaId: Int): Array[Byte] = {
+    val out = getConfluentHeaderStream(schemaId)
     appendBinaryRecordToConfluentStream(record, out)
     out.toByteArray
   }
 
-  private def getConfluentHeaderStream: ByteArrayOutputStream = {
+  private def getConfluentHeaderStream(schemaId: Int): ByteArrayOutputStream = {
     val out = new ByteArrayOutputStream()
     out.write(ConfluentConstants.MAGIC_BYTE)
-    out.write(ByteBuffer.allocate(ConfluentConstants.SCHEMA_ID_SIZE_BYTES).putInt(8).array)
+    out.write(ByteBuffer.allocate(ConfluentConstants.SCHEMA_ID_SIZE_BYTES).putInt(schemaId).array)
     out
   }
 
-  private def appendBinaryRecordToConfluentStream(record: GenericRecord, out: ByteArrayOutputStream) = {
+  private def appendBinaryRecordToConfluentStream(record: GenericRecord, out: ByteArrayOutputStream): Unit = {
     val encoder = EncoderFactory.get().directBinaryEncoder(out, null)
     val writer = new SpecificDatumWriter[GenericRecord](schema)
     writer.write(record, encoder)
     encoder.flush()
-  }
-
-  private class MockedSchemaRegistryClient extends SchemaRegistryClient {
-
-    override def getVersion(s: String, schema: Schema): Int = 8
-
-    override def getAllSubjects: util.Collection[String] = new util.ArrayList[String]()
-
-    override def getSchemaMetadata(s: String, i: Int): SchemaMetadata = null
-
-    override def getBySubjectAndID(s: String, i: Int): Schema = getBySubjectAndId(s, i)
-
-    override def getById(id: Int): org.apache.avro.Schema = schema
-
-    override def getBySubjectAndId(subject: String, id: Int): org.apache.avro.Schema = schema
-
-    override def getLatestSchemaMetadata(s: String): SchemaMetadata = null
-
-    override def updateCompatibility(s: String, s1: String): String = null
-
-    override def getByID(i: Int): Schema = schema
-
-    override def getCompatibility(s: String): String = null
-
-    override def testCompatibility(s: String, schema: Schema) = true
-
-    override def register(s: String, schema: Schema): Int = 8
-
-    override def deleteSchemaVersion(conf: java.util.Map[String,String], subject: String, version: String): Integer = ???
-    override def deleteSchemaVersion(subject: String, version: String): Integer = ???
-    override def deleteSubject(params: java.util.Map[String,String], subject: String): java.util.List[Integer] = ???
-    override def deleteSubject(subject: String): java.util.List[Integer] = ???
-    override def getAllVersions(subject: String): java.util.List[Integer] = ???
-    override def getId(subject: String, schema: org.apache.avro.Schema): Int = ???
   }
 }
