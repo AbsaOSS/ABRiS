@@ -40,14 +40,12 @@ Among the motivations for this project, it is possible to highlight:
 - In some use cases you may want to keep your Dataframe schema, adding your data as a nested structure, whereas in other cases you may want to use the schema for your data as the schema for the whole Dataframe.
 
 ### Coordinates for Maven POM dependency
+####Abris for Scala 2.11
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11)
 
-```xml
-<dependency>
-    <groupId>za.co.absa</groupId>
-    <artifactId>abris_2.12</artifactId>
-    <version>3.0.1</version>
-</dependency>
-```
+####Abris for Scala 2.12
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12)
+
 ## Supported Spark versions
 On spark 2.4.x Abris should work without any further requirements.
 
