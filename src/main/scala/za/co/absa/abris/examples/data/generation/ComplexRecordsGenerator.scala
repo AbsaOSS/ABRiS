@@ -41,7 +41,7 @@ object ComplexRecordsGenerator {
   private val avroParser = new AvroToSparkParser()
   private val random = new Random()
 
-  def usedAvroSchema = plainSchema
+  def usedAvroSchema: String = plainSchema
 
   def generateRecords(howMany: Int): List[GenericRecord] = {
     val result = new Array[GenericRecord](howMany)
@@ -123,7 +123,7 @@ object ComplexRecordsGenerator {
   }
   
   private def randomSeqOfLongs(listSize: Int) = {
-    randomListOfLongs(listSize).asScala.toSeq
+    randomListOfLongs(listSize).asScala
   }
   
   private def randomListOfStrings(listSize: Int, stringLength: Int) = {
@@ -135,7 +135,7 @@ object ComplexRecordsGenerator {
   }
 
   private def randomSeqOfStrings(listSize: Int, stringLength: Int) = {
-    randomListOfStrings(listSize, stringLength).asScala.toSeq    
+    randomListOfStrings(listSize, stringLength).asScala
   }  
   
   private def randomString(length: Int): String = {
@@ -144,7 +144,7 @@ object ComplexRecordsGenerator {
   }
 
   private def recordToBean(record: GenericRecord): Bean = {    
-    new Bean(
+    Bean(
       record.get("bytes").toString().getBytes(),
       record.get("string").asInstanceOf[String],
       record.get("int").asInstanceOf[Int],

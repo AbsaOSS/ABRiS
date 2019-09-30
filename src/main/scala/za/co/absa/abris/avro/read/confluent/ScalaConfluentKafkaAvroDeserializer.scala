@@ -31,14 +31,7 @@ import za.co.absa.abris.avro.read.ScalaDatumReader
   *
   * Please, invest some time in understanding how it works and above all, read the documentation for the method 'deserialize()'.
   */
-class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerSchema: Option[Schema]) {
-
-  if (topic.isEmpty && readerSchema.isEmpty) {
-    throw new IllegalArgumentException("Neither topic nor reader Schema were informed. If you want a specific schema to" +
-      " be used for reading pass it as the readerSchema value. Otherwise, if you'd like the schema to be retrieved from" +
-      " SchemaRegistry, pass in the topic being consume and inform the SchemaRegistry URLs by calling " +
-      " 'configure' in this object using SchemaManager.PARAM_SCHEMA_REGISTRY_URL as the key in the map.")
-  }
+class ScalaConfluentKafkaAvroDeserializer(val readerSchema: Schema) {
 
   private val decoderFactory = DecoderFactory.get()
   private val idSchemaReader = scala.collection.mutable.Map[Int,ScalaDatumReader[ScalaAvroRecord]]()
@@ -89,7 +82,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
       val buffer = getByteBuffer(payload)
 
       schemaId = buffer.getInt()
-      val writerSchema = getWriterSchema(topic, schemaId)
+      val writerSchema = getWriterSchema(schemaId)
 
       val length = buffer.limit() - 1 - ConfluentConstants.SCHEMA_ID_SIZE_BYTES
       val start = buffer.position() + buffer.arrayOffset()
@@ -107,12 +100,12 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     * If there is a topic defined and the Schema Registry has been configured, the writer schema will be retrieved from
     * Schema Registry, otherwise, the reader schema passed on to the constructor will also the considered the writer's.
     */
-  private def getWriterSchema(topic: Option[String], id: Int): Schema = {
-    if (topic.isDefined && SchemaManager.isSchemaRegistryConfigured) {
+  private def getWriterSchema(id: Int): Schema = {
+    if (SchemaManager.isSchemaRegistryConfigured) {
       SchemaManager.getById(id).get
     }
     else {
-      readerSchema.get
+      readerSchema
     }
   }
 
@@ -136,7 +129,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     * the documentation of [[ScalaConfluentKafkaAvroDeserializer.deserialize()]] to understand the implications of schema
     * changes.
     */
-  private def getDatumReader(writerSchema: Schema, readerSchema: Option[Schema], id: Int): ScalaDatumReader[ScalaAvroRecord] = {
+  private def getDatumReader(writerSchema: Schema, readerSchema: Schema, id: Int): ScalaDatumReader[ScalaAvroRecord] = {
     idSchemaReader.getOrElseUpdate(id, createDatumReader(writerSchema, readerSchema))
   }
 
@@ -145,8 +138,7 @@ class ScalaConfluentKafkaAvroDeserializer(val topic: Option[String], val readerS
     *
     * If the reader schema passed on to the constructor is undefined, the writer schema is also considered the reader one.
     */
-  private def createDatumReader(writerSchema: Schema, readerSchema: Option[Schema]): ScalaDatumReader[ScalaAvroRecord] = {
-    new ScalaDatumReader[ScalaAvroRecord](writerSchema,
-      if (readerSchema.isDefined) readerSchema.get else writerSchema)
+  private def createDatumReader(writerSchema: Schema, readerSchema: Schema): ScalaDatumReader[ScalaAvroRecord] = {
+    new ScalaDatumReader[ScalaAvroRecord](writerSchema, readerSchema)
   }
 }

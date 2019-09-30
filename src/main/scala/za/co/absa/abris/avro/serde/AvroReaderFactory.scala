@@ -48,13 +48,10 @@ private[avro] object AvroReaderFactory {
     * the parameters to do it are defined.
     */
   def createConfiguredConfluentAvroReader(schemaPath: Option[String], schemaRegistryConf: Option[Map[String,String]]): ScalaConfluentKafkaAvroDeserializer = {
-    val schema = if (schemaPath.isDefined) Some(AvroSchemaUtils.load(schemaPath.get)) else None
+    val schema = resolveSchema(schemaPath, schemaRegistryConf)
     val configs = if (schemaRegistryConf.isDefined) schemaRegistryConf.get else Map[String,String]()
-    val topic = if (configs.contains(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)) Some(configs(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)) else None
 
-    val reader = new ScalaConfluentKafkaAvroDeserializer(topic, schema)
-    reader.configureSchemaRegistry(configs)
-    reader
+    createConfiguredConfluentAvroReader(schema, configs)
   }
 
   /**
@@ -62,8 +59,19 @@ private[avro] object AvroReaderFactory {
     * the parameters to do it are defined.
     */
   def createConfiguredConfluentAvroReader(schema: Schema, schemaRegistryConf: Map[String,String]): ScalaConfluentKafkaAvroDeserializer = {
-    val reader = new ScalaConfluentKafkaAvroDeserializer(None, Some(schema))
+    val reader = new ScalaConfluentKafkaAvroDeserializer(schema)
     reader.configureSchemaRegistry(schemaRegistryConf)
     reader
+  }
+
+  private def resolveSchema(schemaPath: Option[String], schemaRegistryConf: Option[Map[String,String]]): Schema = {
+    if (schemaPath.isEmpty && schemaRegistryConf.isEmpty) {
+      throw new IllegalArgumentException("Schema could not be resolved: neither path nor Schema Registry configuration provided.")
+    }
+
+    schemaPath match {
+      case Some(path) => AvroSchemaUtils.load(path)
+      case None => AvroSchemaUtils.load(schemaRegistryConf.get)
+    }
   }
 }
