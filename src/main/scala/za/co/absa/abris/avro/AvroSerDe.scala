@@ -198,7 +198,7 @@ object AvroSerDe {
 
       if (schemaId.isEmpty) {
         throw new InvalidParameterException(s"Schema could not be registered for topic '$topic'. Make sure that the Schema Registry " +
-            s"is available, the parameters are correct and the schemas ar compatible")
+            s"is available, the parameters are correct and the schemas are compatible")
       }
       else {
         logger.info(s"Schema successfully registered for topic '$topic' with id '{${schemaId.get}}'.")
