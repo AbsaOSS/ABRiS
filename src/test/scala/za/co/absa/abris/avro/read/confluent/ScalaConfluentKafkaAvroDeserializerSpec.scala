@@ -63,7 +63,7 @@ class ScalaConfluentKafkaAvroDeserializerSpec extends FlatSpec with BeforeAndAft
     }
   }
 
-  it should "deserialize Confluent's Avro records retrieving schema from Schema Registry using topic" in {
+  it should "deserialize Confluent's Avro records retrieving schema from Schema Registry using schema id" in {
     val schemaId = 2
     val deserializer = new ScalaConfluentKafkaAvroDeserializer(schema)
     SchemaManager.setConfiguredSchemaRegistry(new MockedSchemaRegistryClient(schemaId, schema))
