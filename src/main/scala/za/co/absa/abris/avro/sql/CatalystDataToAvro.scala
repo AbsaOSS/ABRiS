@@ -16,8 +16,6 @@
 
 package za.co.absa.abris.avro.sql
 
-import java.security.InvalidParameterException
-
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, IndexedRecord}
 import org.apache.spark.sql.avro.AvroSerializer
@@ -26,7 +24,6 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.read.confluent.SchemaManager
 
 case class CatalystDataToAvro(
    child: Expression,
@@ -71,34 +68,12 @@ case class CatalystDataToAvro(
   /**
    * Tries to manage schema registration in case credentials to access Schema Registry are provided.
    */
-  @throws[InvalidParameterException]
   private def registerSchema(
       schema: Schema,
       registryConfig: Map[String,String],
       prependSchemaId: Boolean): Option[Int] = {
 
-    val topic = registryConfig(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
-
-    val valueStrategy = registryConfig.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
-    val keyStrategy = registryConfig.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
-
-    val schemaId = (valueStrategy, keyStrategy) match {
-      case (Some(valueStrategy), None) => AvroSchemaUtils.registerIfCompatibleValueSchema(topic, schema, registryConfig)
-      case (None, Some(keyStrategy)) => AvroSchemaUtils.registerIfCompatibleKeySchema(topic, schema, registryConfig)
-      case (Some(_), Some(_)) =>
-        throw new InvalidParameterException(
-          "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
-            "Only one of them supposed to be defined!")
-      case _ =>
-        throw new InvalidParameterException(
-          "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
-            "must be defined to use schema registry!")
-    }
-
-    if (schemaId.isEmpty) {
-      throw new InvalidParameterException(s"Schema could not be registered for topic '$topic'. " +
-        "Make sure that the Schema Registry is available, the parameters are correct and the schemas ar compatible")
-    }
+    val schemaId = AvroSchemaUtils.registerSchema(schema, registryConfig)
 
     if (prependSchemaId) schemaId else None
   }

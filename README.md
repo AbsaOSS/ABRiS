@@ -59,7 +59,7 @@ The API consists of four Spark SQL expressions:
 * ```to_avro``` and ```from_avro``` used for normal Avro payload
 * ```to_confluent_avro``` and ```from_confluent_avro``` used for Confluent Avro data format
 
-Full runable examples can be found in ```za.co.absa.abris.examples.sql``` package.
+Full runnable examples can be found in ```za.co.absa.abris.examples``` package. You can also take a look at unit tests in package ```za.co.absa.abris.avro.sql```.
 
 ### Deprecation Note
 Old ABRiS API is deprecated, but is still included in the library. Documentation for old API is in [ABRiS 2.2.3.](https://github.com/AbsaOSS/ABRiS/tree/v2.2.3)

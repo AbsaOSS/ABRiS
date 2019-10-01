@@ -54,10 +54,11 @@ object functions {
 
   /**
    * Converts a binary column of confluent avro format into its corresponding catalyst value using schema registry.
-   * The schema id is removed from start of the avro payload, but it's not used. You still need to provide some schema
-   * id in the schemaRegistryConf.
-   * The schema loaded from schema registry must match the read data, otherwise the behavior is undefined:
-   * it may fail or return arbitrary result.
+   * There are two avro schemas used: writer schema and reader schema.
+   *
+   * The configuration you provide (naming strategy, topic, ...) is used for getting the reader schema from schema
+   * registry. The writer schema is also loaded from the registry but it's found by the schema id that is taken from
+   * beginning of confluent avro payload.
    *
    * @param data the binary column.
    * @param schemaRegistryConf schema registry configuration.
@@ -68,17 +69,22 @@ object functions {
   }
 
   /**
-   * Converts a binary column of confluent avro format into its corresponding catalyst value using provided schema.
-   * The schema id is removed from start of the avro payload, but it's not used.
-   * The specified schema must match the read data, otherwise the behavior is undefined:
-   * it may fail or return arbitrary result.
+   * Converts a binary column of confluent avro format into its corresponding catalyst value using schema registry.
+   * There are two avro schemas used: writer schema and reader schema.
+   *
+   * The reader schema is provided as a parameter.
+   *
+   * The writer schema is loaded from the registry, it's found by the schema id that is taken from
+   * beginning of confluent avro payload.
    *
    * @param data the binary column.
-   * @param jsonFormatSchema the avro schema in JSON string format.
+   * @param readerSchema the reader avro schema in JSON string format.
+   * @param schemaRegistryConf schema registry configuration for getting the writer schema.
    *
    */
-  def from_confluent_avro(data: Column, jsonFormatSchema: String): Column = {
-    new Column(sql.AvroDataToCatalyst(data.expr, Some(jsonFormatSchema), None, confluentCompliant = true))
+  def from_confluent_avro(data: Column, readerSchema: String, schemaRegistryConf: Map[String,String]): Column = {
+    new Column(sql.AvroDataToCatalyst(
+      data.expr, Some(readerSchema), Some(schemaRegistryConf), confluentCompliant = true))
   }
 
   /**
