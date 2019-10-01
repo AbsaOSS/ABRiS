@@ -44,6 +44,7 @@ object ConfluentKafkaAvroReader {
     val stream = spark
       .readStream
       .format("kafka")
+      .option("startingOffsets", "earliest")
       .addOptions(properties) // 1. this method will add the properties starting with "option."
                               // 2. security options can be set in the properties file
 
@@ -65,13 +66,15 @@ object ConfluentKafkaAvroReader {
 
     import za.co.absa.abris.avro.functions.from_confluent_avro
 
+    val schemaRegistryConfig = properties.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
+
     if (properties.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      val schemaRegistryConfig = properties.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
       dataFrame.select(from_confluent_avro(col("value"), schemaRegistryConfig) as 'data).select("data.*")
     } else {
       val source = scala.io.Source.fromFile(properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
       val schemaString = try source.mkString finally source.close()
-      dataFrame.select(from_confluent_avro(col("value"), schemaString) as 'data).select("data.*")
+      dataFrame.select(from_confluent_avro(col("value"), schemaString, schemaRegistryConfig) as 'data)
+        .select("data.*")
     }
   }
 }

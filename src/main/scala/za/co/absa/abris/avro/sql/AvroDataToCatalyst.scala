@@ -46,14 +46,13 @@ case class AvroDataToCatalyst(
 
   override def nullable: Boolean = true
 
-  @transient private lazy val reader = new GenericDatumReader[Any](avroSchema)
-
   @transient private lazy val avroSchema = (jsonFormatSchema, schemaRegistryConf) match {
     case (Some(schemaString), _) => new Schema.Parser().parse(schemaString)
     case (_, Some(schemaRegistryConf)) => loadSchemaFromRegistry(schemaRegistryConf)
     case _ => throw new SparkException("Schema or schema registry configuration must be provided")
   }
 
+  @transient private var reader: GenericDatumReader[Any] = _
   @transient private var decoder: BinaryDecoder = _
 
   override def nullSafeEval(input: Any): Any = {
@@ -80,34 +79,40 @@ case class AvroDataToCatalyst(
       s"(${CodeGenerator.boxedType(dataType)})$expr.nullSafeEval($input)")
   }
 
-  private def decode(payload: Array[Byte]): Any = {
-
-    if (confluentCompliant) {
-      decoder = getConfluentDecoder(payload)
-    } else {
-      decoder = getVanillaDecoder(payload, 0, payload.length)
-    }
-
-    reader.read(null, decoder)
+  private def decode(payload: Array[Byte]): Any = if (confluentCompliant) {
+    decodeConfluentAvro(payload)
+  } else {
+    decodeVanillaAvro(payload)
   }
 
-  private def getConfluentDecoder(payload: Array[Byte]): BinaryDecoder = {
+  private def decodeConfluentAvro(payload: Array[Byte]): Any  = {
 
     val buffer = ByteBuffer.wrap(payload)
     if (buffer.get() != ConfluentConstants.MAGIC_BYTE) {
       throw new SerializationException("Unknown magic byte!")
     }
 
-    buffer.getInt() // schema id, currently not used
+    val schemaId = buffer.getInt()
 
     val start = buffer.position() + buffer.arrayOffset()
     val length = buffer.limit() - 1 - ConfluentConstants.SCHEMA_ID_SIZE_BYTES
+    decoder = DecoderFactory.get().binaryDecoder(buffer.array(), start, length, decoder)
 
-    getVanillaDecoder(buffer.array(), start, length)
+    val writerSchema = getWriterSchema(schemaId)
+    reader = new GenericDatumReader[Any](writerSchema, avroSchema)
+
+    reader.read(reader, decoder)
   }
 
-  private def getVanillaDecoder(payload: Array[Byte], offset: Int, length: Int) =
-    DecoderFactory.get().binaryDecoder(payload, offset, length, decoder)
+  private def getWriterSchema(id: Int): Schema = SchemaManager.getById(id).get
+
+  private def decodeVanillaAvro(payload: Array[Byte]): Any = {
+
+    decoder =  DecoderFactory.get().binaryDecoder(payload, 0, payload.length, decoder)
+    reader = new GenericDatumReader[Any](avroSchema)
+
+    reader.read(reader, decoder)
+  }
 
   private def loadSchemaFromRegistry(registryConfig: Map[String, String]): Schema = {
 

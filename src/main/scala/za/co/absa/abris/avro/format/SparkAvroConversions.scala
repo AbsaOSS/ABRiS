@@ -28,6 +28,7 @@ import org.apache.avro.generic.{GenericRecord, IndexedRecord}
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.types._
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.ConfluentConstants
 import za.co.absa.abris.avro.write.AvroWriterHolder
 
@@ -96,6 +97,13 @@ object SparkAvroConversions {
     val record = rowToGenericRecord(row, sparkSchema, avroSchema)
     toByteArray(record, avroSchema, schemaId)
   }
+
+  /**
+   * Translates an Avro Schema into a Spark's StructType.
+   *
+   * Relies on Databricks Spark-Avro library to do the job.
+   */
+  def toSqlType(schema: String): StructType = toSqlType(AvroSchemaUtils.parse(schema))
 
   /**
    * Translates an Avro Schema into a Spark's StructType.

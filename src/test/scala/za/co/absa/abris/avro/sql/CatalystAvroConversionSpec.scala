@@ -329,7 +329,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_confluent_avro('bytes, schemaString) as 'result)
+      .select(from_confluent_avro('bytes, schemaString, schemaRegistryConfig) as 'result)
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -359,28 +359,6 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
-  }
-
-  /**
-   * assert that both dataFrames contain the same data
-   */
-  private def shouldEqualByData(inputFrame: DataFrame, outputFrame: DataFrame): Unit = {
-
-    def columnNames(frame: DataFrame) = frame.schema.fields.map(_.name)
-
-    val inputColNames = columnNames(inputFrame)
-    val outputColNames = columnNames(outputFrame)
-
-    inputColNames shouldEqual outputColNames
-
-    inputColNames.foreach(col => {
-      val inputColumn = inputFrame.select(col).collect().map(row => row.toSeq.head)
-      val outputColumn = outputFrame.select(col).collect().map(row => row.toSeq.head)
-
-      for ((input, output ) <- inputColumn.zip(outputColumn)) {
-        input shouldEqual output
-      }
-    })
   }
 
   private def getEncoder: Encoder[Row] = {

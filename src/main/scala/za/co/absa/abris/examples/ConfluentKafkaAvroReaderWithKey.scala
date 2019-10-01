@@ -93,8 +93,8 @@ object ConfluentKafkaAvroReaderWithKey {
       val valueSchema = loadSchemaFromFile(properties(PARAM_PAYLOAD_AVRO_SCHEMA))
       val keySchema = loadSchemaFromFile(properties(PARAM_KEY_AVRO_SCHEMA))
       dataFrame.select(
-        from_confluent_avro(col("key"), keySchema) as 'key,
-        from_confluent_avro(col("value"), valueSchema) as 'value)
+        from_confluent_avro(col("key"), keySchema, keyRegistryConfig) as 'key,
+        from_confluent_avro(col("value"), valueSchema, valueRegistryConfig) as 'value)
     }
   }
 
