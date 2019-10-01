@@ -96,6 +96,12 @@
 			<timezone>Europe/Prague</timezone>
 			<url>https://github.com/felipemmelo</url>
 		</developer>
+        <developer>
+            <id>cerveada</id>
+            <name>Adam Cervenka</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/cerveada</url>
+        </developer>
 	</developers>
 
     <dependencies>
