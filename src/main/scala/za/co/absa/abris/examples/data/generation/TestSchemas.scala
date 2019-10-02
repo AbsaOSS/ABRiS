@@ -62,7 +62,7 @@ object TestSchemas {
      "name": "native_complete",
      "fields":[                  
          {"name": "bytes", "type": "bytes" },
-         { "name": "string",      "type": ["string", "null"] },
+         { "name": "string",      "type": ["string", "null"], "default":"blue" },
          { "name": "int",         "type": ["int",    "null"] },
          { "name": "long",        "type": ["long",   "null"] },
  		     { "name": "double",      "type": ["double", "null"] },
