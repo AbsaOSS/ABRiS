@@ -160,7 +160,7 @@ object SchemaManager {
       }
       catch {
         case e: Exception =>
-          logger.error(s"Could not get schema for subject '$subject'", e)
+          logger.error(s"Could not get the id of the latest version for subject '$subject'", e)
           None
       }
     }
