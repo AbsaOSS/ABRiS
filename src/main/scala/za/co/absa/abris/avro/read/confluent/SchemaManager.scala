@@ -115,11 +115,14 @@ object SchemaManager {
       }
       catch {
         case e: Exception =>
-          e.printStackTrace()
+          logger.error(s"Could not get schema for subject '$subject' and id '$id'", e)
           None
       }
     }
-    else None
+    else {
+      logger.warn(s"Schema Registry not configured. Returning None for subject '$subject' and id '$id'")
+      None
+    }
   }
 
   /**
@@ -134,11 +137,14 @@ object SchemaManager {
       }
       catch {
         case e: Exception =>
-          e.printStackTrace()
+          logger.error(s"Could not get schema metadata for subject '$subject' and version '$version'", e)
           None
       }
     }
-    else None
+    else {
+      logger.warn(s"Schema Registry not configured. Returning None for subject '$subject' and version '$version'")
+      None
+    }
   }
 
   def getById(id: Int): Option[Schema] = getBySubjectAndId(null, id)
@@ -154,11 +160,14 @@ object SchemaManager {
       }
       catch {
         case e: Exception =>
-          e.printStackTrace()
+          logger.error(s"Could not get the id of the latest version for subject '$subject'", e)
           None
       }
     }
-    else None
+    else {
+      logger.warn(s"Schema Registry not configured. Returning None for subject '$subject'")
+      None
+    }
   }
 
   /**
@@ -185,6 +194,7 @@ object SchemaManager {
       val maxSchemaObject = config.getMaxSchemasPerSubject
 
       if (null == schemaRegistryClient) {
+        logger.info(s"Configuring new Schema Registry instance of type ${classOf[CachedSchemaRegistryClient].getCanonicalName}")
         schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject)
       }
     } catch {
