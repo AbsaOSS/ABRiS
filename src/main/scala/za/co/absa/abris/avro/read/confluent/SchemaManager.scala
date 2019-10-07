@@ -137,7 +137,7 @@ object SchemaManager {
       }
       catch {
         case e: Exception =>
-          logger.error(s"Could not get schema for subject '$subject' and version '$version'", e)
+          logger.error(s"Could not get schema metadata for subject '$subject' and version '$version'", e)
           None
       }
     }
