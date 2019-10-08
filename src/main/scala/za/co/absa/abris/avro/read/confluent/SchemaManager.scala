@@ -152,7 +152,22 @@ object SchemaManager extends Logging {
     }
   }
 
-  def getById(id: Int): Option[Schema] = getBySubjectAndId(null, id)
+  def getById(id: Int): Option[Schema] = {
+    logInfo(s"Trying to get schema for id '$id'")
+    if (isSchemaRegistryConfigured) {
+      try {
+        Some(schemaRegistryClient.getById(id))
+      }
+      catch {
+        case e: Exception =>
+          throw new Exception(s"Could not get schema for id '$id'", e)
+      }
+    }
+    else {
+      logWarning(s"Schema Registry not configured. Returning None as schema for id '$id'")
+      throw new IllegalStateException(s"Schema Registry not configured. Returning None as schema for id '$id'")
+    }
+  }
 
   /**
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
