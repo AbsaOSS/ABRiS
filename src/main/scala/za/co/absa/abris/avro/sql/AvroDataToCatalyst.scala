@@ -104,7 +104,10 @@ case class AvroDataToCatalyst(
     reader.read(reader, decoder)
   }
 
-  private def getWriterSchema(id: Int): Schema = SchemaManager.getById(id).get
+  private def getWriterSchema(id: Int): Schema = {
+    SchemaManager.configureSchemaRegistry(schemaRegistryConf.get)
+    SchemaManager.getById(id).get
+  }
 
   private def decodeVanillaAvro(payload: Array[Byte]): Any = {
 
