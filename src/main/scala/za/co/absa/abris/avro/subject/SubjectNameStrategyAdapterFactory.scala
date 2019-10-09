@@ -16,7 +16,7 @@
 
 package za.co.absa.abris.avro.subject
 
-import io.confluent.kafka.serializers.subject.{RecordNameStrategy, SubjectNameStrategy, TopicNameStrategy, TopicRecordNameStrategy}
+import io.confluent.kafka.serializers.subject.{RecordNameStrategy, TopicNameStrategy, TopicRecordNameStrategy}
 import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.read.confluent.SchemaManager.SchemaStorageNamingStrategies._
 

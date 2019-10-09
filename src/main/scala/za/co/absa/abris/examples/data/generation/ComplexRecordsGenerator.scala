@@ -21,7 +21,6 @@ import java.nio.ByteBuffer
 
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.Row
-import za.co.absa.abris.avro.parsing.AvroToSparkParser
 
 import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
 import scala.collection.{Map, Seq, immutable, mutable}
@@ -38,7 +37,6 @@ object ComplexRecordsGenerator {
                   map: Map[String, java.util.ArrayList[Long]])
 
   private val plainSchema = TestSchemas.NATIVE_COMPLETE_SCHEMA
-  private val avroParser = new AvroToSparkParser()
   private val random = new Random()
 
   def usedAvroSchema = plainSchema
@@ -72,7 +70,7 @@ object ComplexRecordsGenerator {
       "double" -> new Double(random.nextDouble()),
       "float" -> new Float(random.nextFloat()),
       "boolean" -> new Boolean(random.nextBoolean()),
-      "array" -> randomListOfStrings(10, 15),      
+      "array" -> randomListOfStrings(10, 15),
       "map" -> map.asJava,
       "fixed" -> new FixedString(randomString(40)))
   }
@@ -89,29 +87,9 @@ object ComplexRecordsGenerator {
       new Double(random.nextDouble()),
       new Float(random.nextFloat()),
       new Boolean(random.nextBoolean()),
-      randomSeqOfStrings(10, 15),            
+      randomSeqOfStrings(10, 15),
       map,
       new FixedString(randomString(40)).bytes())
-  }
-
-  def lazilyGenerateRows(howMany: Int): List[Row] = {
-    lazilyConvertToRows(generateRecords(howMany))
-  }
-
-  def eagerlyGenerateRows(howMany: Int): List[Row] = {
-    eagerlyConvertToRows(generateRecords(howMany))
-  }
-
-  def lazilyConvertToBeans(records: List[GenericRecord]): List[Bean] = {
-    records.toStream.map(record => recordToBean(record)).toList
-  }
-
-  def eagerlyConvertToRows(records: List[GenericRecord]): List[Row] = {
-    records.map(record => avroParser.parse(record))
-  }
-
-  def lazilyConvertToRows(records: List[GenericRecord]): List[Row] = {
-    records.toStream.map(record => avroParser.parse(record)).toList
   }
 
   private def randomListOfLongs(listSize: Int) = {
@@ -121,11 +99,11 @@ object ComplexRecordsGenerator {
     }
     new java.util.ArrayList(array.toList.asJava)
   }
-  
+
   private def randomSeqOfLongs(listSize: Int) = {
     randomListOfLongs(listSize).asScala.toSeq
   }
-  
+
   private def randomListOfStrings(listSize: Int, stringLength: Int) = {
     val array = new Array[String](listSize)
     for (i <- 0 until listSize) {
@@ -135,15 +113,15 @@ object ComplexRecordsGenerator {
   }
 
   private def randomSeqOfStrings(listSize: Int, stringLength: Int) = {
-    randomListOfStrings(listSize, stringLength).asScala.toSeq    
-  }  
-  
+    randomListOfStrings(listSize, stringLength).asScala.toSeq
+  }
+
   private def randomString(length: Int): String = {
     val randomStream: Stream[Char] = Random.alphanumeric
     randomStream.take(length).mkString
   }
 
-  private def recordToBean(record: GenericRecord): Bean = {    
+  private def recordToBean(record: GenericRecord): Bean = {
     new Bean(
       record.get("bytes").toString().getBytes(),
       record.get("string").asInstanceOf[String],
