@@ -24,6 +24,7 @@ import org.apache.spark.internal.Logging
 import za.co.absa.abris.avro.subject.SubjectNameStrategyAdapterFactory
 
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
 /**
   * This object provides methods to integrate with remote schemas through Schema Registry.
@@ -62,24 +63,24 @@ object SchemaManager extends Logging {
     *
     * This method returns the subject name based on the topic and to which part of the message it corresponds.
     */
-  def getSubjectName(topic: String, isKey: Boolean, schema: Schema, params: Map[String, String]): Option[String] = {
+  def getSubjectName(topic: String, isKey: Boolean, schema: Schema, params: Map[String, String]): String = {
     val adapter = getSubjectNamingStrategyAdapter(isKey, params)
 
     if (adapter.validate(schema)) {
       val subjectName = adapter.subjectName(topic, isKey, schema)
       logInfo(s"Subject name resolved to: $subjectName")
-      Some(subjectName)
+      subjectName
     }
     else {
-      logError(s"Invalid configuration for naming strategy. Are you using RecordName or TopicRecordName? " +
+      throw new SchemaManagerException(
+        s"Invalid configuration for naming strategy. Are you using RecordName or TopicRecordName? " +
         s"If yes, are you providing SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY and " +
         s"SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY in the configuration map?")
-      None
     }
   }
 
   def getSubjectName(topic: String, isKey: Boolean, schemaNameAndSpace: (String,String), params: Map[String, String]):
-      Option[String] = {
+      String = {
     val (name, namespace) = schemaNameAndSpace
     getSubjectName(topic, isKey, Schema.createRecord(name, "", namespace, false), params)
   }
@@ -99,94 +100,54 @@ object SchemaManager extends Logging {
   }
 
   /**
-    * Configures the Schema Registry client.
-    * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
-    */
-  def configureSchemaRegistry(configs: Map[String,String]): Unit = {
-    if (configs.nonEmpty) {
-      configureSchemaRegistry(new KafkaAvroDeserializerConfig(configs.asJava))
-    }
-  }
-
-  /**
     * Retrieves an Avro Schema instance from a given subject and stored with a given id.
-    * It will return None if the Schema Registry client is not configured.
     */
-  def getBySubjectAndId(subject: String, id: Int): Option[Schema] = {
+  def getBySubjectAndId(subject: String, id: Int): Schema = {
     logDebug(s"Trying to get schema for subject '$subject' and id '$id'")
-    if (isSchemaRegistryConfigured) {
-      try {
-        Some(schemaRegistryClient.getBySubjectAndId(subject, id))
-      }
-      catch {
-        case e: Exception =>
-          logError(s"Could not get schema for subject '$subject' and id '$id'", e)
-          None
-      }
-    }
-    else {
-      logWarning(s"Schema Registry not configured. Returning None for subject '$subject' and id '$id'")
-      None
+    throwIfClientNotConfigured
+
+    Try(schemaRegistryClient.getBySubjectAndId(subject, id)) match {
+      case Success(schema)  => schema
+      case Failure(e)   => throw new SchemaManagerException(
+        s"Could not get schema for subject '$subject' and id '$id'", e)
     }
   }
 
   /**
     * Retrieves an Avro [[SchemaMetadata]] instance from a given subject and stored with a given version.
-    * It will return None if the Schema Registry client is not configured.
     */
-  def getBySubjectAndVersion(subject: String, version: Int): Option[SchemaMetadata] = {
+  def getBySubjectAndVersion(subject: String, version: Int): SchemaMetadata = {
     logDebug(s"Trying to get schema for subject '$subject' and version '$version'")
-    if (isSchemaRegistryConfigured) {
-      try {
-        Some(schemaRegistryClient.getSchemaMetadata(subject, version))
-      }
-      catch {
-        case e: Exception =>
-          logError(s"Could not get schema metadata for subject '$subject' and version '$version'", e)
-          None
-      }
-    }
-    else {
-      logWarning(s"Schema Registry not configured. Returning None for subject '$subject' and version '$version'")
-      None
+    throwIfClientNotConfigured
+
+    Try(schemaRegistryClient.getSchemaMetadata(subject, version)) match {
+      case Success(id)  => id
+      case Failure(e)   => throw new SchemaManagerException(
+        s"Could not get schema metadata for subject '$subject' and version '$version'", e)
     }
   }
 
-  def getById(id: Int): Option[Schema] = {
+  def getById(id: Int): Schema = {
     logInfo(s"Trying to get schema for id '$id'")
-    if (isSchemaRegistryConfigured) {
-      try {
-        Some(schemaRegistryClient.getById(id))
-      }
-      catch {
-        case e: Exception =>
-          throw new Exception(s"Could not get schema for id '$id'", e)
-      }
-    }
-    else {
-      logWarning(s"Schema Registry not configured. Returning None as schema for id '$id'")
-      throw new IllegalStateException(s"Schema Registry not configured. Returning None as schema for id '$id'")
+    throwIfClientNotConfigured
+
+    Try(schemaRegistryClient.getById(id)) match {
+      case Success(id)  => id
+      case Failure(e)   => throw new SchemaManagerException(s"Could not get schema for id '$id'", e)
     }
   }
 
   /**
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
     */
-  def getLatestVersionId(subject: String): Option[Int] = {
+  def getLatestVersionId(subject: String): Int = {
     logInfo(s"Trying to get latest schema version id for subject '$subject'")
-    if (isSchemaRegistryConfigured) {
-      try {
-        Some(schemaRegistryClient.getLatestSchemaMetadata(subject).getId)
-      }
-      catch {
-        case e: Exception =>
-          logError(s"Could not get the id of the latest version for subject '$subject'", e)
-          None
-      }
-    }
-    else {
-      logWarning(s"Schema Registry not configured. Returning None for subject '$subject'")
-      None
+    throwIfClientNotConfigured
+
+    Try(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) match {
+      case Success(id)  => id
+      case Failure(e)   => throw new SchemaManagerException(
+        s"Could not get the id of the latest version for subject '$subject'", e)
     }
   }
 
@@ -195,14 +156,32 @@ object SchemaManager extends Logging {
     *
     * Afterwards the schema can be identified by this id.
     */
-  def register(schema: Schema, subject: String): Option[Int] = {
-    if (isSchemaRegistryConfigured) Some(schemaRegistryClient.register(subject, schema)) else None
+  def register(schema: Schema, subject: String): Int = {
+    throwIfClientNotConfigured
+    schemaRegistryClient.register(subject, schema)
   }
 
   /**
     * Checks if SchemaRegistry has been configured, i.e. if it is null
     */
   def isSchemaRegistryConfigured: Boolean = schemaRegistryClient != null
+
+  private def throwIfClientNotConfigured: Unit = {
+    if(!isSchemaRegistryConfigured) {
+      throw new SchemaManagerException(s"Schema registry client not configured!")
+    }
+  }
+
+
+  /**
+   * Configures the Schema Registry client.
+   * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
+   */
+  def configureSchemaRegistry(configs: Map[String,String]): Unit = {
+    if (configs.nonEmpty) {
+      configureSchemaRegistry(new KafkaAvroDeserializerConfig(configs.asJava))
+    }
+  }
 
   /**
     * Configures the Schema Registry client.
@@ -245,6 +224,8 @@ object SchemaManager extends Logging {
     * Checks if a given schema exists in Schema Registry.
     */
   def exists(subject: String): Boolean = {
+    throwIfClientNotConfigured
+
     try {
       schemaRegistryClient.getLatestSchemaMetadata(subject)
       true
@@ -257,8 +238,8 @@ object SchemaManager extends Logging {
         else {
           logError(s"Problems found while retrieving metadata for subject '$subject'", e)
         }
-      }
         false
+      }
     }
   }
 
@@ -266,4 +247,8 @@ object SchemaManager extends Logging {
     * Resets this manager to its initial state, before being configured.
     */
   def reset(): Unit = schemaRegistryClient = null
+}
+
+class SchemaManagerException(msg: String, throwable: Throwable) extends RuntimeException(msg, throwable) {
+  def this(msg: String) = this(msg, null)
 }

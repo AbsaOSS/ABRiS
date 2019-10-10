@@ -52,8 +52,8 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
       SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME,
       SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
     )
-    assert(subject + "-value" == SchemaManager.getSubjectName(subject, isKey = false, (null, null), conf).get)
-    assert(subject + "-key" == SchemaManager.getSubjectName(subject, isKey = true, (null, null), conf).get)
+    assert(subject + "-value" == SchemaManager.getSubjectName(subject, isKey = false, (null, null), conf))
+    assert(subject + "-key" == SchemaManager.getSubjectName(subject, isKey = true, (null, null), conf))
   }
 
   it should "retrieve the correct subject name for RecordName strategy" in {
@@ -67,13 +67,13 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     val schemaNamespace = "schema_namespace"
 
     assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      subject, isKey = false, (schemaName, schemaNamespace), conf).get)
+      subject, isKey = false, (schemaName, schemaNamespace), conf))
 
     assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      subject, isKey = true, (schemaName, schemaNamespace), conf).get)
+      subject, isKey = true, (schemaName, schemaNamespace), conf))
   }
 
-  it should "retrieve None for RecordName strategy if schema is null" in {
+  it should "throw SchemaManagerException when getting RecordName strategy if schema is null" in {
     val subject = "a_subject"
     val conf = Map(
       SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
@@ -83,8 +83,11 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     val schemaName = null
     val schemaNamespace = "namespace"
 
-    assert(SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
-    assert(SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
+    assertThrows[SchemaManagerException](
+      SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
+
+    assertThrows[SchemaManagerException](
+      SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
   }
 
   it should "retrieve the correct subject name for TopicRecordName strategy" in {
@@ -98,13 +101,13 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     val schemaNamespace = "schema_namespace"
 
     assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      topic, isKey = false, (schemaName, schemaNamespace), conf).get)
+      topic, isKey = false, (schemaName, schemaNamespace), conf))
 
     assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      topic, isKey = true, (schemaName, schemaNamespace), conf).get)
+      topic, isKey = true, (schemaName, schemaNamespace), conf))
   }
 
-  it should "retrieve None for TopicRecordName strategy if schema is null" in {
+  it should "throw when getting TopicRecordName strategy if schema is null" in {
     val subject = "a_subject"
     val conf = Map(
       SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
@@ -114,8 +117,11 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     val schemaName = null
     val schemaNamespace = "namespace"
 
-    assert(SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
-    assert(SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
+    assertThrows[SchemaManagerException](
+      SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
+
+    assertThrows[SchemaManagerException](
+      SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
   }
 
   it should "not try to configure Schema Registry client if parameters are empty" in {
@@ -123,16 +129,16 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     assertResult(false) {SchemaManager.isSchemaRegistryConfigured} // should still be unconfigured
   }
 
-  it should "return None as schema if Schema Registry client is not configured" in {
-    assertResult(None) {SchemaManager.getBySubjectAndId("subject", 1)}
+  it should "throw when getting subject and id if Schema Registry client is not configured" in {
+    assertThrows[SchemaManagerException] {SchemaManager.getBySubjectAndId("subject", 1)}
   }
 
-  it should "return None as latest version if Schema Registry client is not configured" in {
-    assertResult(None) {SchemaManager.getLatestVersionId("subject")}
+  it should "throw when getting latest id if Schema Registry client is not configured" in {
+    assertThrows[SchemaManagerException] {SchemaManager.getLatestVersionId("subject")}
   }
 
-  it should "return None as registered schema id if Schema Registry client is not configured" in {
-    assertResult(None) {SchemaManager.register(schema, "subject")}
+  it should "throw when registering schema if Schema Registry client is not configured" in {
+    assertThrows[SchemaManagerException] {SchemaManager.register(schema, "subject")}
   }
 
   it should "throw IllegalArgumentException if cluster address is empty or null" in {

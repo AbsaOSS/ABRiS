@@ -97,18 +97,15 @@ object AvroSchemaUtils {
 
     configureSchemaManager(schemaRegistryConf)
 
-    SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf) match {
-      case Some(subject) => {
-        if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
-          logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
-          SchemaManager.register(schema, subject)
-        }
-        else {
-          logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
-          None
-        }
-      }
-      case None => None
+    val subject = SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf)
+
+    if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
+      logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
+      Some(SchemaManager.register(schema, subject))
+    }
+    else {
+      logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
+      None
     }
   }
 
