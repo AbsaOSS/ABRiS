@@ -126,6 +126,36 @@ def readAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): D
 ```
 The only difference is the expression name.
 
+```Pyspark
+This section will provide sample guide to call deserlize api for confluent kafka. As from python we need to convert python object into JVM object, 
+we need to some extra step to call this scala api.
+
+
+import logging, traceback
+import requests
+from pyspark.sql import Column
+from pyspark.sql.column import *
+
+    
+        jvm_gateway = spark_context._gateway.jvm
+        abris_avro  = jvm_gateway.za.co.absa.abris.avro
+        naming_strategy = getattr(getattr(abris_avro.read.confluent.SchemaManager, "SchemaStorageNamingStrategies$"),
+                                  "MODULE$").TOPIC_NAME()        
+
+        schema_registry_config_dict = {"schema.registry.url": schema_registry_url,
+                                       "schema.registry.topic": topic,
+                                       "value.schema.id": "latest",
+                                       "value.schema.naming.strategy": naming_strategy}
+
+        conf_map = getattr(getattr(jvm_gateway.scala.collection.immutable.Map, "EmptyMap$"), "MODULE$")
+        for k, v in schema_registry_config_dict.items():
+          conf_map = getattr(conf, "$plus")(jvm_gateway.scala.Tuple2(k, v))
+        
+        deserialized_df = data_frame.select(
+            Column(abris_avro.functions.from_confluent_avro(data_frame._jdf.col("value"), conf_map))
+                .alias("data")).select("data.*")
+                
+        
 ### Reading Confluent Avro binary records using Schema Registry for key and value
 In a case that we are sending the Avro data using Kafka we may want to serialize both the key and the value of Kafka message.
 The serialization of Avro data is not really different when we are doing it for key or for value, but Schema Registry handle each of them slightly differently.
