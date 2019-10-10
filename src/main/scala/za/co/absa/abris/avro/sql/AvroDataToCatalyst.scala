@@ -32,6 +32,7 @@ import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManager}
 
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 case class AvroDataToCatalyst(
    child: Expression,
@@ -106,7 +107,10 @@ case class AvroDataToCatalyst(
 
   private def getWriterSchema(id: Int): Schema = {
     SchemaManager.configureSchemaRegistry(schemaRegistryConf.get)
-    SchemaManager.getById(id).get
+    Try(SchemaManager.getById(id)) match {
+      case Success(schema)  => schema
+      case Failure(e)       => throw new RuntimeException("Not able to load writer schema", e)
+    }
   }
 
   private def decodeVanillaAvro(payload: Array[Byte]): Any = {

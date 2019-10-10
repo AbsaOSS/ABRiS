@@ -76,20 +76,9 @@ object SchemaLoader {
     val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
-    if (subject.isEmpty) {
-      throw new IllegalArgumentException(s"Could not load subject for topic = " +
-        s"'$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
-    }
 
-    val id = getSchemaId(schemaSpecifiedId, subject.get)
-    val schema = SchemaManager.getBySubjectAndId(subject.get, id)
-    if (schema.isDefined) {
-      schema.get
-    }
-    else {
-      throw new IllegalArgumentException(s"Could not load schema for topic = " +
-        s"'$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
-    }
+    val id = getSchemaId(schemaSpecifiedId, subject)
+    SchemaManager.getBySubjectAndId(subject, id)
   }
 
   private def loadFromSchemaRegistry(
@@ -102,16 +91,7 @@ object SchemaLoader {
     val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
-    if (subject.isEmpty) {
-      throw new IllegalArgumentException(s"Could not load subject for topic = " +
-        s"'$topic', version = '$version', isKey = '$isKey' and params = '$params'")
-    }
-    SchemaManager
-        .getBySubjectAndVersion(subject.get, version)
-        .getOrElse(
-      throw new IllegalArgumentException(s"Could not load schema for topic = " +
-        s"'$topic', version = '$version', isKey = '$isKey' and params = '$params'")
-    )
+    SchemaManager.getBySubjectAndVersion(subject, version)
   }
 
   private def configureSchemaManager(params: Map[String,String]): Unit = {
@@ -122,14 +102,7 @@ object SchemaLoader {
 
   private def getSchemaId(paramId: String, subject: String): Int = {
     if (paramId == SchemaManager.PARAM_SCHEMA_ID_LATEST_NAME) {
-      val latest = SchemaManager.getLatestVersionId(subject)
-      if (latest.isDefined) {
-        latest.get
-      }
-      else {
-        throw new IllegalArgumentException(s"Could not find schema for subject '$subject'. " +
-          s"Are you sure Schema Registry is running and the subject exists?")
-      }
+      SchemaManager.getLatestVersionId(subject)
     }
     else {
       paramId.toInt
