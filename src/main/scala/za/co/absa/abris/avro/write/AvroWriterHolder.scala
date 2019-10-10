@@ -26,19 +26,19 @@ import org.apache.avro.io.{BinaryEncoder, DatumWriter, Encoder, EncoderFactory}
  * Holds an Avro writer. Convenient for encapsulating logic behind object reuse.
  */
 class AvroWriterHolder {
-     
-  def getWriter(schema: Schema): DatumWriter[IndexedRecord] = {    
+
+  def getWriter(schema: Schema): DatumWriter[IndexedRecord] = {
     this.writer.setSchema(schema)
     this.writer
   }
-  
-  def getEncoder(outStream: ByteArrayOutputStream): Encoder = {       
-    if (encoder == null) {     
+
+  def getEncoder(outStream: ByteArrayOutputStream): Encoder = {
+    if (encoder == null) {
      encoder = EncoderFactory.get().binaryEncoder(outStream, null)
     }
     EncoderFactory.get().binaryEncoder(outStream, encoder)
   }
-    
+
   private val writer = new ScalaCustomDatumWriter[IndexedRecord]()
-  private var encoder: BinaryEncoder = null  
+  private var encoder: BinaryEncoder = null
 }

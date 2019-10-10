@@ -23,16 +23,18 @@ import org.apache.avro.generic.{GenericData, GenericRecord, IndexedRecord}
 import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.types._
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.{AvroDataUtils, TestSchemas}
 
 import scala.collection.JavaConverters._
 import scala.collection._
 
-class SparkAvroConversionsSpec extends FlatSpec {
+class SparkAvroConversionsSpec extends FlatSpec with Matchers {
 
-    private val structType = StructType(
+  // scalastyle:off magic.number
+
+  private val structType = StructType(
       Seq(
         StructField("int1", IntegerType, false),
         StructField("long1", LongType, false),
@@ -73,29 +75,14 @@ class SparkAvroConversionsSpec extends FlatSpec {
 
     assert(parsedRecord.toString() == record.toString())
   }
-/*
-  it should "convert Rows to Avro binary records" in {
-    val map = Map("key" -> 3)
-    val array: mutable.ListBuffer[Any] = new mutable.ListBuffer()
-    array.append(4l)
-    array.append(5l)
 
-    val data: Array[Any] = Array(1, 2l, map, array, Row("st1", "st2"), 6d, Row(7, 8f), Array[Byte](42, 8, 9, 6))
-    val row = new GenericRowWithSchema(data, structType)
-    val avroSchema = SparkAvroConversions.toAvroSchema(structType, "name", "namespace")
-    val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    val rowBytes = SparkAvroConversions.rowToBinaryAvro(row, sparkSchema, avroSchema)
-    val record: GenericRecord = parse(rowBytes, avroSchema).asInstanceOf[GenericRecord]
-    for (i <- 0 until (data.length -1)) assert(record.get(i) == data(i))
-    assert(record.get(7).asInstanceOf[Array[Byte]].sameElements(data(7).asInstanceOf[Array[Byte]]))
-  }
-*/
   it should "convert Avro schemas to SQL types" in {
     val schema = AvroSchemaUtils.parse(TestSchemas.COMPLEX_SCHEMA_SPEC)
     val sql = SparkAvroConversions.toSqlType(schema)
     val schemaFromSql = SparkAvroConversions.toAvroSchema(sql, schema.getName, schema.getNamespace)
 
-    schema.getFields.asScala.foreach(field => assert(schema.getField(field.name).toString == schemaFromSql.getField(field.name).toString))
+    schema.getFields.asScala.foreach(field =>
+      assert(schema.getField(field.name).toString == schemaFromSql.getField(field.name).toString))
   }
 
   it should "convert SQL types to Avro schemas" in {
@@ -161,12 +148,9 @@ class SparkAvroConversionsSpec extends FlatSpec {
   }
 
   private def parse(bytes: Array[Byte], schema: Schema): IndexedRecord = {
-    /*
-    val decoder = DecoderFactory.get().binaryDecoder(bytes, null)
-    val reader = new ScalaDatumReader[IndexedRecord](schema)
-    reader.read(null, decoder)
-     */
 
     AvroDataUtils.bytesToRecord(bytes, schema)
   }
+
+  // scalastyle:on magic.number
 }

@@ -30,6 +30,7 @@ import scala.util.Random
  * This class provides methods to generate example/test data.
  * Not part of the library core.
  */
+// scalastyle:off magic.number
 object ComplexRecordsGenerator {
 
   case class Bean(bytes: Array[scala.Byte], string: String, int: Int, long: Long, double: Double,
@@ -39,7 +40,7 @@ object ComplexRecordsGenerator {
   private val plainSchema = TestSchemas.NATIVE_COMPLETE_SCHEMA
   private val random = new Random()
 
-  def usedAvroSchema = plainSchema
+  def usedAvroSchema: String = plainSchema
 
   def generateRecords(howMany: Int): List[GenericRecord] = {
     val result = new Array[GenericRecord](howMany)
@@ -101,7 +102,7 @@ object ComplexRecordsGenerator {
   }
 
   private def randomSeqOfLongs(listSize: Int) = {
-    randomListOfLongs(listSize).asScala.toSeq
+    randomListOfLongs(listSize).asScala
   }
 
   private def randomListOfStrings(listSize: Int, stringLength: Int) = {
@@ -113,25 +114,12 @@ object ComplexRecordsGenerator {
   }
 
   private def randomSeqOfStrings(listSize: Int, stringLength: Int) = {
-    randomListOfStrings(listSize, stringLength).asScala.toSeq
+    randomListOfStrings(listSize, stringLength).asScala
   }
 
   private def randomString(length: Int): String = {
     val randomStream: Stream[Char] = Random.alphanumeric
     randomStream.take(length).mkString
   }
-
-  private def recordToBean(record: GenericRecord): Bean = {
-    new Bean(
-      record.get("bytes").toString().getBytes(),
-      record.get("string").asInstanceOf[String],
-      record.get("int").asInstanceOf[Int],
-      record.get("long").asInstanceOf[Long],
-      record.get("double").asInstanceOf[Double],
-      record.get("float").asInstanceOf[Float],
-      record.get("boolean").asInstanceOf[Boolean],
-      record.get("array").asInstanceOf[mutable.ListBuffer[Any]],
-      record.get("fixed").toString().getBytes,
-      record.get("map").asInstanceOf[Map[String, java.util.ArrayList[Long]]])
-  }
 }
+// scalastyle:on magic.number

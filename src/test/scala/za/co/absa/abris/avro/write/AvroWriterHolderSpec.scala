@@ -21,10 +21,10 @@ import java.io.ByteArrayOutputStream
 import org.scalatest.FlatSpec
 
 class AvroWriterHolderSpec extends FlatSpec {
-  
+
   behavior of "AvroWriterHolder"
 
-  it should "reuse Encoders" in {    
+  it should "reuse Encoders" in {
     val holder = new AvroWriterHolder()
     val encoder = holder.getEncoder(new ByteArrayOutputStream())
     assert(encoder == holder.getEncoder(new ByteArrayOutputStream()))

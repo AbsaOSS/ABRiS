@@ -63,11 +63,13 @@ class SubjectNameStrategyAdapterSpec extends FlatSpec {
   }
 
   it should "invoke TopicRecordNameStragey for value" in {
-    assert(s"$topic-${avroSchema.getFullName}" == topicRecordNameAdapter.subjectName(topic, false, avroSchema))
+    assert(s"$topic-${avroSchema.getFullName}" == topicRecordNameAdapter.subjectName(
+      topic, false, avroSchema))
   }
 
   it should "invoke TopicRecordNameStragey for key" in {
-    assert(s"$topic-${avroSchema.getFullName}" == topicRecordNameAdapter.subjectName(topic, true, avroSchema))
+    assert(s"$topic-${avroSchema.getFullName}" == topicRecordNameAdapter.subjectName(
+      topic, true, avroSchema))
   }
 
   private def caseClassToSparkSchema: StructType = Encoders.product[ClassForSchema].schema

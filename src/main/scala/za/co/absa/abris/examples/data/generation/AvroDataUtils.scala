@@ -39,7 +39,8 @@ object AvroDataUtils {
   }
 
   def mapToGenericRecord(data: Map[String, Object], schema: String): GenericRecord = {
-    passRecordThroughAvroApi(mapToGenericRecordDirectly(data, schema)) // so that we have the proper data types added to each record field
+    // so that we have the proper data types added to each record field
+    passRecordThroughAvroApi(mapToGenericRecordDirectly(data, schema))
   }
 
   private def getRecordBuilder(schema: String): GenericRecordBuilder = {

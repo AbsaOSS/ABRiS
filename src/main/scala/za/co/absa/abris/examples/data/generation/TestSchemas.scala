@@ -23,7 +23,9 @@ package za.co.absa.abris.examples.data.generation
  */
 object TestSchemas {
 
-  case class ErrorMessage(errType: String, errCode: String, errMsg: String, errCol: String, rawValues: Seq[String], mappings: Seq[Mapping] = Seq())
+  case class ErrorMessage(errType: String, errCode: String, errMsg: String, errCol: String, rawValues: Seq[String],
+                          mappings: Seq[Mapping] = Seq())
+
   case class Mapping(mappingTableColumn: String, mappedDatasetColumn: String)
 
   val NATIVE_SIMPLE_OUTER_SCHEMA = """{
@@ -47,20 +49,20 @@ object TestSchemas {
 
   val NATIVE_SIMPLE_NESTED_SCHEMA = """{
      "namespace": "all-types.test",
-     "type":"record",  
-      "name":"nested", 
+     "type":"record",
+      "name":"nested",
       "fields":
 				  [
 					  {"name":"int", "type":"int"},
 					  {"name":"long","type":"long"}
-					]				 				     
+					]
   }"""
 
   val NATIVE_COMPLETE_SCHEMA = """{
      "namespace": "all-types.test",
      "type": "record",
      "name": "native_complete",
-     "fields":[                  
+     "fields":[
          {"name": "bytes", "type": "bytes" },
          { "name": "string",      "type": ["string", "null"], "default":"blue" },
          { "name": "int",         "type": ["int",    "null"] },
@@ -95,7 +97,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "native",
-     "fields":[                  
+     "fields":[
          { "name": "string",      "type": ["string", "null"] },
          { "name": "int",         "type": ["int",    "null"] },
          { "name": "long",        "type": ["long",   "null"] },
@@ -109,7 +111,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "array",
-     "fields":[                  
+     "fields":[
  		     { "name": "array", "type": {"type": "array", "items": "string"} }
      ]
   }"""
@@ -118,7 +120,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "map",
-     "fields":[                  
+     "fields":[
  		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
      ]
   }"""
@@ -127,7 +129,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "bytes",
-     "fields":[                  
+     "fields":[
  		     {"name": "bytes", "type": "bytes" }
      ]
   }"""
@@ -136,7 +138,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "fixed_name",
-     "fields":[                  
+     "fields":[
  		     {"name": "fixed", "type": {"type": "fixed", "size": 13, "name": "fixed"}}
      ]
   }"""
@@ -145,7 +147,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "decimal",
-     "fields":[                  
+     "fields":[
  		     {"name": "decimal", "type": {"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2}}
      ]
   }"""
@@ -154,7 +156,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "date",
-     "fields":[                  
+     "fields":[
  		     {"name": "date", "type": {"type": "int", "logicalType": "date"}}
      ]
   }"""
@@ -163,7 +165,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "millisecond",
-     "fields":[                  
+     "fields":[
  		     {"name": "millisecond", "type": {"type": "int", "logicalType": "time-millis"}}
      ]
   }"""
@@ -172,7 +174,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "microsecond",
-     "fields":[                  
+     "fields":[
  		     {"name": "microsecond", "type": {"type": "long", "logicalType": "time-micros"}}
      ]
   }"""
@@ -181,7 +183,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "timestamp_millis",
-     "fields":[                  
+     "fields":[
  		     {"name": "timestampMillis", "type": {"type": "long", "logicalType": "timestamp-millis"}}
      ]
   }"""
@@ -190,7 +192,7 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "timestamp_micros",
-     "fields":[                  
+     "fields":[
  		     {"name": "timestampMicros", "type": {"type": "long", "logicalType": "timestamp-micros"}}
      ]
   }"""
@@ -199,12 +201,12 @@ object TestSchemas {
      "namespace": "all-types.test",
      "type": "record",
      "name": "duration_micros",
-     "fields":[                  
+     "fields":[
  		     {"name": "duration", "type": {"type": "fixed", "size": 12, "name": "name", "logicalType": "duration"}}
      ]
   }"""
 
-  val COMPLEX_SCHEMA_SPEC = """{	
+  val COMPLEX_SCHEMA_SPEC = """{
 	"type":"record",
 	"name":"complex",
 	"namespace":"all-types.test",
@@ -244,7 +246,7 @@ object TestSchemas {
 	]
   }"""
 
-  val COMPLEX_SCHEMA_STREET_SPEC = """		
+  val COMPLEX_SCHEMA_STREET_SPEC = """
 	  {
 	    "namespace":"test_city",
 	    "type":"record",
@@ -253,11 +255,11 @@ object TestSchemas {
   		[
 	  	  {"name":"name","type":"string"},
 		  	{"name":"zip","type":"string"}
-		  ]		
+		  ]
     }"""
 
   val COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC = """
-  { 
+  {
     "namespace":"test_neighborhood",
     "type":"record",
     "name":"Neighborhood",
@@ -284,7 +286,7 @@ object TestSchemas {
 	}"""
 
   val COMPLEX_SCHEMA_CITY_SPEC = """
-    {	
+    {
       "namespace":"test_city",
       "type":"record",
       "name":"City",
@@ -324,56 +326,56 @@ object TestSchemas {
 		}"""
 
   val CASE_CLASSES_SCHEMA = """
-  {  
+  {
    "type":"record",
    "name":"name",
    "namespace":"namespace",
-   "fields":[  
-      {  
+   "fields":[
+      {
          "name":"errCol",
-         "type":[  
-            {  
+         "type":[
+            {
                "type":"array",
-               "items":[  
-                  {  
+               "items":[
+                  {
                      "type":"record",
                      "name":"errCol",
                      "namespace":"namespace.errCol",
-                     "fields":[  
-                        {  
+                     "fields":[
+                        {
                            "name":"errType",
-                           "type":[  
+                           "type":[
                               "string",
                               "null"
                            ]
                         },
-                        {  
+                        {
                            "name":"errCode",
-                           "type":[  
+                           "type":[
                               "string",
                               "null"
                            ]
                         },
-                        {  
+                        {
                            "name":"errMsg",
-                           "type":[  
+                           "type":[
                               "string",
                               "null"
                            ]
                         },
-                        {  
+                        {
                            "name":"errCol",
-                           "type":[  
+                           "type":[
                               "string",
                               "null"
                            ]
                         },
-                        {  
+                        {
                            "name":"rawValues",
-                           "type":[  
-                              {  
+                           "type":[
+                              {
                                  "type":"array",
-                                 "items":[  
+                                 "items":[
                                     "string",
                                     "null"
                                  ]
@@ -381,27 +383,27 @@ object TestSchemas {
                               "null"
                            ]
                         },
-                        {  
+                        {
                            "name":"mappings",
-                           "type":[  
-                              {  
+                           "type":[
+                              {
                                  "type":"array",
-                                 "items":[  
-                                    {  
+                                 "items":[
+                                    {
                                        "type":"record",
                                        "name":"mappings",
                                        "namespace":"namespace.errCol.mappings",
-                                       "fields":[  
-                                          {  
+                                       "fields":[
+                                          {
                                              "name":"mappingTableColumn",
-                                             "type":[  
+                                             "type":[
                                                 "string",
                                                 "null"
                                              ]
                                           },
-                                          {  
+                                          {
                                              "name":"mappedDatasetColumn",
-                                             "type":[  
+                                             "type":[
                                                 "string",
                                                 "null"
                                              ]
@@ -423,6 +425,6 @@ object TestSchemas {
          ]
       }
    ]
-}    
+}
     """
 }
