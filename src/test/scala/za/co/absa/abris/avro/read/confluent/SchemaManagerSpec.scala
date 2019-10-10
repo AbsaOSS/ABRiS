@@ -17,13 +17,14 @@
 package za.co.absa.abris.avro.read.confluent
 
 import io.confluent.common.config.ConfigException
-import org.apache.avro.Schema
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 
 class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
 
-  private val schema = AvroSchemaUtils.parse("{\"type\": \"record\", \"name\": \"Blah\", \"fields\": [{ \"name\": \"name\", \"type\": \"string\" }]}")
+  private val schema = AvroSchemaUtils.parse(
+    "{\"type\": \"record\", \"name\": \"Blah\", \"fields\": [{ \"name\": \"name\", \"type\": \"string\" }]}")
+
   behavior of "SchemaManager"
 
   before {
@@ -34,8 +35,12 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
   it should "throw if no strategy is specified" in {
     val topic = "a_subject"
     val conf = Map[String,String]()
-    val message1 = intercept[IllegalArgumentException] {SchemaManager.getSubjectName(topic, isKey = false, (null, null), conf)}
-    val message2 = intercept[IllegalArgumentException] {SchemaManager.getSubjectName(topic, isKey = true, (null, null), conf)}
+    val message1 = intercept[IllegalArgumentException] {
+      SchemaManager.getSubjectName(topic, isKey = false, (null, null), conf)
+    }
+    val message2 = intercept[IllegalArgumentException] {
+      SchemaManager.getSubjectName(topic, isKey = true, (null, null), conf)
+    }
 
     assert(message1.getMessage.contains("not specified"))
     assert(message2.getMessage.contains("not specified"))
@@ -61,8 +66,11 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     val schemaName = "schema_name"
     val schemaNamespace = "schema_namespace"
 
-    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).get)
-    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).get)
+    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
+      subject, isKey = false, (schemaName, schemaNamespace), conf).get)
+
+    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
+      subject, isKey = true, (schemaName, schemaNamespace), conf).get)
   }
 
   it should "retrieve None for RecordName strategy if schema is null" in {
@@ -89,8 +97,11 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     val schemaName = "schema_name"
     val schemaNamespace = "schema_namespace"
 
-    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(topic, isKey = false, (schemaName, schemaNamespace), conf).get)
-    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(topic, isKey = true, (schemaName, schemaNamespace), conf).get)
+    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
+      topic, isKey = false, (schemaName, schemaNamespace), conf).get)
+
+    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
+      topic, isKey = true, (schemaName, schemaNamespace), conf).get)
   }
 
   it should "retrieve None for TopicRecordName strategy if schema is null" in {

@@ -21,7 +21,6 @@ import java.nio.ByteBuffer
 
 import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.Row
-import za.co.absa.abris.avro.parsing.AvroToSparkParser
 
 import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
 import scala.collection.{Map, Seq, immutable, mutable}
@@ -31,6 +30,7 @@ import scala.util.Random
  * This class provides methods to generate example/test data.
  * Not part of the library core.
  */
+// scalastyle:off magic.number
 object ComplexRecordsGenerator {
 
   case class Bean(bytes: Array[scala.Byte], string: String, int: Int, long: Long, double: Double,
@@ -38,10 +38,9 @@ object ComplexRecordsGenerator {
                   map: Map[String, java.util.ArrayList[Long]])
 
   private val plainSchema = TestSchemas.NATIVE_COMPLETE_SCHEMA
-  private val avroParser = new AvroToSparkParser()
   private val random = new Random()
 
-  def usedAvroSchema = plainSchema
+  def usedAvroSchema: String = plainSchema
 
   def generateRecords(howMany: Int): List[GenericRecord] = {
     val result = new Array[GenericRecord](howMany)
@@ -72,7 +71,7 @@ object ComplexRecordsGenerator {
       "double" -> new Double(random.nextDouble()),
       "float" -> new Float(random.nextFloat()),
       "boolean" -> new Boolean(random.nextBoolean()),
-      "array" -> randomListOfStrings(10, 15),      
+      "array" -> randomListOfStrings(10, 15),
       "map" -> map.asJava,
       "fixed" -> new FixedString(randomString(40)))
   }
@@ -89,29 +88,9 @@ object ComplexRecordsGenerator {
       new Double(random.nextDouble()),
       new Float(random.nextFloat()),
       new Boolean(random.nextBoolean()),
-      randomSeqOfStrings(10, 15),            
+      randomSeqOfStrings(10, 15),
       map,
       new FixedString(randomString(40)).bytes())
-  }
-
-  def lazilyGenerateRows(howMany: Int): List[Row] = {
-    lazilyConvertToRows(generateRecords(howMany))
-  }
-
-  def eagerlyGenerateRows(howMany: Int): List[Row] = {
-    eagerlyConvertToRows(generateRecords(howMany))
-  }
-
-  def lazilyConvertToBeans(records: List[GenericRecord]): List[Bean] = {
-    records.toStream.map(record => recordToBean(record)).toList
-  }
-
-  def eagerlyConvertToRows(records: List[GenericRecord]): List[Row] = {
-    records.map(record => avroParser.parse(record))
-  }
-
-  def lazilyConvertToRows(records: List[GenericRecord]): List[Row] = {
-    records.toStream.map(record => avroParser.parse(record)).toList
   }
 
   private def randomListOfLongs(listSize: Int) = {
@@ -121,11 +100,11 @@ object ComplexRecordsGenerator {
     }
     new java.util.ArrayList(array.toList.asJava)
   }
-  
+
   private def randomSeqOfLongs(listSize: Int) = {
-    randomListOfLongs(listSize).asScala.toSeq
+    randomListOfLongs(listSize).asScala
   }
-  
+
   private def randomListOfStrings(listSize: Int, stringLength: Int) = {
     val array = new Array[String](listSize)
     for (i <- 0 until listSize) {
@@ -135,25 +114,12 @@ object ComplexRecordsGenerator {
   }
 
   private def randomSeqOfStrings(listSize: Int, stringLength: Int) = {
-    randomListOfStrings(listSize, stringLength).asScala.toSeq    
-  }  
-  
+    randomListOfStrings(listSize, stringLength).asScala
+  }
+
   private def randomString(length: Int): String = {
     val randomStream: Stream[Char] = Random.alphanumeric
     randomStream.take(length).mkString
   }
-
-  private def recordToBean(record: GenericRecord): Bean = {    
-    new Bean(
-      record.get("bytes").toString().getBytes(),
-      record.get("string").asInstanceOf[String],
-      record.get("int").asInstanceOf[Int],
-      record.get("long").asInstanceOf[Long],
-      record.get("double").asInstanceOf[Double],
-      record.get("float").asInstanceOf[Float],
-      record.get("boolean").asInstanceOf[Boolean],
-      record.get("array").asInstanceOf[mutable.ListBuffer[Any]],
-      record.get("fixed").toString().getBytes,
-      record.get("map").asInstanceOf[Map[String, java.util.ArrayList[Long]]])
-  }
 }
+// scalastyle:on magic.number

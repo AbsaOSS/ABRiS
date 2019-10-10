@@ -32,8 +32,8 @@ object SchemaLoader {
 
   def loadFromFile(path: String): String = {
     if (path == null) {
-      throw new IllegalArgumentException("Null path informed. Please make sure you provide a valid path to an existing " +
-        "Avro schema located in some file system.")
+      throw new IllegalArgumentException("Null path informed. " +
+        "Please make sure you provide a valid path to an existing Avro schema located in some file system.")
     }
     val hdfs = FileSystem.get(new Configuration())
     val stream = hdfs.open(new Path(path))
@@ -66,13 +66,19 @@ object SchemaLoader {
     loadFromSchemaRegistry(topic, isKey = false, params, version)
   }
 
-  private def loadFromSchemaRegistry(topic: String, schemaSpecifiedId: String, isKey: Boolean, params: Map[String,String]): Schema = {
+  private def loadFromSchemaRegistry(
+    topic: String,
+    schemaSpecifiedId: String,
+    isKey: Boolean,
+    params: Map[String,String]): Schema = {
+
     val schemaName = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
     val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
     if (subject.isEmpty) {
-      throw new IllegalArgumentException(s"Could not load subject for topic = '$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
+      throw new IllegalArgumentException(s"Could not load subject for topic = " +
+        s"'$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
     }
 
     val id = getSchemaId(schemaSpecifiedId, subject.get)
@@ -81,22 +87,30 @@ object SchemaLoader {
       schema.get
     }
     else {
-      throw new IllegalArgumentException(s"Could not load schema for topic = '$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
+      throw new IllegalArgumentException(s"Could not load schema for topic = " +
+        s"'$topic', id = '$schemaSpecifiedId', isKey = '$isKey' and params = '$params'")
     }
   }
 
-  private def loadFromSchemaRegistry(topic: String, isKey: Boolean, params: Map[String,String], version: Int): SchemaMetadata = {
+  private def loadFromSchemaRegistry(
+    topic: String,
+    isKey: Boolean,
+    params: Map[String,String],
+    version: Int): SchemaMetadata = {
+
     val schemaName = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
     val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
     if (subject.isEmpty) {
-      throw new IllegalArgumentException(s"Could not load subject for topic = '$topic', version = '$version', isKey = '$isKey' and params = '$params'")
+      throw new IllegalArgumentException(s"Could not load subject for topic = " +
+        s"'$topic', version = '$version', isKey = '$isKey' and params = '$params'")
     }
     SchemaManager
         .getBySubjectAndVersion(subject.get, version)
         .getOrElse(
-      throw new IllegalArgumentException(s"Could not load schema for topic = '$topic', version = '$version', isKey = '$isKey' and params = '$params'")
+      throw new IllegalArgumentException(s"Could not load schema for topic = " +
+        s"'$topic', version = '$version', isKey = '$isKey' and params = '$params'")
     )
   }
 
@@ -113,7 +127,8 @@ object SchemaLoader {
         latest.get
       }
       else {
-        throw new IllegalArgumentException(s"Could not find schema for subject '$subject'. Are you sure Schema Registry is running and the subject exists?")
+        throw new IllegalArgumentException(s"Could not find schema for subject '$subject'. " +
+          s"Are you sure Schema Registry is running and the subject exists?")
       }
     }
     else {

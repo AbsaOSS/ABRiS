@@ -66,7 +66,8 @@ object AvroSchemaUtils {
     *
     * @return None if incompatible or if could not perform the registration.
     */
-  def registerIfCompatibleKeySchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
+  def registerIfCompatibleKeySchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]):
+  Option[Int] = {
     registerIfCompatibleSchema(topic, schema, schemaRegistryConf, isKey = true)
   }
 
@@ -75,7 +76,11 @@ object AvroSchemaUtils {
     *
     * @return None if incompatible or if could not perform the registration.
     */
-  def registerIfCompatibleValueSchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]): Option[Int] = {
+  def registerIfCompatibleValueSchema(
+    topic: String,
+    schema: Schema,
+    schemaRegistryConf: Map[String,String]): Option[Int] = {
+
     registerIfCompatibleSchema(topic, schema, schemaRegistryConf, isKey = false)
   }
 
@@ -84,7 +89,11 @@ object AvroSchemaUtils {
     *
     * @return None if incompatible or if could not perform the registration.
     */
-  private def registerIfCompatibleSchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String], isKey: Boolean): Option[Int] = {
+  private def registerIfCompatibleSchema(
+    topic: String,
+    schema: Schema,
+    schemaRegistryConf: Map[String,String],
+    isKey: Boolean): Option[Int] = {
 
     configureSchemaManager(schemaRegistryConf)
 

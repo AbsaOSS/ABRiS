@@ -16,7 +16,7 @@
 
 package za.co.absa.abris.avro.subject
 
-import io.confluent.kafka.serializers.subject.{RecordNameStrategy, TopicNameStrategy, TopicRecordNameStrategy}
+import io.confluent.kafka.serializers.subject.TopicNameStrategy
 import io.confluent.kafka.serializers.subject.strategy.SubjectNameStrategy
 import org.apache.avro.Schema
 
