@@ -201,10 +201,6 @@ object SchemaManager extends Logging {
     }
   }
 
-  private def extractURLs(configs: Map[String,String]): java.util.List[String] = {
-    new KafkaAvroDeserializerConfig(configs.asJava).getSchemaRegistryUrls
-  }
-
   /**
     * This class uses [[CachedSchemaRegistryClient]] by default. This method can override the default.
     *
