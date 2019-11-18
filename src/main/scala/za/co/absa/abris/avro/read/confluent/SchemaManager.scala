@@ -177,32 +177,26 @@ object SchemaManager extends Logging {
    * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
    */
   def configureSchemaRegistry(configs: Map[String,String]): Unit = {
-    if (configs.nonEmpty) {
-        if (null == schemaRegistryClient) {
-          val settings = new KafkaAvroDeserializerConfig(configs.asJava)
-
-          val urls = settings.getSchemaRegistryUrls
-          val maxSchemaObject = settings.getMaxSchemasPerSubject
-
-          logInfo(msg = s"Configuring new Schema Registry instance of type " +
-            s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
-
-          try {
-            schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
-
-          } catch {
-            case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
-          }
-        } else {
-          logWarning(msg = "Schema Registry client is already configured.")
-        }
-    } else {
+    if (configs.isEmpty) {
       logWarning(msg = "Asked to configure Schema Registry client but settings map is empty.")
-    }
-  }
+    } else if (null != schemaRegistryClient) {
+      logWarning(msg = "Schema Registry client is already configured.")
+    } else {
+      val settings = new KafkaAvroDeserializerConfig(configs.asJava)
 
-  private def extractURLs(configs: Map[String,String]): java.util.List[String] = {
-    new KafkaAvroDeserializerConfig(configs.asJava).getSchemaRegistryUrls
+      val urls = settings.getSchemaRegistryUrls
+      val maxSchemaObject = settings.getMaxSchemasPerSubject
+
+      logInfo(msg = s"Configuring new Schema Registry instance of type " +
+        s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
+
+      try {
+        schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+
+      } catch {
+        case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
+      }
+    }
   }
 
   /**
