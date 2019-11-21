@@ -104,7 +104,7 @@ object SchemaManager extends Logging {
     */
   def getBySubjectAndId(subject: String, id: Int): Schema = {
     logDebug(s"Trying to get schema for subject '$subject' and id '$id'")
-    throwIfClientNotConfigured
+    throwIfClientNotConfigured()
 
     Try(schemaRegistryClient.getBySubjectAndId(subject, id)) match {
       case Success(schema)  => schema
@@ -118,7 +118,7 @@ object SchemaManager extends Logging {
     */
   def getBySubjectAndVersion(subject: String, version: Int): SchemaMetadata = {
     logDebug(s"Trying to get schema for subject '$subject' and version '$version'")
-    throwIfClientNotConfigured
+    throwIfClientNotConfigured()
 
     Try(schemaRegistryClient.getSchemaMetadata(subject, version)) match {
       case Success(id)  => id
@@ -129,10 +129,10 @@ object SchemaManager extends Logging {
 
   def getById(id: Int): Schema = {
     logInfo(s"Trying to get schema for id '$id'")
-    throwIfClientNotConfigured
+    throwIfClientNotConfigured()
 
     Try(schemaRegistryClient.getById(id)) match {
-      case Success(id)  => id
+      case Success(retrievedId)  => retrievedId
       case Failure(e)   => throw new SchemaManagerException(s"Could not get schema for id '$id'", e)
     }
   }
@@ -142,7 +142,7 @@ object SchemaManager extends Logging {
     */
   def getLatestVersionId(subject: String): Int = {
     logInfo(s"Trying to get latest schema version id for subject '$subject'")
-    throwIfClientNotConfigured
+    throwIfClientNotConfigured()
 
     Try(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) match {
       case Success(id)  => id
@@ -157,7 +157,7 @@ object SchemaManager extends Logging {
     * Afterwards the schema can be identified by this id.
     */
   def register(schema: Schema, subject: String): Int = {
-    throwIfClientNotConfigured
+    throwIfClientNotConfigured()
     schemaRegistryClient.register(subject, schema)
   }
 
@@ -166,39 +166,36 @@ object SchemaManager extends Logging {
     */
   def isSchemaRegistryConfigured: Boolean = schemaRegistryClient != null
 
-  private def throwIfClientNotConfigured: Unit = {
+  private def throwIfClientNotConfigured(): Unit = {
     if(!isSchemaRegistryConfigured) {
       throw new SchemaManagerException(s"Schema registry client not configured!")
     }
   }
-
 
   /**
    * Configures the Schema Registry client.
    * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
    */
   def configureSchemaRegistry(configs: Map[String,String]): Unit = {
-    if (configs.nonEmpty) {
-      configureSchemaRegistry(new KafkaAvroDeserializerConfig(configs.asJava))
-    }
-  }
+    if (configs.isEmpty) {
+      logWarning(msg = "Asked to configure Schema Registry client but settings map is empty.")
+    } else if (null != schemaRegistryClient) {
+      logWarning(msg = "Schema Registry client is already configured.")
+    } else {
+      val settings = new KafkaAvroDeserializerConfig(configs.asJava)
 
-  /**
-    * Configures the Schema Registry client.
-    * When invoked, it expects at least the [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
-    */
-  private def configureSchemaRegistry(config: AbstractKafkaAvroSerDeConfig): Unit = {
-    try {
-      val urls = config.getSchemaRegistryUrls
-      val maxSchemaObject = config.getMaxSchemasPerSubject
+      val urls = settings.getSchemaRegistryUrls
+      val maxSchemaObject = settings.getMaxSchemasPerSubject
 
-      if (null == schemaRegistryClient) {
-        val clientClass = classOf[CachedSchemaRegistryClient].getCanonicalName
-        logInfo(s"Configuring new Schema Registry instance of type '$clientClass'")
-        schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject)
+      logInfo(msg = s"Configuring new Schema Registry instance of type " +
+        s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
+
+      try {
+        schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+
+      } catch {
+        case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
       }
-    } catch {
-      case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
     }
   }
 
@@ -224,7 +221,7 @@ object SchemaManager extends Logging {
     * Checks if a given schema exists in Schema Registry.
     */
   def exists(subject: String): Boolean = {
-    throwIfClientNotConfigured
+    throwIfClientNotConfigured()
 
     try {
       schemaRegistryClient.getLatestSchemaMetadata(subject)
