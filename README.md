@@ -265,7 +265,7 @@ val result: DataFrame = dataFrame.select(
 After serialization the data are again stored in the columns *key* and *value*, but now they are in Avro binary format.
 
 
-### Security and settings to Schema Manager
+### Schema Registry security settings
 
 Some settings are required when using Schema Registry, as explained above. However, there is more settings supported by Schema Registry as contained in ```io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig```.
 
