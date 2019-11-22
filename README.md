@@ -264,6 +264,33 @@ val result: DataFrame = dataFrame.select(
 ```
 After serialization the data are again stored in the columns *key* and *value*, but now they are in Avro binary format.
 
+
+### Security and settings to Schema Manager
+
+Some settings are required when using Schema Registry, as explained above. However, there is more settings supported by Schema Registry as contained in ```io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig```.
+
+Among those are ```basic.auth.user.info``` and ```basic.auth.credentials.source``` required for user authentication.
+
+To make use of those, all that is required is to add them to the settings map as in the example below:
+
+```scala
+val commonRegistryConfig = Map(
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081",
+  SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
+  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
+)
+
+val valueRegistryConfig = commonRegistryConfig +
+  (SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name")
+
+val securityRegistryConfig = valueRegistryConfig + 
+  ("client.basic.auth.credentials.source" -> "USER_INFO",
+   "client.schema.registry.basic.auth.user.info" -> "srkey:srvalue")
+```
+ 
+
+
 ### Using ABRiS with Python and PySpark
 
 ABRiS can also be used with PySpark to deserialize Avro payloads from Confluent Kafka. For that, we need to convert Python object into JVM ones. The snippet below shows how it can be achieved.
