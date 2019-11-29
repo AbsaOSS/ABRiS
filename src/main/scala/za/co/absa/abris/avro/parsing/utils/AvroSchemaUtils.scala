@@ -17,6 +17,7 @@
 package za.co.absa.abris.avro.parsing.utils
 
 import java.security.InvalidParameterException
+import java.util.concurrent.ConcurrentHashMap
 
 import io.confluent.kafka.schemaregistry.client.SchemaMetadata
 import org.apache.avro.Schema
@@ -30,6 +31,7 @@ import za.co.absa.abris.avro.schemas.SchemaLoader
 object AvroSchemaUtils {
 
   private val logger = LoggerFactory.getLogger(AvroSchemaUtils.getClass)
+  private val schemaIdCache = new ConcurrentHashMap[String, ConcurrentHashMap[Schema, Option[Int]]]
 
   private def configureSchemaManager(schemaRegistryConf: Map[String,String]): Unit = {
     if (!SchemaManager.isSchemaRegistryConfigured) {
@@ -99,14 +101,15 @@ object AvroSchemaUtils {
 
     val subject = SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf)
 
-    if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
-      logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
-      Some(SchemaManager.register(schema, subject))
-    }
-    else {
-      logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
-      None
-    }
+    val schemaIdMap = schemaIdCache.computeIfAbsent(subject, _ => new ConcurrentHashMap)
+    schemaIdMap.computeIfAbsent(schema, _ =>
+      if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
+        logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
+        Some(SchemaManager.register(schema, subject))
+      } else {
+        logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
+        None
+      })
   }
 
   /**
