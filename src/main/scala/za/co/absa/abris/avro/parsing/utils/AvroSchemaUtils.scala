@@ -24,6 +24,7 @@ import org.apache.avro.Schema
 import org.slf4j.LoggerFactory
 import za.co.absa.abris.avro.read.confluent.SchemaManager
 import za.co.absa.abris.avro.schemas.SchemaLoader
+import java.util.function.Function
 
 /**
  * This class provides utility methods to cope with Avro schemas.
@@ -101,15 +102,20 @@ object AvroSchemaUtils {
 
     val subject = SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf)
 
-    val schemaIdMap = schemaIdCache.computeIfAbsent(subject, _ => new ConcurrentHashMap)
-    schemaIdMap.computeIfAbsent(schema, _ =>
-      if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
-        logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
-        Some(SchemaManager.register(schema, subject))
-      } else {
-        logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
-        None
-      })
+    val schemaIdMap = schemaIdCache.computeIfAbsent(subject, new Function[String, ConcurrentHashMap[Schema, Option[Int]]] {
+      override def apply(subject: String) = new ConcurrentHashMap[Schema, Option[Int]]
+    })
+
+    schemaIdMap.computeIfAbsent(schema,  new Function[Schema, Option[Int]] {
+      override def apply(schema: Schema) =
+        if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
+          logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
+          Some(SchemaManager.register(schema, subject))
+        } else {
+          logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
+          None
+        }
+    })
   }
 
   /**
