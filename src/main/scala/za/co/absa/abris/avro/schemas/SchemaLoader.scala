@@ -108,4 +108,9 @@ object SchemaLoader {
       paramId.toInt
     }
   }
+
+  def loadById(id: Int, params: Map[String,String]): Schema = {
+    configureSchemaManager(params)
+    SchemaManager.getById(id)
+  }
 }

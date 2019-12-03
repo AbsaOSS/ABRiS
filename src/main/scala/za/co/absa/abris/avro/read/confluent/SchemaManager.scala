@@ -68,7 +68,7 @@ object SchemaManager extends Logging {
 
     if (adapter.validate(schema)) {
       val subjectName = adapter.subjectName(topic, isKey, schema)
-      logInfo(s"Subject name resolved to: $subjectName")
+      logDebug(s"Subject name resolved to: $subjectName")
       subjectName
     }
     else {
@@ -128,7 +128,7 @@ object SchemaManager extends Logging {
   }
 
   def getById(id: Int): Schema = {
-    logInfo(s"Trying to get schema for id '$id'")
+    logDebug(s"Trying to get schema for id '$id'")
     throwIfClientNotConfigured()
 
     Try(schemaRegistryClient.getById(id)) match {
@@ -141,7 +141,7 @@ object SchemaManager extends Logging {
     * Retrieves the id corresponding to the latest schema available in Schema Registry.
     */
   def getLatestVersionId(subject: String): Int = {
-    logInfo(s"Trying to get latest schema version id for subject '$subject'")
+    logDebug(s"Trying to get latest schema version id for subject '$subject'")
     throwIfClientNotConfigured()
 
     Try(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) match {

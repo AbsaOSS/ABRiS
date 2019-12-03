@@ -30,6 +30,7 @@ import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression,
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManager}
+import za.co.absa.abris.avro.schemas.SchemaLoader
 
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -106,8 +107,7 @@ case class AvroDataToCatalyst(
   }
 
   private def getWriterSchema(id: Int): Schema = {
-    SchemaManager.configureSchemaRegistry(schemaRegistryConf.get)
-    Try(SchemaManager.getById(id)) match {
+    Try(SchemaLoader.loadById(id, schemaRegistryConf.get)) match {
       case Success(schema)  => schema
       case Failure(e)       => throw new RuntimeException("Not able to load writer schema", e)
     }
