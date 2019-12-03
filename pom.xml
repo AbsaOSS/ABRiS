@@ -56,7 +56,7 @@
 		<!--Platforms-->
 		<spark.version>2.4.4</spark.version>
 		<kafka.spark.version>0-10</kafka.spark.version>
-		<confluent.version>5.1.0</confluent.version>
+		<confluent.version>5.1.1</confluent.version>
 
 		<!--Scala-->
 		<scala.version>2.12.10</scala.version>
