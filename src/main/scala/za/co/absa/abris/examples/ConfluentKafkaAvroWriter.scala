@@ -105,7 +105,6 @@ object ConfluentKafkaAvroWriter {
   private def getEncoder: Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    println(sparkSchema)
     RowEncoder.apply(sparkSchema)
   }
 }
