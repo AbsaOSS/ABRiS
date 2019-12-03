@@ -34,14 +34,14 @@ case class CatalystDataToAvro(
 
   override def dataType: DataType = BinaryType
 
+  private lazy val schemaId = schemaRegistryConf.flatMap(conf =>
+    registerSchema(schemaProvider.wrappedSchema(child), conf, confluentCompliant))
+
   @transient private lazy val serializer: AvroSerializer =
     new AvroSerializer(child.dataType, schemaProvider.originalSchema(child), child.nullable)
 
   override def nullSafeEval(input: Any): Any = {
     val avroData = serializer.serialize(input)
-
-    val schemaId = schemaRegistryConf.flatMap(conf =>
-      registerSchema(schemaProvider.wrappedSchema(child), conf, confluentCompliant))
 
     val record : IndexedRecord = avroData match {
       case ad: IndexedRecord => ad
