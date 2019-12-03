@@ -69,12 +69,11 @@ object ConfluentKafkaAvroReader {
     val schemaRegistryConfig = properties.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
 
     if (properties.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      dataFrame.select(from_confluent_avro(col("value"), schemaRegistryConfig) as 'data).select("data.*")
+      dataFrame.select(from_confluent_avro(col("value"), schemaRegistryConfig) as 'data)
     } else {
       val source = scala.io.Source.fromFile(properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
       val schemaString = try source.mkString finally source.close()
       dataFrame.select(from_confluent_avro(col("value"), schemaString, schemaRegistryConfig) as 'data)
-        .select("data.*")
     }
   }
 }

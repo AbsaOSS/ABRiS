@@ -66,12 +66,12 @@ object KafkaAvroReader {
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
       val schemaRegistryConfig = props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
-      dataFrame.select(from_avro(col("value"), schemaRegistryConfig) as 'data).select("data.*")
+      dataFrame.select(from_avro(col("value"), schemaRegistryConfig) as 'data)
     }
     else {
       val source = scala.io.Source.fromFile(props.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
       val schemaString = try source.mkString finally source.close()
-      dataFrame.select(from_avro(col("value"), schemaString) as 'data).select("data.*")
+      dataFrame.select(from_avro(col("value"), schemaString) as 'data)
     }
   }
 }
