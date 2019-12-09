@@ -285,8 +285,8 @@ val valueRegistryConfig = commonRegistryConfig +
   (SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name")
 
 val securityRegistryConfig = valueRegistryConfig + 
-  ("client.basic.auth.credentials.source" -> "USER_INFO",
-   "client.schema.registry.basic.auth.user.info" -> "srkey:srvalue")
+  ("basic.auth.credentials.source" -> "USER_INFO",
+   "basic.auth.user.info" -> "srkey:srvalue")
 ```
  
 
