@@ -47,6 +47,9 @@ The API consists of four Spark SQL expressions:
 
 Full runnable examples can be found in the ```za.co.absa.abris.examples``` package. You can also take a look at unit tests in package ```za.co.absa.abris.avro.sql```.
 
+**IMPORTANT**: Spark dependencies have `provided` scope in the `pom.xml`, so when running the examples, please make sure that you either, instruct your IDE to include dependencies with 
+`provided` scope, or change the scope directly.
+
 ### Deprecation Note
 Old ABRiS API is deprecated, but is still included in the library. Documentation for old API is in [ABRiS 2.2.3.](https://github.com/AbsaOSS/ABRiS/tree/v2.2.3)
 
