@@ -312,7 +312,7 @@ schema_registry_config_dict = {"schema.registry.url": schema_registry_url,
 
 conf_map = getattr(getattr(jvm_gateway.scala.collection.immutable.Map, "EmptyMap$"), "MODULE$")
     for k, v in schema_registry_config_dict.items():
-        conf_map = getattr(conf, "$plus")(jvm_gateway.scala.Tuple2(k, v))
+        conf_map = getattr(conf_map, "$plus")(jvm_gateway.scala.Tuple2(k, v))
         
     deserialized_df = data_frame.select(Column(abris_avro.functions.from_confluent_avro(data_frame._jdf.col("value"), conf_map))
                       .alias("data")).select("data.*")
