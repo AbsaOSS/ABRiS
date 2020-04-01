@@ -16,6 +16,8 @@
 
 package za.co.absa.abris.avro.read.confluent
 
+import java.security.InvalidParameterException
+
 import io.confluent.common.config.ConfigException
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -125,7 +127,7 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
   }
 
   it should "not try to configure Schema Registry client if parameters are empty" in {
-    SchemaManager.configureSchemaRegistry(Map[String,String]())
+    SchemaManager.configure(Map[String,String]())
     assertResult(false) {SchemaManager.isSchemaRegistryConfigured} // should still be unconfigured
   }
 
@@ -145,7 +147,30 @@ class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
     val config1 = Map(SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "")
     val config2 = Map(SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> null)
 
-    assertThrows[IllegalArgumentException] {SchemaManager.configureSchemaRegistry(config1)}
-    assertThrows[ConfigException] {SchemaManager.configureSchemaRegistry(config2)}
+    assertThrows[IllegalArgumentException] {SchemaManager.configure(config1)}
+    assertThrows[ConfigException] {SchemaManager.configure(config2)}
+  }
+
+  it should "retrieve true if key naming strategy is set" in {
+    val keyNamingStrategyConfig = Map(
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
+
+    assert(SchemaManager.isKey(keyNamingStrategyConfig))
+  }
+
+  it should "retieve false if value naming strategy is set" in {
+    val valueNamingStrategyConfig = Map(
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
+
+    assert(!SchemaManager.isKey(valueNamingStrategyConfig))
+  }
+
+  it should "throw InvalidParameterException if both or none value and key naming strategies are set" in {
+    val bothNamingStrategyConfig = Map(
+      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME,
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
+
+    assertThrows[InvalidParameterException] {SchemaManager.isKey(bothNamingStrategyConfig)}
+    assertThrows[InvalidParameterException] {SchemaManager.isKey(Map())}
   }
 }

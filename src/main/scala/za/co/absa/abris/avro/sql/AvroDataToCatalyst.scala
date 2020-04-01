@@ -122,21 +122,14 @@ case class AvroDataToCatalyst(
   }
 
   private def loadSchemaFromRegistry(registryConfig: Map[String, String]): Schema = {
-
-    val valueStrategy = registryConfig.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
-    val keyStrategy = registryConfig.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
-
-    (valueStrategy, keyStrategy) match {
-      case (Some(valueStrategy), None) => AvroSchemaUtils.loadForValue(registryConfig)
-      case (None, Some(keyStrategy)) => AvroSchemaUtils.loadForKey(registryConfig)
-      case (Some(_), Some(_)) =>
-        throw new InvalidParameterException(
-          "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
-            "Only one of them supoused to be defined!")
-      case _ =>
-        throw new InvalidParameterException(
-          "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
-            "must be defined to use schema registry!")
+    val id = SchemaManager.getIdFromConfig(registryConfig)
+    var config = registryConfig
+    if(SchemaManager.isKey(registryConfig)) {
+      if (id.isDefined) config = config ++ Map(SchemaManager.PARAM_KEY_SCHEMA_ID -> id.get.toString)
+      AvroSchemaUtils.loadForKey(config)
+    } else {
+      if (id.isDefined) config = config ++ Map(SchemaManager.PARAM_VALUE_SCHEMA_ID -> id.get.toString)
+      AvroSchemaUtils.loadForValue(config)
     }
   }
 

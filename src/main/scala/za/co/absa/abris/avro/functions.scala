@@ -118,7 +118,7 @@ object functions {
     val namespace = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
     new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), confluentCompliant = false))
+      data.expr, SchemaProvider(name, namespace, schemaRegistryConf), Some(schemaRegistryConf), confluentCompliant = false))
   }
 
   /**
@@ -147,7 +147,7 @@ object functions {
     val namespace = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
     new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(name, namespace), Some(schemaRegistryConf), confluentCompliant = true))
+      data.expr, SchemaProvider(name, namespace, schemaRegistryConf), Some(schemaRegistryConf), confluentCompliant = true))
   }
 
   /**

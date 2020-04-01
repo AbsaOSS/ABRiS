@@ -19,6 +19,7 @@ package za.co.absa.abris.avro.sql
 import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.spark.sql.avro.SchemaConverters.toAvroType
 import org.apache.spark.sql.catalyst.expressions.Expression
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 
 /**
  * This class encapsulate logic and data necessary to get an Avro Schema from various sources
@@ -79,10 +80,24 @@ object SchemaProvider {
   }
 
   def apply(): SchemaProvider = {
-    apply(None, None)
+    inferSchemaProvider(None, None)
   }
 
-  def apply(name: Option[String], namespace: Option[String]): SchemaProvider = {
+  def apply(name: Option[String], namespace: Option[String], registryConfig: Map[String, String]): SchemaProvider = {
+    if (SchemaManager.isIdConfigSet(registryConfig)) {
+      new SchemaProvider((expression: Expression) => {
+        val subject = SchemaManager.getSubjectName(registryConfig)
+        val id = SchemaManager.getIdFromConfig(registryConfig)
+        val schema = SchemaManager.getBySubjectAndId(subject, id.get)
+
+        (schema, wrapSchema(schema, DEFAULT_SCHEMA_NAME, DEFAULT_SCHEMA_NAMESPACE))
+      })
+    } else {
+      inferSchemaProvider(name, namespace)
+    }
+  }
+
+  private def inferSchemaProvider(name: Option[String], namespace: Option[String]): SchemaProvider = {
 
     new SchemaProvider((expression: Expression) => {
       val schemaName = name.getOrElse(DEFAULT_SCHEMA_NAME)

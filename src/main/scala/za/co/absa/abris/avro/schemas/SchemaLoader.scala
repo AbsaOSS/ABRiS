@@ -41,7 +41,7 @@ object SchemaLoader {
   }
 
   def loadFromSchemaRegistryValue(params: Map[String,String]): Schema = {
-    configureSchemaManager(params)
+    SchemaManager.configure(params)
 
     val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
     val specifiedSchemaId = params(SchemaManager.PARAM_VALUE_SCHEMA_ID)
@@ -50,7 +50,7 @@ object SchemaLoader {
   }
 
   def loadFromSchemaRegistryKey(params: Map[String,String]): Schema = {
-    configureSchemaManager(params)
+    SchemaManager.configure(params)
 
     val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
     val specifiedSchemaId = params(SchemaManager.PARAM_KEY_SCHEMA_ID)
@@ -59,7 +59,7 @@ object SchemaLoader {
   }
 
   def loadFromSchemaRegistry(version: Int, params: Map[String,String]): SchemaMetadata = {
-    configureSchemaManager(params)
+    SchemaManager.configure(params)
 
     val topic = params(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
 
@@ -94,12 +94,6 @@ object SchemaLoader {
     SchemaManager.getBySubjectAndVersion(subject, version)
   }
 
-  private def configureSchemaManager(params: Map[String,String]): Unit = {
-    if (!SchemaManager.isSchemaRegistryConfigured) {
-      SchemaManager.configureSchemaRegistry(params)
-    }
-  }
-
   private def getSchemaId(paramId: String, subject: String): Int = {
     if (paramId == SchemaManager.PARAM_SCHEMA_ID_LATEST_NAME) {
       SchemaManager.getLatestVersionId(subject)
@@ -110,7 +104,7 @@ object SchemaLoader {
   }
 
   def loadById(id: Int, params: Map[String,String]): Schema = {
-    configureSchemaManager(params)
+    SchemaManager.configure(params)
     SchemaManager.getById(id)
   }
 }

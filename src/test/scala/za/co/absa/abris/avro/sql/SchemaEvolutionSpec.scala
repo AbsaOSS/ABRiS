@@ -40,7 +40,10 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
     SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
     SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "record_name",
-    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test",
+    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
+  )
+
+  private val latestSchemaRegistryConfig = schemaRegistryConfig ++ Map(
     SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
   )
 
@@ -88,7 +91,7 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_confluent_avro('avroBytes, recordEvolvedByteSchema, schemaRegistryConfig)
+      .select(from_confluent_avro('avroBytes, recordEvolvedByteSchema, latestSchemaRegistryConfig)
         as 'integersWithDefault)
 
     val expectedStruct = struct(allData.col(allData.columns.head), lit("green"))
@@ -108,14 +111,14 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     // To avoid race conditions between schema registration and reading the data are converted from spark to scala
     val avroRows = avroBytes.collect()
 
-    AvroSchemaUtils.registerSchema(recordEvolvedByteSchema, schemaRegistryConfig)
+    AvroSchemaUtils.registerSchema(recordEvolvedByteSchema, latestSchemaRegistryConfig)
 
     // Now when the last version of schema is registered, we will convert the data back to spark DataFrame
     val avroDF = spark.sparkContext.parallelize(avroRows, 2)
     val outputAvro = spark.createDataFrame(avroDF, avroBytes.schema)
 
     val result = outputAvro
-        .select(from_confluent_avro('avroBytes, schemaRegistryConfig)
+        .select(from_confluent_avro('avroBytes, latestSchemaRegistryConfig)
           as 'integersWithDefault)
 
     val expectedStruct = struct(allData.col(allData.columns.head), lit("green"))

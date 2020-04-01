@@ -80,6 +80,7 @@ val schemaRegistryConfig = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC        -> "topic_name",
   SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // choose a subject name strategy
   SchemaManager.PARAM_VALUE_SCHEMA_ID              -> "current_schema_id" // set to "latest" if you want the latest schema version to used  
+  SchemaManager.PARAM_VALUE_SCHEMA_VERSION         -> "current_schema_version" // set to "latest" if you want the latest schema version to used
 )
 ```
 Depending on the selected naming strategy you may also need to provide ```SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY``` and ```SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY```
@@ -189,7 +190,9 @@ val schemaRegistryConfig = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC                -> "topic_name",
   SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY         -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
   SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "schema_name",
-  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace"
+  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace",
+  SchemaManager.PARAM_VALUE_SCHEMA_ID                      -> "current_schema_id", // (optional) set to "latest" if you want the latest schema version to used
+  SchemaManager.PARAM_VALUE_SCHEMA_VERSION                 -> "current_schema_version" // (optional) set to "latest" if you want the latest schema version to used
 )
 ```
 In this example the ```TOPIC_RECORD_NAME``` naming strategy is used, therefore we need to provide topic, name and namespace.
