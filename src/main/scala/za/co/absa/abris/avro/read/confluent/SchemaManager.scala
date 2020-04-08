@@ -16,6 +16,8 @@
 
 package za.co.absa.abris.avro.read.confluent
 
+import java.security.InvalidParameterException
+
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaMetadata, SchemaRegistryClient}
 import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDeserializerConfig}
 import org.apache.avro.Schema
@@ -40,7 +42,9 @@ object SchemaManager extends Logging {
   val PARAM_SCHEMA_REGISTRY_TOPIC = "schema.registry.topic"
   val PARAM_SCHEMA_REGISTRY_URL   = "schema.registry.url"
   val PARAM_VALUE_SCHEMA_ID       = "value.schema.id"
+  val PARAM_VALUE_SCHEMA_VERSION  = "value.schema.version"
   val PARAM_KEY_SCHEMA_ID         = "key.schema.id"
+  val PARAM_KEY_SCHEMA_VERSION    = "key.schema.version"
   val PARAM_SCHEMA_ID_LATEST_NAME = "latest"
 
   val PARAM_KEY_SCHEMA_NAMING_STRATEGY   = "key.schema.naming.strategy"
@@ -83,6 +87,14 @@ object SchemaManager extends Logging {
       String = {
     val (name, namespace) = schemaNameAndSpace
     getSubjectName(topic, isKey, Schema.createRecord(name, "", namespace, false), params)
+  }
+
+  def getSubjectName(params: Map[String, String]): String = {
+    val topic = params(PARAM_SCHEMA_REGISTRY_TOPIC)
+    val schemaName = params.getOrElse(PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
+    val schemaNamespace = params.getOrElse(PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
+
+    getSubjectName(topic, isKey(params), (schemaName, schemaNamespace), params)
   }
 
   private def getSubjectNamingStrategyAdapter(isKey: Boolean, params: Map[String,String]) = {
@@ -173,10 +185,20 @@ object SchemaManager extends Logging {
   }
 
   /**
+   * Configures the Schema Manger
+   * * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set
+   */
+  def configure(params: Map[String,String]): Unit = {
+    if (!isSchemaRegistryConfigured) {
+      configureSchemaRegistry(params)
+    }
+  }
+
+  /**
    * Configures the Schema Registry client.
    * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
    */
-  def configureSchemaRegistry(configs: Map[String,String]): Unit = {
+  private def configureSchemaRegistry(configs: Map[String,String]): Unit = {
     if (configs.isEmpty) {
       logWarning(msg = "Asked to configure Schema Registry client but settings map is empty.")
     } else if (null != schemaRegistryClient) {
@@ -237,6 +259,55 @@ object SchemaManager extends Logging {
         }
         false
       }
+    }
+  }
+
+  def isKey(schemaRegistryConf: Map[String, String]): Boolean = {
+    val valueStrategy = schemaRegistryConf.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
+    val keyStrategy = schemaRegistryConf.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
+
+    (valueStrategy, keyStrategy) match {
+      case (Some(valueStrategy), None) => false
+      case (None, Some(keyStrategy)) => true
+      case (Some(_), Some(_)) =>
+        throw new InvalidParameterException(
+          "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
+            "Only one of them supoused to be defined!")
+      case _ =>
+        throw new InvalidParameterException(
+          "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
+            "must be defined to use schema registry!")
+    }
+  }
+
+  def isIdConfigSet(registryConf: Map[String, String]): Boolean = {
+    if (isKey(registryConf)) {
+      registryConf.contains(PARAM_KEY_SCHEMA_VERSION) || registryConf.contains(PARAM_KEY_SCHEMA_ID)
+    } else {
+      registryConf.contains(PARAM_VALUE_SCHEMA_VERSION) || registryConf.contains(PARAM_VALUE_SCHEMA_ID)
+    }
+  }
+
+  def getIdFromConfig(registryConf: Map[String, String]): Option[Int] = {
+    configure(registryConf)
+
+    if (isKey(registryConf)) {
+      getIdFromConfig(registryConf, PARAM_KEY_SCHEMA_VERSION, PARAM_KEY_SCHEMA_ID)
+    } else {
+      getIdFromConfig(registryConf, PARAM_VALUE_SCHEMA_VERSION, PARAM_VALUE_SCHEMA_ID)
+    }
+  }
+
+  private def getIdFromConfig(registryConf: Map[String, String], paramVersion: String, paramId: String): Option[Int] = {
+    val subject = getSubjectName(registryConf)
+    registryConf.get(paramVersion) match {
+      case Some(PARAM_SCHEMA_ID_LATEST_NAME) => Some(getLatestVersionId(subject))
+      case Some(version) => Some(getBySubjectAndVersion(subject, version.toInt).getId)
+      case _ => registryConf.get(paramId) match {
+          case Some(PARAM_SCHEMA_ID_LATEST_NAME) =>  Some(getLatestVersionId(subject))
+          case Some(id) => Some(id.toInt)
+          case _ => None
+        }
     }
   }
 

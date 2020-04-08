@@ -31,12 +31,6 @@ object AvroSchemaUtils {
 
   private val logger = LoggerFactory.getLogger(AvroSchemaUtils.getClass)
 
-  private def configureSchemaManager(schemaRegistryConf: Map[String,String]): Unit = {
-    if (!SchemaManager.isSchemaRegistryConfigured) {
-      SchemaManager.configureSchemaRegistry(schemaRegistryConf)
-    }
-  }
-
   /**
    * Parses a plain Avro schema into an org.apache.avro.Schema implementation.
    */
@@ -95,7 +89,7 @@ object AvroSchemaUtils {
     schemaRegistryConf: Map[String,String],
     isKey: Boolean): Option[Int] = {
 
-    configureSchemaManager(schemaRegistryConf)
+    SchemaManager.configure(schemaRegistryConf)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf)
 

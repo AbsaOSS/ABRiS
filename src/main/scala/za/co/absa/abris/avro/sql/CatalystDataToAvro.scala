@@ -24,6 +24,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.read.confluent.SchemaManager
 
 case class CatalystDataToAvro(
    child: Expression,
@@ -72,8 +73,10 @@ case class CatalystDataToAvro(
       schema: Schema,
       registryConfig: Map[String,String],
       prependSchemaId: Boolean): Option[Int] = {
-
-    val schemaId = AvroSchemaUtils.registerSchema(schema, registryConfig)
+    var schemaId = SchemaManager.getIdFromConfig(registryConfig)
+    if (schemaId.isEmpty) {
+      schemaId = AvroSchemaUtils.registerSchema(schema, registryConfig)
+    }
 
     if (prependSchemaId) schemaId else None
   }

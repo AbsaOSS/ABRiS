@@ -44,8 +44,15 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
     SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
     SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
-    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test",
+    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
+  )
+
+  private val latestIdSchemaRegistryConfig = schemaRegistryConfig ++ Map(
     SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
+  )
+
+  private val latestVersionSchemaRegistryConfig = schemaRegistryConfig ++ Map(
+    SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> SchemaManager.PARAM_SCHEMA_ID_LATEST_NAME
   )
 
   private def getTestingDataFrame: DataFrame = {
@@ -259,7 +266,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('avroBytes, schemaRegistryConfig) as 'result)
+      .select(from_avro('avroBytes, latestIdSchemaRegistryConfig) as 'result)
       .select("result.*")
 
     shouldEqualByData(dataFrame.select('bytes), result)
@@ -277,7 +284,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('bytes, schemaRegistryConfig) as 'result)
+      .select(from_avro('bytes, latestIdSchemaRegistryConfig) as 'result)
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -294,7 +301,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('bytes, schemaRegistryConfig) as 'result)
+      .select(from_avro('bytes, latestIdSchemaRegistryConfig) as 'result)
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -311,7 +318,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_confluent_avro('bytes, schemaRegistryConfig) as 'result)
+      .select(from_confluent_avro('bytes, latestIdSchemaRegistryConfig) as 'result)
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -334,12 +341,35 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
 
     shouldEqualByData(dataFrame, result)
   }
+
+  it should "convert all types of data to confluent avro an back using schema registry and the latest version" in {
+
+    val dataFrame: DataFrame = getTestingDataFrame
+    val schemaString = ComplexRecordsGenerator.usedAvroSchema
+    AvroSchemaUtils.registerSchema(schemaString, latestVersionSchemaRegistryConfig)
+
+    val avroBytes = dataFrame
+      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
+      .select(to_confluent_avro('input, latestVersionSchemaRegistryConfig) as 'bytes)
+
+    avroBytes.collect() // force evaluation
+
+    val result = avroBytes
+      .select(from_confluent_avro('bytes, latestVersionSchemaRegistryConfig) as 'result)
+      .select("result.*")
+
+    shouldEqualByData(dataFrame, result)
+  }
+
   private val schemaRegistryConfigForKey = Map(
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
     SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.name",
     SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
-    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test",
+    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
+  )
+
+  private val latestSchemaRegistryConfigForKey = schemaRegistryConfigForKey ++ Map(
     SchemaManager.PARAM_KEY_SCHEMA_ID -> "latest"
   )
 
@@ -355,7 +385,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_confluent_avro('bytes, schemaRegistryConfigForKey) as 'result)
+      .select(from_confluent_avro('bytes, latestSchemaRegistryConfigForKey) as 'result)
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
