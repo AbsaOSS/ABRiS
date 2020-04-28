@@ -43,8 +43,8 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
     SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
-    SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
-    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
+    SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
   )
 
   private val latestIdSchemaRegistryConfig = schemaRegistryConfig ++ Map(
@@ -365,8 +365,8 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
     SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.name",
-    SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
-    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
+    SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
+    SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
   )
 
   private val latestSchemaRegistryConfigForKey = schemaRegistryConfigForKey ++ Map(

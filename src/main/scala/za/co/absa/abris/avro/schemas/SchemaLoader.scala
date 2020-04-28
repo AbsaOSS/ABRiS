@@ -72,8 +72,7 @@ object SchemaLoader {
     isKey: Boolean,
     params: Map[String,String]): Schema = {
 
-    val schemaName = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
-    val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
+    val (schemaName, schemaNamespace) = SchemaManager.getSchemaNameAndNameSpace(params, isKey)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
 
@@ -87,8 +86,7 @@ object SchemaLoader {
     params: Map[String,String],
     version: Int): SchemaMetadata = {
 
-    val schemaName = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
-    val schemaNamespace = params.getOrElse(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
+    val (schemaName, schemaNamespace) = SchemaManager.getSchemaNameAndNameSpace(params, isKey)
 
     val subject = SchemaManager.getSubjectName(topic, isKey, (schemaName, schemaNamespace), params)
     SchemaManager.getBySubjectAndVersion(subject, version)

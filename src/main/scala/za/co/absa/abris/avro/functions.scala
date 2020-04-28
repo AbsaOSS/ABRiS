@@ -114,8 +114,8 @@ object functions {
    * @param schemaRegistryConf schema registry configuration
    */
   def to_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
-    val name = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-    val namespace = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+
+    val (name, namespace) = SchemaManager.getMaybeSchemaNameAndNameSpace(schemaRegistryConf, isKey(data))
 
     new Column(sql.CatalystDataToAvro(
       data.expr, SchemaProvider(name, namespace, schemaRegistryConf), Some(schemaRegistryConf), confluentCompliant = false))
@@ -143,8 +143,7 @@ object functions {
    */
   def to_confluent_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
 
-    val name = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-    val namespace = schemaRegistryConf.get(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+    val (name, namespace) = SchemaManager.getMaybeSchemaNameAndNameSpace(schemaRegistryConf, isKey(data))
 
     new Column(sql.CatalystDataToAvro(
       data.expr, SchemaProvider(name, namespace, schemaRegistryConf), Some(schemaRegistryConf), confluentCompliant = true))
@@ -161,6 +160,10 @@ object functions {
 
     new Column(sql.CatalystDataToAvro(
       data.expr, SchemaProvider(jsonFormatSchema), Some(schemaRegistryConf), confluentCompliant = true))
+  }
+
+  private def isKey(col: Column): Boolean = {
+    col.toString().toLowerCase == "key"
   }
 
   // scalastyle:on: method.name
