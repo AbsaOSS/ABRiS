@@ -105,15 +105,8 @@ object SchemaManager extends Logging {
   }
 
   def getSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (String,String) = {
-    if (isKey) {
-      val keySchemaName = params.getOrElse(PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
-      val keySchemaNamespace = params.getOrElse(PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
-      (keySchemaName, keySchemaNamespace)
-    } else {
-      val valueSchemaName = params.getOrElse(PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
-      val valueSchemaNamespace = params.getOrElse(PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
-      (valueSchemaName, valueSchemaNamespace)
-    }
+val (maybeName, maybeNamespace) = getMaybeSchemaNameAndNameSpace(params, isKey)
+(maybeName.getOrElse(null), maybeNamespace.getOrElse(null))
   }
 
   def getMaybeSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (Option[String],Option[String]) = {
