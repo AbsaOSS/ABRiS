@@ -136,8 +136,8 @@ val commonRegistryConfig = Map(
 val keyRegistryConfig = commonRegistryConfig ++ Map(
   SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
   SchemaManager.PARAM_KEY_SCHEMA_ID -> "latest",
-  SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
-  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
+  SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
+  SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
 )
 
 val valueRegistryConfig = commonRegistryConfig ++ Map(
@@ -186,13 +186,13 @@ If you provide the Avro schema as a second argument, ABRiS will use it to conver
 First we need to provide the Schema Registry configuration:
 ```scala
 val schemaRegistryConfig = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL                  -> "url_to_schema_registry",
-  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC                -> "topic_name",
-  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY         -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
-  SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "schema_name",
-  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace",
-  SchemaManager.PARAM_VALUE_SCHEMA_ID                      -> "current_schema_id", // (optional) set to "latest" if you want the latest schema version to used
-  SchemaManager.PARAM_VALUE_SCHEMA_VERSION                 -> "current_schema_version" // (optional) set to "latest" if you want the latest schema version to used
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL                        -> "url_to_schema_registry",
+  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC                      -> "topic_name",
+  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY               -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
+  SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "schema_name",
+  SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace",
+  SchemaManager.PARAM_VALUE_SCHEMA_ID                            -> "current_schema_id", // (optional) set to "latest" if you want the latest schema version to used
+  SchemaManager.PARAM_VALUE_SCHEMA_VERSION                       -> "current_schema_version" // (optional) set to "latest" if you want the latest schema version to used
 )
 ```
 In this example the ```TOPIC_RECORD_NAME``` naming strategy is used, therefore we need to provide topic, name and namespace.
@@ -251,8 +251,8 @@ As in the reading example, for writing you also have to specify the naming strat
 val commonRegistryConfig = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
   SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081",
-  SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
-  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
+  SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
+  SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
 )
 
 val keyRegistryConfig = commonRegistryConfig +
@@ -282,9 +282,7 @@ To make use of those, all that is required is to add them to the settings map as
 ```scala
 val commonRegistryConfig = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081",
-  SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
-  SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
+  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081"
 )
 
 val valueRegistryConfig = commonRegistryConfig +
@@ -335,8 +333,10 @@ This library also provides utility methods for registering schemas with topics i
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL                  -> "url_to_schema_registry",
       SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY         -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // if you are retrieving value schema
       SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY           -> SchemaManager.SchemaStorageNamingStrategies.{TOPIC_NAME, RECORD_NAME, TOPIC_RECORD_NAME}, // if your are retrieving key schema
-      SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "schema_name", // if you're using RecordName or TopicRecordName strategies
-      SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace" // if you're using RecordName or TopicRecordName strategies
+      SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "key_schema_name", // if you're using RecordName or TopicRecordName strategies for key
+      SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "key_schema_namespace", // if you're using RecordName or TopicRecordName strategies for key
+      SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "value_schema_name", // if you're using RecordName or TopicRecordName strategies for value
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "value_schema_namespace" // if you're using RecordName or TopicRecordName strategies for value
     )
     SchemaManager.configureSchemaRegistry(schemaRegistryConfs)
 

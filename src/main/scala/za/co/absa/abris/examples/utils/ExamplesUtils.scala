@@ -139,8 +139,8 @@ object ExamplesUtils {
         SchemaManager.PARAM_VALUE_SCHEMA_ID,
         SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY,
         SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
-        SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY,
-        SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+        SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY,
+        SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
       val confs = scala.collection.mutable.Map[String,String](
         SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(subscribeParamKey))

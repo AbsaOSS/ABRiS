@@ -38,8 +38,10 @@ object ConfluentKafkaAvroWriterWithKey {
   private val PARAM_JOB_MASTER = "job.master"
   private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
   private val PARAM_KEY_AVRO_SCHEMA = "key.avro.schema"
-  private val PARAM_AVRO_RECORD_NAME = "avro.record.name"
-  private val PARAM_AVRO_RECORD_NAMESPACE = "avro.record.namespace"
+  private val PARAM_KEY_AVRO_RECORD_NAME = "avro.key.record.name"
+  private val PARAM_KEY_AVRO_RECORD_NAMESPACE = "avro.key.record.namespace"
+  private val PARAM_VALUE_AVRO_RECORD_NAME = "avro.value.record.name"
+  private val PARAM_VALUE_AVRO_RECORD_NAMESPACE = "avro.value.record.namespace"
   private val PARAM_INFER_SCHEMA = "infer.schema"
   private val PARAM_LOG_LEVEL = "log.level"
   private val PARAM_TEST_DATA_ENTRIES = "test.data.entries"
@@ -81,8 +83,10 @@ object ConfluentKafkaAvroWriterWithKey {
     val commonRegistryConfig = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> properties(PARAM_TOPIC),
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
-      SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAME),
-      SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_AVRO_RECORD_NAMESPACE)
+      SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_KEY_AVRO_RECORD_NAME),
+      SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_KEY_AVRO_RECORD_NAMESPACE),
+      SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_VALUE_AVRO_RECORD_NAME),
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_VALUE_AVRO_RECORD_NAMESPACE)
     )
 
     val valueRegistryConfig = commonRegistryConfig +

@@ -33,6 +33,12 @@ object ConfluentKafkaAvroReaderWithKey {
   private val PARAM_OPTION_SUBSCRIBE = "option.subscribe"
   private val PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY = "example.should.use.schema.registry"
 
+  private val PARAM_KEY_SCHEMA_NAME = "key.schema.name"
+  private val PARAM_KEY_SCHEMA_NAMESPACE = "key.schema.namespace"
+
+  private val PARAM_VALUE_SCHEMA_NAME = "value.schema.name"
+  private val PARAM_VALUE_SCHEMA_NAMESPACE = "value.schema.namespace"
+
   def main(args: Array[String]): Unit = {
 
     // there is an example file at /src/test/resources/AvroReadingExample.properties
@@ -67,10 +73,12 @@ object ConfluentKafkaAvroReaderWithKey {
     val commonRegistryConfig = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> properties(PARAM_OPTION_SUBSCRIBE),
       SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> properties(SchemaManager.PARAM_SCHEMA_REGISTRY_URL),
-      SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY ->
-        properties(SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY),
-      SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY ->
-        properties(SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+
+      SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_KEY_SCHEMA_NAME),
+      SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_KEY_SCHEMA_NAMESPACE),
+
+      SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> properties(PARAM_VALUE_SCHEMA_NAME),
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> properties(PARAM_VALUE_SCHEMA_NAMESPACE)
     )
 
     val valueRegistryConfig = commonRegistryConfig ++ Map(

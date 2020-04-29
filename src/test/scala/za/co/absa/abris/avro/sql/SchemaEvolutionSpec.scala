@@ -39,8 +39,8 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
     SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
-    SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "record_name",
-    SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
+    SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "record_name",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
   )
 
   private val latestSchemaRegistryConfig = schemaRegistryConfig ++ Map(

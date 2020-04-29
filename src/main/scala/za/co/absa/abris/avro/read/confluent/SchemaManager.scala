@@ -50,8 +50,11 @@ object SchemaManager extends Logging {
   val PARAM_KEY_SCHEMA_NAMING_STRATEGY   = "key.schema.naming.strategy"
   val PARAM_VALUE_SCHEMA_NAMING_STRATEGY = "value.schema.naming.strategy"
 
-  val PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "schema.name"
-  val PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "schema.namespace"
+  val PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "key.schema.name"
+  val PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "key.schema.namespace"
+
+  val PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "value.schema.name"
+  val PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "value.schema.namespace"
 
   object SchemaStorageNamingStrategies extends Enumeration {
     val TOPIC_NAME        = "topic.name"
@@ -91,10 +94,31 @@ object SchemaManager extends Logging {
 
   def getSubjectName(params: Map[String, String]): String = {
     val topic = params(PARAM_SCHEMA_REGISTRY_TOPIC)
-    val schemaName = params.getOrElse(PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY, null)
-    val schemaNamespace = params.getOrElse(PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY, null)
+
+    val (schemaName, schemaNamespace) = getSchemaNameAndNameSpace(params)
 
     getSubjectName(topic, isKey(params), (schemaName, schemaNamespace), params)
+  }
+
+  def getSchemaNameAndNameSpace(params: Map[String, String]): (String,String) = {
+    getSchemaNameAndNameSpace(params, isKey(params))
+  }
+
+  def getSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (String,String) = {
+    val (maybeName, maybeNamespace) = getMaybeSchemaNameAndNameSpace(params, isKey)
+    (maybeName.getOrElse(null), maybeNamespace.getOrElse(null))
+  }
+
+  def getMaybeSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (Option[String],Option[String]) = {
+    if (isKey) {
+      val keySchemaName = params.get(PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY)
+      val keySchemaNamespace = params.get(PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+      (keySchemaName, keySchemaNamespace)
+    } else {
+      val valueSchemaName = params.get(PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY)
+      val valueSchemaNamespace = params.get(PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+      (valueSchemaName, valueSchemaNamespace)
+    }
   }
 
   private def getSubjectNamingStrategyAdapter(isKey: Boolean, params: Map[String,String]) = {
