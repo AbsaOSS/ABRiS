@@ -105,8 +105,8 @@ object SchemaManager extends Logging {
   }
 
   def getSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (String,String) = {
-val (maybeName, maybeNamespace) = getMaybeSchemaNameAndNameSpace(params, isKey)
-(maybeName.getOrElse(null), maybeNamespace.getOrElse(null))
+    val (maybeName, maybeNamespace) = getMaybeSchemaNameAndNameSpace(params, isKey)
+    (maybeName.getOrElse(null), maybeNamespace.getOrElse(null))
   }
 
   def getMaybeSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (Option[String],Option[String]) = {
