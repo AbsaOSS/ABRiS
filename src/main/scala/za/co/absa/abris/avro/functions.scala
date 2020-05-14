@@ -17,7 +17,8 @@
 package za.co.absa.abris.avro
 
 import org.apache.spark.sql.Column
-import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent._
+import za.co.absa.abris.avro.schemas.RegistryConfig
 import za.co.absa.abris.avro.sql.{AvroDataToCatalyst, CatalystDataToAvro, SchemaProvider}
 
 
@@ -36,7 +37,12 @@ object functions {
    *
    */
   def from_avro(data: Column, jsonFormatSchema: String): Column = {
-    new Column(AvroDataToCatalyst(data.expr, Some(jsonFormatSchema), None, confluentCompliant = false))
+    new Column(AvroDataToCatalyst(
+      data.expr,
+      jsonFormatSchema,
+      None,
+      confluentCompliant = false
+    ))
   }
 
   /**
@@ -48,8 +54,18 @@ object functions {
    * @param schemaRegistryConf schema registry configuration.
    *
    */
-  def from_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
-    new Column(sql.AvroDataToCatalyst(data.expr, None, Some(schemaRegistryConf), confluentCompliant = false))
+  def from_avro(
+    data: Column,
+    schemaRegistryConf: Map[String,String],
+  ): Column = {
+    val schema = SchemaManagerFactory.create(schemaRegistryConf).downloadSchema()
+
+    new Column(AvroDataToCatalyst(
+      data.expr,
+      schema.toString(),
+      Some(schemaRegistryConf),
+      confluentCompliant = false
+    ))
   }
 
   /**
@@ -64,8 +80,18 @@ object functions {
    * @param schemaRegistryConf schema registry configuration.
    *
    */
-  def from_confluent_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
-    new Column(sql.AvroDataToCatalyst(data.expr, None, Some(schemaRegistryConf), confluentCompliant = true))
+  def from_confluent_avro(
+    data: Column,
+    schemaRegistryConf: Map[String,String],
+  ): Column = {
+    val schema = SchemaManagerFactory.create(schemaRegistryConf).downloadSchema()
+
+    new Column(AvroDataToCatalyst(
+      data.expr,
+      schema.toString(),
+      Some(schemaRegistryConf),
+      confluentCompliant = true
+    ))
   }
 
   /**
@@ -82,9 +108,17 @@ object functions {
    * @param schemaRegistryConf schema registry configuration for getting the writer schema.
    *
    */
-  def from_confluent_avro(data: Column, readerSchema: String, schemaRegistryConf: Map[String,String]): Column = {
-    new Column(sql.AvroDataToCatalyst(
-      data.expr, Some(readerSchema), Some(schemaRegistryConf), confluentCompliant = true))
+  def from_confluent_avro(
+    data: Column,
+    readerSchema: String,
+    schemaRegistryConf: Map[String,String],
+  ): Column = {
+    new Column(AvroDataToCatalyst(
+      data.expr,
+      readerSchema,
+      Some(schemaRegistryConf),
+      confluentCompliant = true
+    ))
   }
 
   /**
@@ -93,7 +127,12 @@ object functions {
    *
    */
   def to_avro(data: Column): Column = {
-    new Column(CatalystDataToAvro(data.expr, SchemaProvider(), None, confluentCompliant = false))
+    new Column(CatalystDataToAvro(
+      data.expr,
+      SchemaProvider(),
+      None,
+      confluentCompliant = false
+    ))
   }
 
   /**
@@ -103,7 +142,12 @@ object functions {
    * @param jsonFormatSchema schema used for conversion
    */
   def to_avro(data: Column, jsonFormatSchema: String): Column = {
-    new Column(sql.CatalystDataToAvro(data.expr, SchemaProvider(jsonFormatSchema), None, confluentCompliant = false))
+    new Column(CatalystDataToAvro(
+      data.expr,
+      SchemaProvider(jsonFormatSchema),
+      None,
+      confluentCompliant = false
+    ))
   }
 
   /**
@@ -113,12 +157,15 @@ object functions {
    * @param data column to be converted to avro
    * @param schemaRegistryConf schema registry configuration
    */
-  def to_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
+  def to_avro(
+    data: Column,
+    schemaRegistryConf: Map[String,String],
+  ): Column = {
 
-    val (name, namespace) = SchemaManager.getMaybeSchemaNameAndNameSpace(schemaRegistryConf, isKey(data))
+    val schemaProvider: SchemaProvider = createSchemaProvider(data, schemaRegistryConf)
 
-    new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(name, namespace, schemaRegistryConf), Some(schemaRegistryConf), confluentCompliant = false))
+    new Column(CatalystDataToAvro(
+      data.expr, schemaProvider, Some(schemaRegistryConf), confluentCompliant = false))
   }
 
   /**
@@ -128,9 +175,17 @@ object functions {
    * @param jsonFormatSchema schema used for conversion
    * @param schemaRegistryConf schema registry configuration
    */
-  def to_avro(data: Column, jsonFormatSchema: String, schemaRegistryConf: Map[String,String]): Column = {
-    new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(jsonFormatSchema), Some(schemaRegistryConf), confluentCompliant = false))
+  def to_avro(
+    data: Column,
+    jsonFormatSchema: String,
+    schemaRegistryConf: Map[String,String],
+  ): Column = {
+    new Column(CatalystDataToAvro(
+      data.expr,
+      SchemaProvider(jsonFormatSchema),
+      Some(schemaRegistryConf),
+      confluentCompliant = false
+    ))
   }
 
   /**
@@ -141,12 +196,15 @@ object functions {
    * @param data column to be converted to avro
    * @param schemaRegistryConf schema registry configuration
    */
-  def to_confluent_avro(data: Column, schemaRegistryConf: Map[String,String]): Column = {
+  def to_confluent_avro(
+    data: Column,
+    schemaRegistryConf: Map[String,String],
+  ): Column = {
 
-    val (name, namespace) = SchemaManager.getMaybeSchemaNameAndNameSpace(schemaRegistryConf, isKey(data))
+    val schemaProvider: SchemaProvider = createSchemaProvider(data, schemaRegistryConf)
 
-    new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(name, namespace, schemaRegistryConf), Some(schemaRegistryConf), confluentCompliant = true))
+    new Column(CatalystDataToAvro(
+      data.expr, schemaProvider, Some(schemaRegistryConf), confluentCompliant = true))
   }
 
   /**
@@ -156,14 +214,48 @@ object functions {
    * @param data column to be converted to avro
    * @param schemaRegistryConf schema registry configuration
    */
-  def to_confluent_avro(data: Column, jsonFormatSchema: String, schemaRegistryConf: Map[String,String]): Column = {
+  def to_confluent_avro(
+    data: Column,
+    jsonFormatSchema: String,
+    schemaRegistryConf: Map[String,String],
+   ): Column = {
 
-    new Column(sql.CatalystDataToAvro(
-      data.expr, SchemaProvider(jsonFormatSchema), Some(schemaRegistryConf), confluentCompliant = true))
+    new Column(CatalystDataToAvro(
+      data.expr,
+      SchemaProvider(jsonFormatSchema),
+      Some(schemaRegistryConf),
+      confluentCompliant = true
+    ))
+  }
+
+
+  private def createSchemaProvider(data: Column, schemaRegistryConf: Map[String, String]) = {
+    val registryConfig = new RegistryConfig(schemaRegistryConf)
+    val schemaProvider = if (registryConfig.isIdOrVersionDefined) {
+      val schemaManager = SchemaManagerFactory.create(schemaRegistryConf)
+      val schema = schemaManager.downloadSchema()
+      SchemaProvider(schema.toString)
+    } else {
+      val (name, namespace) = getMaybeSchemaNameAndNameSpace(schemaRegistryConf, isKey(data))
+      SchemaProvider(name, namespace)
+    }
+    schemaProvider
   }
 
   private def isKey(col: Column): Boolean = {
     col.toString().toLowerCase == "key"
+  }
+
+  private def getMaybeSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean) = {
+    if (isKey) {
+      val keySchemaName = params.get(SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY)
+      val keySchemaNamespace = params.get(SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+      (keySchemaName, keySchemaNamespace)
+    } else {
+      val valueSchemaName = params.get(SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY)
+      val valueSchemaNamespace = params.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+      (valueSchemaName, valueSchemaNamespace)
+    }
   }
 
   // scalastyle:on: method.name

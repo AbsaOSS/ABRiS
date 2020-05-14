@@ -23,8 +23,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCo
 import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.format.SparkAvroConversions
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 
 case class CatalystDataToAvro(
    child: Expression,
@@ -35,11 +34,16 @@ case class CatalystDataToAvro(
 
   override def dataType: DataType = BinaryType
 
-  private lazy val schemaId = schemaRegistryConf.flatMap(conf =>
-    registerSchema(schemaProvider.wrappedSchema(child), conf, confluentCompliant))
+  private lazy val schemaId = schemaRegistryConf.flatMap { _ =>
+    schemaManager.schemaId
+      .orElse(registerSchema(schemaProvider.wrappedSchema(child)))
+      .filter(_ => confluentCompliant)
+  }
 
   @transient private lazy val serializer: AvroSerializer =
     new AvroSerializer(child.dataType, schemaProvider.originalSchema(child), child.nullable)
+
+  @transient private lazy val schemaManager = SchemaManagerFactory.create(schemaRegistryConf.get)
 
   override def nullSafeEval(input: Any): Any = {
     val avroData = serializer.serialize(input)
@@ -66,19 +70,6 @@ case class CatalystDataToAvro(
       s"(byte[]) $expr.nullSafeEval($input)")
   }
 
-  /**
-   * Tries to manage schema registration in case credentials to access Schema Registry are provided.
-   */
-  private def registerSchema(
-      schema: Schema,
-      registryConfig: Map[String,String],
-      prependSchemaId: Boolean): Option[Int] = {
-    var schemaId = SchemaManager.getIdFromConfig(registryConfig)
-    if (schemaId.isEmpty) {
-      schemaId = AvroSchemaUtils.registerSchema(schema, registryConfig)
-    }
-
-    if (prependSchemaId) schemaId else None
-  }
+  private def registerSchema(schema: Schema): Option[Int] = Some(schemaManager.register(schema))
 
 }

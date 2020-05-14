@@ -49,8 +49,8 @@
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
 		<!--Tests-->
-		<mockito.version>1.8.5</mockito.version>
-		<scalatest.version>3.0.8</scalatest.version>
+		<scalatestplus.mockito.version>3.1.0.0</scalatestplus.mockito.version>
+		<scalatest.version>3.1.0</scalatest.version>
 		<scalatest.maven.version>2.0.0</scalatest.maven.version>
 		<scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
@@ -108,21 +108,15 @@
     <dependencies>
 		<!-- Tests -->
         <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-core_${scala.compat.version}</artifactId>
-            <version>${specs.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
             <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
+            <groupId>org.scalatestplus</groupId>
+            <artifactId>mockito-3-2_${scala.compat.version}</artifactId>
+            <version>${scalatestplus.mockito.version}</version>
             <scope>test</scope>
         </dependency>
 
