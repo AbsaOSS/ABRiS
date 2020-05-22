@@ -131,16 +131,31 @@ object ExamplesUtils {
 
   implicit class SchemaRegistryConfiguration(props: Properties) {
 
-    def getSchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] = {
+    def getValueSchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] =
+      getSchemaRegistryConfigurations(
+        Set(
+          SchemaManager.PARAM_SCHEMA_REGISTRY_URL,
+          SchemaManager.PARAM_VALUE_SCHEMA_ID,
+          SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
+          SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY,
+          SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
+        ),
+        subscribeParamKey
+      )
 
-      val keys = Set(
-        SchemaManager.PARAM_SCHEMA_REGISTRY_URL,
-        SchemaManager.PARAM_KEY_SCHEMA_ID,
-        SchemaManager.PARAM_VALUE_SCHEMA_ID,
-        SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY,
-        SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
-        SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY,
-        SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
+    def getKeySchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] =
+      getSchemaRegistryConfigurations(
+        Set(
+          SchemaManager.PARAM_SCHEMA_REGISTRY_URL,
+          SchemaManager.PARAM_KEY_SCHEMA_ID,
+          SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY,
+          SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY,
+          SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
+        ),
+        subscribeParamKey
+      )
+
+    def getSchemaRegistryConfigurations(keys: Set[String], subscribeParamKey: String): Map[String,String] = {
 
       val confs = scala.collection.mutable.Map[String,String](
         SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(subscribeParamKey))

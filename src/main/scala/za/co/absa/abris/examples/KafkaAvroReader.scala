@@ -65,7 +65,7 @@ object KafkaAvroReader {
     import za.co.absa.abris.avro.functions.from_avro
 
     if (props.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      val schemaRegistryConfig = props.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
+      val schemaRegistryConfig = props.getValueSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
       dataFrame.select(from_avro(col("value"), schemaRegistryConfig) as 'data)
     }
     else {
