@@ -22,8 +22,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent.{SchemaManager, SchemaManagerFactory}
 
 class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 {
@@ -48,7 +47,7 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   )
 
   override def beforeEach() {
-    SchemaManager.setConfiguredSchemaRegistry(new MockSchemaRegistryClient())
+    SchemaManagerFactory.setClientInstance(new MockSchemaRegistryClient())
   }
 
   val recordByteSchema = """{
@@ -111,7 +110,8 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     // To avoid race conditions between schema registration and reading the data are converted from spark to scala
     val avroRows = avroBytes.collect()
 
-    AvroSchemaUtils.registerSchema(recordEvolvedByteSchema, latestSchemaRegistryConfig)
+    val schemaManager = SchemaManagerFactory.create(latestSchemaRegistryConfig)
+    schemaManager.register(recordEvolvedByteSchema)
 
     // Now when the last version of schema is registered, we will convert the data back to spark DataFrame
     val avroDF = spark.sparkContext.parallelize(avroRows, 2)

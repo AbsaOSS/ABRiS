@@ -20,6 +20,7 @@ import java.io.File
 
 import org.apache.commons.io.FileUtils
 import org.scalatest.FlatSpec
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
 class SchemaLoaderSpec extends FlatSpec {
@@ -32,7 +33,7 @@ class SchemaLoaderSpec extends FlatSpec {
     val expectedSchema = TestSchemas.COMPLEX_SCHEMA_SPEC
     val schemaFileName = "testSchemaName"
     val destination = writeIntoFS(expectedSchema, schemaFileName)
-    val loadedSchema = SchemaLoader.loadFromFile(destination.getAbsolutePath)
+    val loadedSchema = AvroSchemaUtils.loadPlain(destination.getAbsolutePath)
 
     FileUtils.deleteQuietly(new File(destination.getAbsolutePath))
     FileUtils.deleteDirectory(testDir)

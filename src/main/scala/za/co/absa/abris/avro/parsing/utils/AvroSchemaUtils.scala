@@ -16,20 +16,17 @@
 
 package za.co.absa.abris.avro.parsing.utils
 
-import java.security.InvalidParameterException
-
-import io.confluent.kafka.schemaregistry.client.SchemaMetadata
 import org.apache.avro.Schema
-import org.slf4j.LoggerFactory
-import za.co.absa.abris.avro.read.confluent.SchemaManager
-import za.co.absa.abris.avro.schemas.SchemaLoader
+import org.apache.commons.io.IOUtils
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
+
+import scala.collection.JavaConverters._
 
 /**
  * This class provides utility methods to cope with Avro schemas.
  */
 object AvroSchemaUtils {
-
-  private val logger = LoggerFactory.getLogger(AvroSchemaUtils.getClass)
 
   /**
    * Parses a plain Avro schema into an org.apache.avro.Schema implementation.
@@ -43,109 +40,17 @@ object AvroSchemaUtils {
     parse(loadPlain(path))
   }
 
-  def loadForValue(schemaRegistryConf: Map[String,String]): Schema = {
-    SchemaLoader.loadFromSchemaRegistryValue(schemaRegistryConf)
-  }
-
-  def loadForKey(schemaRegistryConf: Map[String,String]): Schema = {
-    SchemaLoader.loadFromSchemaRegistryKey(schemaRegistryConf)
-  }
-
-  def load(schemaVersion: Int, schemaRegistryConf: Map[String,String]): SchemaMetadata = {
-    SchemaLoader.loadFromSchemaRegistry(schemaVersion, schemaRegistryConf)
-  }
-
-  /**
-    * Register a new schema for a subject KEY if the schema is compatible with the latest available version.
-    *
-    * @return None if incompatible or if could not perform the registration.
-    */
-  def registerIfCompatibleKeySchema(topic: String, schema: Schema, schemaRegistryConf: Map[String,String]):
-  Option[Int] = {
-    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, isKey = true)
-  }
-
-  /**
-    * Register a new schema for a subject VALUE if the schema is compatible with the latest available version.
-    *
-    * @return None if incompatible or if could not perform the registration.
-    */
-  def registerIfCompatibleValueSchema(
-    topic: String,
-    schema: Schema,
-    schemaRegistryConf: Map[String,String]): Option[Int] = {
-
-    registerIfCompatibleSchema(topic, schema, schemaRegistryConf, isKey = false)
-  }
-
-  /**
-    * Register a new schema for a subject if the schema is compatible with the latest available version.
-    *
-    * @return None if incompatible or if could not perform the registration.
-    */
-  private def registerIfCompatibleSchema(
-    topic: String,
-    schema: Schema,
-    schemaRegistryConf: Map[String,String],
-    isKey: Boolean): Option[Int] = {
-
-    SchemaManager.configure(schemaRegistryConf)
-
-    val subject = SchemaManager.getSubjectName(topic, isKey, schema, schemaRegistryConf)
-
-    if (!SchemaManager.exists(subject) || SchemaManager.isCompatible(schema, subject)) {
-      logger.info(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
-      Some(SchemaManager.register(schema, subject))
-    }
-    else {
-      logger.error(s"Schema incompatible with latest for subject '$subject' in Schema Registry")
-      None
-    }
-  }
-
   /**
    * Loads an Avro's plain schema from the path.
    */
   def loadPlain(path: String): String = {
-    SchemaLoader.loadFromFile(path)
+    if (path == null) {
+      throw new IllegalArgumentException("Null path informed. " +
+        "Please make sure you provide a valid path to an existing Avro schema located in some file system.")
+    }
+    val hdfs = FileSystem.get(new Configuration())
+    val stream = hdfs.open(new Path(path))
+    try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()
   }
 
-  /**
-   * Tries to manage schema registration in case credentials to access Schema Registry are provided.
-   */
-  @throws[InvalidParameterException]
-  def registerSchema(schemaAsString: String, registryConfig: Map[String,String]): Option[Int] =
-    registerSchema(parse(schemaAsString), registryConfig)
-
-  /**
-   * Tries to manage schema registration in case credentials to access Schema Registry are provided.
-   */
-  @throws[InvalidParameterException]
-  def registerSchema(schema: Schema, registryConfig: Map[String,String]): Option[Int] = {
-
-    val topic = registryConfig(SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC)
-
-    val valueStrategy = registryConfig.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
-    val keyStrategy = registryConfig.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
-
-    val schemaId = (valueStrategy, keyStrategy) match {
-      case (Some(valueStrategy), None) => AvroSchemaUtils.registerIfCompatibleValueSchema(topic, schema, registryConfig)
-      case (None, Some(keyStrategy)) => AvroSchemaUtils.registerIfCompatibleKeySchema(topic, schema, registryConfig)
-      case (Some(_), Some(_)) =>
-        throw new InvalidParameterException(
-          "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
-            "Only one of them supposed to be defined!")
-      case _ =>
-        throw new InvalidParameterException(
-          "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
-            "must be defined to use schema registry!")
-    }
-
-    if (schemaId.isEmpty) {
-      throw new InvalidParameterException(s"Schema could not be registered for topic '$topic'. " +
-        "Make sure that the Schema Registry is available, the parameters are correct and the schemas ar compatible")
-    }
-
-    schemaId
-  }
 }

@@ -24,7 +24,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.read.confluent.SchemaManager
+import za.co.absa.abris.avro.read.confluent.{SchemaManager, SchemaManagerFactory}
 import za.co.absa.abris.examples.data.generation.{ComplexRecordsGenerator, TestSchemas}
 
 class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
@@ -41,7 +41,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
 
   private val schemaRegistryConfig = Map(
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
-    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
+    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://dummy",
     SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
     SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
     SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
@@ -62,7 +62,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   }
 
   override def beforeEach() {
-    SchemaManager.setConfiguredSchemaRegistry(new MockSchemaRegistryClient())
+    SchemaManagerFactory.setClientInstance(new MockSchemaRegistryClient())
   }
 
   val bareByteSchema = """{"type": "bytes"}""""
@@ -345,8 +345,10 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   it should "convert all types of data to confluent avro an back using schema registry and the latest version" in {
 
     val dataFrame: DataFrame = getTestingDataFrame
+
     val schemaString = ComplexRecordsGenerator.usedAvroSchema
-    AvroSchemaUtils.registerSchema(schemaString, latestVersionSchemaRegistryConfig)
+    val schemaManager = SchemaManagerFactory.create(latestVersionSchemaRegistryConfig)
+    schemaManager.register(schemaString)
 
     val avroBytes = dataFrame
       .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)

@@ -18,159 +18,137 @@ package za.co.absa.abris.avro.read.confluent
 
 import java.security.InvalidParameterException
 
-import io.confluent.common.config.ConfigException
+import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.scalatest.{BeforeAndAfter, FlatSpec}
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.schemas.RegistryConfig
 
-class SchemaManagerSpec extends FlatSpec with BeforeAndAfter {
+class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
 
-  private val schema = AvroSchemaUtils.parse(
-    "{\"type\": \"record\", \"name\": \"Blah\", \"fields\": [{ \"name\": \"name\", \"type\": \"string\" }]}")
+  private val schema =
+    "{\"type\": \"record\", \"name\": \"Blah\", \"fields\": [{ \"name\": \"name\", \"type\": \"string\" }]}"
+
+
+  val recordByteSchema = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "record_name",
+     "fields":[
+         {"name": "int", "type":  ["int", "null"] }
+     ]
+  }"""
+
+  val recordEvolvedByteSchema1 = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "record_name",
+     "fields":[
+         {"name": "int", "type": ["int", "null"] },
+         {"name": "favorite_color", "type": "string", "default": "green"}
+     ]
+  }"""
+
+  val recordEvolvedByteSchema2 = """{
+     "namespace": "all-types.test",
+     "type": "record",
+     "name": "record_name",
+     "fields":[
+         {"name": "int", "type": ["int", "null"] },
+         {"name": "favorite_color", "type": "string", "default": "green"},
+         {"name": "favorite_badger", "type": "string", "default": "Honey badger"}
+     ]
+  }"""
 
   behavior of "SchemaManager"
 
-  before {
-    SchemaManager.reset()
-    assertResult(false) {SchemaManager.isSchemaRegistryConfigured}
-  }
-
   it should "throw if no strategy is specified" in {
-    val topic = "a_subject"
     val conf = Map[String,String]()
-    val message1 = intercept[IllegalArgumentException] {
-      SchemaManager.getSubjectName(topic, isKey = false, (null, null), conf)
+    val schemaManager = new SchemaManager(new RegistryConfig(conf), new MockSchemaRegistryClient())
+
+    intercept[InvalidParameterException] {
+      schemaManager.downloadSchema()
     }
-    val message2 = intercept[IllegalArgumentException] {
-      SchemaManager.getSubjectName(topic, isKey = true, (null, null), conf)
+    intercept[InvalidParameterException] {
+      schemaManager.register(recordEvolvedByteSchema1)
     }
-
-    assert(message1.getMessage.contains("not specified"))
-    assert(message2.getMessage.contains("not specified"))
   }
 
-  it should "retrieve the correct subject name for TopicName strategy" in {
-    val subject = "a_subject"
-    val conf = Map(
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME,
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME
-    )
-    assert(subject + "-value" == SchemaManager.getSubjectName(subject, isKey = false, (null, null), conf))
-    assert(subject + "-key" == SchemaManager.getSubjectName(subject, isKey = true, (null, null), conf))
+  private val dummySchemaRegistryConfig = Map(
+    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "dummy_topic",
+    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name",
+  )
+
+
+  private val schemaRegistryConfig = Map(
+    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
+    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name",
+  )
+
+  it should "resolve schema id integer from schema and version" in {
+
+    val client = new MockSchemaRegistryClient()
+
+    val dummySchemaManager = new SchemaManager(new RegistryConfig(dummySchemaRegistryConfig), client)
+    // register dummy schema so that ids and versions are different for the rest
+    dummySchemaManager.register(schema)                 // id 1, version 1
+
+
+    val regConfig = new RegistryConfig(schemaRegistryConfig)
+    val schemaManager1 = new SchemaManager(regConfig, client)
+    // now register several schemas for different topic to create more versions
+    schemaManager1.register(recordByteSchema)           // id 2, version 1
+    schemaManager1.register(recordEvolvedByteSchema1)   // id 3, version 2
+    schemaManager1.register(recordEvolvedByteSchema2)   // id 4, version 3
+
+
+    val schemaManager2 = new SchemaManager(new RegistryConfig(
+      schemaRegistryConfig ++ Map(
+        SchemaManager.PARAM_VALUE_SCHEMA_ID -> "4",
+        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "2"
+      )
+    ), client)
+
+    assert(schemaManager2.schemaId.get == 4)
+
+
+    val schemaManager3 = new SchemaManager(new RegistryConfig(
+      schemaRegistryConfig ++ Map(
+        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "2"
+      )
+    ), client)
+
+    assert(schemaManager3.schemaId.get == 3)
+
+
+    val schemaManager4 = new SchemaManager(new RegistryConfig(
+      schemaRegistryConfig ++ Map(
+        SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
+      )
+    ), client)
+
+    assert(schemaManager4.schemaId.get == 4)
+
+
+    val schemaManager5 = new SchemaManager(new RegistryConfig(
+      schemaRegistryConfig ++ Map(
+        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "latest"
+      )
+    ), client)
+
+    assert(schemaManager5.schemaId.get == 4)
+
+
+    val schemaManager6 = new SchemaManager(new RegistryConfig(
+      dummySchemaRegistryConfig ++ Map(
+        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "latest"
+      )
+    ), client)
+
+    assert(schemaManager6.schemaId.get == 1)
+
+    val schemaManager7 = new SchemaManager(new RegistryConfig(dummySchemaRegistryConfig), client)
+    assert(schemaManager7.schemaId == None)
   }
 
-  it should "retrieve the correct subject name for RecordName strategy" in {
-    val subject = "a_subject"
-    val conf = Map(
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME
-    )
-
-    val schemaName = "schema_name"
-    val schemaNamespace = "schema_namespace"
-
-    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      subject, isKey = false, (schemaName, schemaNamespace), conf))
-
-    assert(s"$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      subject, isKey = true, (schemaName, schemaNamespace), conf))
-  }
-
-  it should "throw SchemaManagerException when getting RecordName strategy if schema is null" in {
-    val subject = "a_subject"
-    val conf = Map(
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME
-    )
-
-    val schemaName = null
-    val schemaNamespace = "namespace"
-
-    assertThrows[SchemaManagerException](
-      SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
-
-    assertThrows[SchemaManagerException](
-      SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
-  }
-
-  it should "retrieve the correct subject name for TopicRecordName strategy" in {
-    val topic = "a_subject"
-    val conf = Map(
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME
-    )
-
-    val schemaName = "schema_name"
-    val schemaNamespace = "schema_namespace"
-
-    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      topic, isKey = false, (schemaName, schemaNamespace), conf))
-
-    assert(s"$topic-$schemaNamespace.$schemaName" == SchemaManager.getSubjectName(
-      topic, isKey = true, (schemaName, schemaNamespace), conf))
-  }
-
-  it should "throw when getting TopicRecordName strategy if schema is null" in {
-    val subject = "a_subject"
-    val conf = Map(
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME
-    )
-
-    val schemaName = null
-    val schemaNamespace = "namespace"
-
-    assertThrows[SchemaManagerException](
-      SchemaManager.getSubjectName(subject, isKey = false, (schemaName, schemaNamespace), conf).isEmpty)
-
-    assertThrows[SchemaManagerException](
-      SchemaManager.getSubjectName(subject, isKey = true, (schemaName, schemaNamespace), conf).isEmpty)
-  }
-
-  it should "not try to configure Schema Registry client if parameters are empty" in {
-    SchemaManager.configure(Map[String,String]())
-    assertResult(false) {SchemaManager.isSchemaRegistryConfigured} // should still be unconfigured
-  }
-
-  it should "throw when getting subject and id if Schema Registry client is not configured" in {
-    assertThrows[SchemaManagerException] {SchemaManager.getBySubjectAndId("subject", 1)}
-  }
-
-  it should "throw when getting latest id if Schema Registry client is not configured" in {
-    assertThrows[SchemaManagerException] {SchemaManager.getLatestVersionId("subject")}
-  }
-
-  it should "throw when registering schema if Schema Registry client is not configured" in {
-    assertThrows[SchemaManagerException] {SchemaManager.register(schema, "subject")}
-  }
-
-  it should "throw IllegalArgumentException if cluster address is empty or null" in {
-    val config1 = Map(SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "")
-    val config2 = Map(SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> null)
-
-    assertThrows[IllegalArgumentException] {SchemaManager.configure(config1)}
-    assertThrows[ConfigException] {SchemaManager.configure(config2)}
-  }
-
-  it should "retrieve true if key naming strategy is set" in {
-    val keyNamingStrategyConfig = Map(
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
-
-    assert(SchemaManager.isKey(keyNamingStrategyConfig))
-  }
-
-  it should "retieve false if value naming strategy is set" in {
-    val valueNamingStrategyConfig = Map(
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
-
-    assert(!SchemaManager.isKey(valueNamingStrategyConfig))
-  }
-
-  it should "throw InvalidParameterException if both or none value and key naming strategies are set" in {
-    val bothNamingStrategyConfig = Map(
-      SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME,
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_NAME)
-
-    assertThrows[InvalidParameterException] {SchemaManager.isKey(bothNamingStrategyConfig)}
-    assertThrows[InvalidParameterException] {SchemaManager.isKey(Map())}
-  }
 }

@@ -18,15 +18,126 @@ package za.co.absa.abris.avro.read.confluent
 
 import java.security.InvalidParameterException
 
-import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaMetadata, SchemaRegistryClient}
-import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDeserializerConfig}
+import io.confluent.kafka.schemaregistry.client.{SchemaMetadata, SchemaRegistryClient}
 import org.apache.avro.Schema
-import org.apache.kafka.common.config.ConfigException
 import org.apache.spark.internal.Logging
-import za.co.absa.abris.avro.subject.SubjectNameStrategyAdapterFactory
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.read.confluent.SchemaManager.PARAM_SCHEMA_ID_LATEST_NAME
+import za.co.absa.abris.avro.schemas.RegistryConfig
 
-import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
+
+class SchemaManager(
+   config: RegistryConfig,
+   schemaRegistryClient: SchemaRegistryClient) extends Logging {
+
+  lazy val schemaId: Option[Int] = resolveSchemaId()
+
+  private def resolveSchemaId(): Option[Int] = {
+    val subject = config.subjectName()
+
+    config.schemaIdOption match {
+      case Some(PARAM_SCHEMA_ID_LATEST_NAME) =>  Some(getLatestVersionId(subject))
+      case Some(id) => Some(id.toInt)
+      case _ => config.schemaVersionOption match {
+        case Some(PARAM_SCHEMA_ID_LATEST_NAME) => Some(getLatestVersionId(subject))
+        case Some(version) => Some(getSchemaMetadataBySubjectAndVersion(subject, version.toInt).getId)
+        case _ => None
+      }
+    }
+  }
+
+  /**
+   * Retrieves the id corresponding to the latest schema available in Schema Registry.
+   */
+  private def getLatestVersionId(subject: String): Int = {
+    logDebug(s"Trying to get latest schema version id for subject '$subject'")
+
+    Try(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) match {
+      case Success(id)  => id
+      case Failure(e)   => throw new SchemaManagerException(
+        s"Could not get the id of the latest version for subject '$subject'", e)
+    }
+  }
+
+  /**
+   * Retrieves an Avro [[SchemaMetadata]] instance from a given subject and stored with a given version.
+   */
+  private def getSchemaMetadataBySubjectAndVersion(subject: String, version: Int): SchemaMetadata = {
+    logDebug(s"Trying to get schema for subject '$subject' and version '$version'")
+
+    Try(schemaRegistryClient.getSchemaMetadata(subject, version)) match {
+      case Success(id)  => id
+      case Failure(e)   => throw new SchemaManagerException(
+        s"Could not get schema metadata for subject '$subject' and version '$version'", e)
+    }
+  }
+
+  def downloadSchema(): Schema = getBySubjectAndId(config.subjectName(), schemaId.get)
+
+  /**
+   * Retrieves an Avro Schema instance from a given subject and stored with a given id.
+   */
+  private def getBySubjectAndId(subject: String, id: Int): Schema = {
+    logDebug(s"Trying to get schema for subject '$subject' and id '$id'")
+
+    Try(schemaRegistryClient.getBySubjectAndId(subject, id)) match {
+      case Success(schema)  => schema
+      case Failure(e)   => throw new SchemaManagerException(
+        s"Could not get schema for subject '$subject' and id '$id'", e)
+    }
+  }
+
+  def downloadById(id: Int): Schema = {
+    logDebug(s"Trying to get schema for id '$id'")
+
+    Try(schemaRegistryClient.getById(id)) match {
+      case Success(retrievedId)  => retrievedId
+      case Failure(e)   => throw new SchemaManagerException(s"Could not get schema for id '$id'", e)
+    }
+  }
+
+  def register(schemaString: String): Int = register(AvroSchemaUtils.parse(schemaString))
+
+  /**
+   * Register a new schema for a subject if the schema is compatible with the latest available version.
+   *
+   * @return registered schema id
+   */
+  def register(schema: Schema): Int = {
+    val subject = config.subjectName(schema)
+
+    if (!exists(subject) || isCompatible(schema, subject)) {
+      logInfo(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
+      schemaRegistryClient.register(subject, schema)
+    } else {
+      throw new InvalidParameterException(s"Schema could not be registered for subject '${subject}'. " +
+        "Make sure that the Schema Registry is available, the parameters are correct and the schemas are compatible")
+    }
+  }
+
+  /**
+   * Checks if a given schema exists in Schema Registry.
+   */
+  private def exists(subject: String): Boolean = {
+    Try(schemaRegistryClient.getLatestSchemaMetadata(subject)) match {
+      case Success(_) => true
+      case Failure(e) if e.getMessage.contains("Subject not found") || e.getMessage.contains("No schema registered") =>
+        logInfo(s"Subject not registered: '$subject'")
+        false
+      case Failure(e) =>
+        logError(s"Problems found while retrieving metadata for subject '$subject'", e)
+        false
+    }
+  }
+
+  /**
+   * Checks if a new schema is compatible with the latest schema registered for a given subject.
+   */
+  private def isCompatible(newSchema: Schema, subject: String): Boolean = {
+    schemaRegistryClient.testCompatibility(subject, newSchema)
+  }
+}
 
 /**
   * This object provides methods to integrate with remote schemas through Schema Registry.
@@ -40,305 +151,27 @@ import scala.util.{Failure, Success, Try}
 object SchemaManager extends Logging {
 
   val PARAM_SCHEMA_REGISTRY_TOPIC = "schema.registry.topic"
-  val PARAM_SCHEMA_REGISTRY_URL   = "schema.registry.url"
-  val PARAM_VALUE_SCHEMA_ID       = "value.schema.id"
-  val PARAM_VALUE_SCHEMA_VERSION  = "value.schema.version"
-  val PARAM_KEY_SCHEMA_ID         = "key.schema.id"
-  val PARAM_KEY_SCHEMA_VERSION    = "key.schema.version"
+  val PARAM_SCHEMA_REGISTRY_URL = "schema.registry.url"
+  val PARAM_VALUE_SCHEMA_ID = "value.schema.id"
+  val PARAM_VALUE_SCHEMA_VERSION = "value.schema.version"
+  val PARAM_KEY_SCHEMA_ID = "key.schema.id"
+  val PARAM_KEY_SCHEMA_VERSION = "key.schema.version"
   val PARAM_SCHEMA_ID_LATEST_NAME = "latest"
 
-  val PARAM_KEY_SCHEMA_NAMING_STRATEGY   = "key.schema.naming.strategy"
+  val PARAM_KEY_SCHEMA_NAMING_STRATEGY = "key.schema.naming.strategy"
   val PARAM_VALUE_SCHEMA_NAMING_STRATEGY = "value.schema.naming.strategy"
 
-  val PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "key.schema.name"
+  val PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY = "key.schema.name"
   val PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "key.schema.namespace"
 
-  val PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY      = "value.schema.name"
+  val PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY = "value.schema.name"
   val PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY = "value.schema.namespace"
 
   object SchemaStorageNamingStrategies extends Enumeration {
-    val TOPIC_NAME        = "topic.name"
-    val RECORD_NAME       = "record.name"
+    val TOPIC_NAME = "topic.name"
+    val RECORD_NAME = "record.name"
     val TOPIC_RECORD_NAME = "topic.record.name"
   }
-
-  private var schemaRegistryClient: SchemaRegistryClient = _
-
-  /**
-    * Confluent's Schema Registry supports schemas for Kafka keys and values. What makes them different is simply the
-    * what is appended to the schema name, either '-key' or '-value'.
-    *
-    * This method returns the subject name based on the topic and to which part of the message it corresponds.
-    */
-  def getSubjectName(topic: String, isKey: Boolean, schema: Schema, params: Map[String, String]): String = {
-    val adapter = getSubjectNamingStrategyAdapter(isKey, params)
-
-    if (adapter.validate(schema)) {
-      val subjectName = adapter.subjectName(topic, isKey, schema)
-      logDebug(s"Subject name resolved to: $subjectName")
-      subjectName
-    }
-    else {
-      throw new SchemaManagerException(
-        s"Invalid configuration for naming strategy. Are you using RecordName or TopicRecordName? " +
-        s"If yes, are you providing SchemaManager.PARAM_SCHEMA_NAME_FOR_RECORD_STRATEGY and " +
-        s"SchemaManager.PARAM_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY in the configuration map?")
-    }
-  }
-
-  def getSubjectName(topic: String, isKey: Boolean, schemaNameAndSpace: (String,String), params: Map[String, String]):
-      String = {
-    val (name, namespace) = schemaNameAndSpace
-    getSubjectName(topic, isKey, Schema.createRecord(name, "", namespace, false), params)
-  }
-
-  def getSubjectName(params: Map[String, String]): String = {
-    val topic = params(PARAM_SCHEMA_REGISTRY_TOPIC)
-
-    val (schemaName, schemaNamespace) = getSchemaNameAndNameSpace(params)
-
-    getSubjectName(topic, isKey(params), (schemaName, schemaNamespace), params)
-  }
-
-  def getSchemaNameAndNameSpace(params: Map[String, String]): (String,String) = {
-    getSchemaNameAndNameSpace(params, isKey(params))
-  }
-
-  def getSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (String,String) = {
-    val (maybeName, maybeNamespace) = getMaybeSchemaNameAndNameSpace(params, isKey)
-    (maybeName.getOrElse(null), maybeNamespace.getOrElse(null))
-  }
-
-  def getMaybeSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean): (Option[String],Option[String]) = {
-    if (isKey) {
-      val keySchemaName = params.get(PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-      val keySchemaNamespace = params.get(PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
-      (keySchemaName, keySchemaNamespace)
-    } else {
-      val valueSchemaName = params.get(PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-      val valueSchemaNamespace = params.get(PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
-      (valueSchemaName, valueSchemaNamespace)
-    }
-  }
-
-  private def getSubjectNamingStrategyAdapter(isKey: Boolean, params: Map[String,String]) = {
-    val strategy = if (isKey) {
-      params.getOrElse(
-        PARAM_KEY_SCHEMA_NAMING_STRATEGY,
-        throw new IllegalArgumentException(s"Parameter not specified: '$PARAM_KEY_SCHEMA_NAMING_STRATEGY'"))
-    }
-    else {
-      params.getOrElse(
-        PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
-        throw new IllegalArgumentException(s"Parameter not specified: '$PARAM_VALUE_SCHEMA_NAMING_STRATEGY'"))
-    }
-    SubjectNameStrategyAdapterFactory.build(strategy)
-  }
-
-  /**
-    * Retrieves an Avro Schema instance from a given subject and stored with a given id.
-    */
-  def getBySubjectAndId(subject: String, id: Int): Schema = {
-    logDebug(s"Trying to get schema for subject '$subject' and id '$id'")
-    throwIfClientNotConfigured()
-
-    Try(schemaRegistryClient.getBySubjectAndId(subject, id)) match {
-      case Success(schema)  => schema
-      case Failure(e)   => throw new SchemaManagerException(
-        s"Could not get schema for subject '$subject' and id '$id'", e)
-    }
-  }
-
-  /**
-    * Retrieves an Avro [[SchemaMetadata]] instance from a given subject and stored with a given version.
-    */
-  def getBySubjectAndVersion(subject: String, version: Int): SchemaMetadata = {
-    logDebug(s"Trying to get schema for subject '$subject' and version '$version'")
-    throwIfClientNotConfigured()
-
-    Try(schemaRegistryClient.getSchemaMetadata(subject, version)) match {
-      case Success(id)  => id
-      case Failure(e)   => throw new SchemaManagerException(
-        s"Could not get schema metadata for subject '$subject' and version '$version'", e)
-    }
-  }
-
-  def getById(id: Int): Schema = {
-    logDebug(s"Trying to get schema for id '$id'")
-    throwIfClientNotConfigured()
-
-    Try(schemaRegistryClient.getById(id)) match {
-      case Success(retrievedId)  => retrievedId
-      case Failure(e)   => throw new SchemaManagerException(s"Could not get schema for id '$id'", e)
-    }
-  }
-
-  /**
-    * Retrieves the id corresponding to the latest schema available in Schema Registry.
-    */
-  def getLatestVersionId(subject: String): Int = {
-    logDebug(s"Trying to get latest schema version id for subject '$subject'")
-    throwIfClientNotConfigured()
-
-    Try(schemaRegistryClient.getLatestSchemaMetadata(subject).getId) match {
-      case Success(id)  => id
-      case Failure(e)   => throw new SchemaManagerException(
-        s"Could not get the id of the latest version for subject '$subject'", e)
-    }
-  }
-
-  /**
-    * Registers a schema into a given subject, returning the id the registration received.
-    *
-    * Afterwards the schema can be identified by this id.
-    */
-  def register(schema: Schema, subject: String): Int = {
-    throwIfClientNotConfigured()
-    schemaRegistryClient.register(subject, schema)
-  }
-
-  /**
-    * Checks if SchemaRegistry has been configured, i.e. if it is null
-    */
-  def isSchemaRegistryConfigured: Boolean = schemaRegistryClient != null
-
-  private def throwIfClientNotConfigured(): Unit = {
-    if(!isSchemaRegistryConfigured) {
-      throw new SchemaManagerException(s"Schema registry client not configured!")
-    }
-  }
-
-  /**
-   * Configures the Schema Manger
-   * * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set
-   */
-  def configure(params: Map[String,String]): Unit = {
-    if (!isSchemaRegistryConfigured) {
-      configureSchemaRegistry(params)
-    }
-  }
-
-  /**
-   * Configures the Schema Registry client.
-   * When invoked, it expects at least [[SchemaManager.PARAM_SCHEMA_REGISTRY_URL]] to be set.
-   */
-  private def configureSchemaRegistry(configs: Map[String,String]): Unit = {
-    if (configs.isEmpty) {
-      logWarning(msg = "Asked to configure Schema Registry client but settings map is empty.")
-    } else if (null != schemaRegistryClient) {
-      logWarning(msg = "Schema Registry client is already configured.")
-    } else {
-      val settings = new KafkaAvroDeserializerConfig(configs.asJava)
-
-      val urls = settings.getSchemaRegistryUrls
-      val maxSchemaObject = settings.getMaxSchemasPerSubject
-
-      logInfo(msg = s"Configuring new Schema Registry instance of type " +
-        s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
-
-      try {
-        schemaRegistryClient = new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
-
-      } catch {
-        case e: io.confluent.common.config.ConfigException => throw new ConfigException(e.getMessage)
-      }
-    }
-  }
-
-  /**
-    * This class uses [[CachedSchemaRegistryClient]] by default. This method can override the default.
-    *
-    * The incoming instance MUST be already configured.
-    *
-    * Useful for tests using mocked SchemaRegistryClient instances.
-    */
-  def setConfiguredSchemaRegistry(schemaRegistryClient: SchemaRegistryClient): Unit = {
-    this.schemaRegistryClient = schemaRegistryClient
-  }
-
-  /**
-    * Checks if a new schema is compatible with the latest schema registered for a given subject.
-    */
-  def isCompatible(newSchema: Schema, subject: String): Boolean = {
-    this.schemaRegistryClient.testCompatibility(subject, newSchema)
-  }
-
-  /**
-    * Checks if a given schema exists in Schema Registry.
-    */
-  def exists(subject: String): Boolean = {
-    throwIfClientNotConfigured()
-
-    try {
-      schemaRegistryClient.getLatestSchemaMetadata(subject)
-      true
-    }
-    catch {
-      case e: Exception => {
-        if (e.getMessage.contains("Subject not found") || e.getMessage.contains("No schema registered")) {
-          logInfo(s"Subject not registered: '$subject'")
-        }
-        else {
-          logError(s"Problems found while retrieving metadata for subject '$subject'", e)
-        }
-        false
-      }
-    }
-  }
-
-  def isKey(schemaRegistryConf: Map[String, String]): Boolean = {
-    val valueStrategy = schemaRegistryConf.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY)
-    val keyStrategy = schemaRegistryConf.get(SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY)
-
-    (valueStrategy, keyStrategy) match {
-      case (Some(valueStrategy), None) => false
-      case (None, Some(keyStrategy)) => true
-      case (Some(_), Some(_)) =>
-        throw new InvalidParameterException(
-          "Both key.schema.naming.strategy and value.schema.naming.strategy were defined. " +
-            "Only one of them supoused to be defined!")
-      case _ =>
-        throw new InvalidParameterException(
-          "At least one of key.schema.naming.strategy or value.schema.naming.strategy " +
-            "must be defined to use schema registry!")
-    }
-  }
-
-  def isIdConfigSet(registryConf: Map[String, String]): Boolean = {
-    if (isKey(registryConf)) {
-      registryConf.contains(PARAM_KEY_SCHEMA_VERSION) || registryConf.contains(PARAM_KEY_SCHEMA_ID)
-    } else {
-      registryConf.contains(PARAM_VALUE_SCHEMA_VERSION) || registryConf.contains(PARAM_VALUE_SCHEMA_ID)
-    }
-  }
-
-  def getIdFromConfig(registryConf: Map[String, String]): Option[Int] = {
-    configure(registryConf)
-
-    if (isKey(registryConf)) {
-      getIdFromConfig(registryConf, PARAM_KEY_SCHEMA_VERSION, PARAM_KEY_SCHEMA_ID)
-    } else {
-      getIdFromConfig(registryConf, PARAM_VALUE_SCHEMA_VERSION, PARAM_VALUE_SCHEMA_ID)
-    }
-  }
-
-  private def getIdFromConfig(registryConf: Map[String, String], paramVersion: String, paramId: String): Option[Int] = {
-    val subject = getSubjectName(registryConf)
-    registryConf.get(paramVersion) match {
-      case Some(PARAM_SCHEMA_ID_LATEST_NAME) => Some(getLatestVersionId(subject))
-      case Some(version) => Some(getBySubjectAndVersion(subject, version.toInt).getId)
-      case _ => registryConf.get(paramId) match {
-          case Some(PARAM_SCHEMA_ID_LATEST_NAME) =>  Some(getLatestVersionId(subject))
-          case Some(id) => Some(id.toInt)
-          case _ => None
-        }
-    }
-  }
-
-  /**
-    * Resets this manager to its initial state, before being configured.
-    */
-  def reset(): Unit = schemaRegistryClient = null
 }
 
 class SchemaManagerException(msg: String, throwable: Throwable) extends RuntimeException(msg, throwable) {
