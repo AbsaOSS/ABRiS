@@ -24,7 +24,7 @@ import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
 import org.apache.kafka.common.errors.SerializationException
 import org.apache.spark.SparkException
 import org.apache.spark.sql.avro.SchemaConverters
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -99,10 +99,9 @@ case class AvroDataToCatalyst(
 //
 //    boxedType.asInstanceOf[String]
 
-    CodeGenerator
-      .getClass
+    classOf[CodegenContext]
       .getMethod("boxedType", classOf[DataType])
-      .invoke(CodeGenerator, dataType)
+      .invoke(ctx, dataType)
       .asInstanceOf[String]
   }
 
