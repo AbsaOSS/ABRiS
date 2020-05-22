@@ -84,20 +84,26 @@ case class AvroDataToCatalyst(
    * The method boxedType(...) is placed in different classes in Spark 2.3 and 2.4
    */
   private def boxedType(ctx: CodegenContext, dataType: DataType): String = {
-    val tryBoxedTypeSpark2_4 = Try {
-      CodeGenerator
-        .getClass
-        .getMethod("boxedType", classOf[DataType])
-        .invoke(CodeGenerator, dataType)
-    }
+//    val tryBoxedTypeSpark2_4 = Try {
+//      CodeGenerator
+//        .getClass
+//        .getMethod("boxedType", classOf[DataType])
+//        .invoke(CodeGenerator, dataType)
+//    }
+//
+//    val boxedType = tryBoxedTypeSpark2_4.getOrElse {
+//      classOf[CodegenContext]
+//        .getMethod("boxedType", classOf[DataType])
+//        .invoke(ctx, dataType)
+//    }
+//
+//    boxedType.asInstanceOf[String]
 
-    val boxedType = tryBoxedTypeSpark2_4.getOrElse {
-      classOf[CodegenContext]
-        .getMethod("boxedType", classOf[DataType])
-        .invoke(ctx, dataType)
-    }
-
-    boxedType.asInstanceOf[String]
+    CodeGenerator
+      .getClass
+      .getMethod("boxedType", classOf[DataType])
+      .invoke(CodeGenerator, dataType)
+      .asInstanceOf[String]
   }
 
   private def decode(payload: Array[Byte]): Any = if (confluentCompliant) {
