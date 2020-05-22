@@ -66,7 +66,7 @@ object ConfluentKafkaAvroReader {
 
     import za.co.absa.abris.avro.functions.from_confluent_avro
 
-    val schemaRegistryConfig = properties.getSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
+    val schemaRegistryConfig = properties.getValueSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
 
     if (properties.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
       dataFrame.select(from_confluent_avro(col("value"), schemaRegistryConfig) as 'data)

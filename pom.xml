@@ -48,6 +48,19 @@
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
+        <!-- Spark -->
+        <spark-23.version>2.3.2</spark-23.version>
+        <spark-24.version>2.4.2</spark-24.version>
+
+        <spark.version>${spark-24.version}</spark.version>
+
+        <!--Scala-->
+        <scala_2.11.version>2.11.12</scala_2.11.version>
+        <scala_2.12.version>2.12.10</scala_2.12.version>
+
+        <scala.version>${scala_2.12.version}</scala.version>
+        <scala.compat.version>2.12</scala.compat.version>
+
 		<!--Tests-->
 		<scalatestplus.mockito.version>3.1.0.0</scalatestplus.mockito.version>
 		<scalatest.version>3.1.0</scalatest.version>
@@ -59,10 +72,6 @@
 		<kafka.spark.version>0-10</kafka.spark.version>
 		<confluent.version>5.3.1</confluent.version>
 
-		<!--Scala-->
-		<scala.version>2.12.10</scala.version>
-		<scala.compat.version>2.12</scala.compat.version>
-		<specs.version>4.7.1</specs.version>
 
 		<!--Libs-->
         <spark.avro.version>2.4.4</spark.avro.version>
