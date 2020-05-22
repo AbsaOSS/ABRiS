@@ -48,8 +48,22 @@
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
+        <!-- Spark -->
+        <spark-23.version>2.3.2</spark-23.version>
+        <spark-24.version>2.4.2</spark-24.version>
+
+        <spark.version>${spark-24.version}</spark.version>
+
+        <!--Scala-->
+        <scala_2.11.version>2.11.12</scala_2.11.version>
+        <scala_2.12.version>2.12.10</scala_2.12.version>
+
+        <scala.version>${scala_2.12.version}</scala.version>
+        <scala.compat.version>2.12</scala.compat.version>
+
 		<!--Tests-->
-		<mockito.version>1.8.5</mockito.version>
+        <specs.version>4.7.1</specs.version>
+        <mockito.version>1.8.5</mockito.version>
 		<scalatest.version>3.0.8</scalatest.version>
 		<scalatest.maven.version>2.0.0</scalatest.maven.version>
 		<scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
@@ -59,10 +73,6 @@
 		<kafka.spark.version>0-10</kafka.spark.version>
 		<confluent.version>5.3.1</confluent.version>
 
-		<!--Scala-->
-		<scala.version>2.12.10</scala.version>
-		<scala.compat.version>2.12</scala.compat.version>
-		<specs.version>4.7.1</specs.version>
 
 		<!--Libs-->
         <spark.avro.version>2.4.4</spark.avro.version>
@@ -297,6 +307,37 @@
 
 
 	<profiles>
+
+        <!-- Cross-building profiles -->
+        <profile>
+            <id>scala-2.11</id>
+            <properties>
+                <scala.compat.version>2.11</scala.compat.version>
+                <scala.version>${scala_2.11.version}</scala.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>scala-2.12</id>
+            <properties>
+                <scala.compat.version>2.12</scala.compat.version>
+                <scala.version>${scala_2.12.version}</scala.version>
+            </properties>
+        </profile>
+
+        <!-- Spark profiles -->
+        <profile>
+            <id>spark-2.3</id>
+            <properties>
+                <spark.version>${spark-23.version}</spark.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-2.4</id>
+            <properties>
+                <spark.version>${spark-24.version}</spark.version>
+            </properties>
+        </profile>
+
         <profile>
             <id>uber</id>
             <build>
