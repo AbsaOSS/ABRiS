@@ -56,7 +56,7 @@ object functions {
    */
   def from_avro(
     data: Column,
-    schemaRegistryConf: Map[String,String],
+    schemaRegistryConf: Map[String,String]
   ): Column = {
     val schema = SchemaManagerFactory.create(schemaRegistryConf).downloadSchema()
 
@@ -82,7 +82,7 @@ object functions {
    */
   def from_confluent_avro(
     data: Column,
-    schemaRegistryConf: Map[String,String],
+    schemaRegistryConf: Map[String,String]
   ): Column = {
     val schema = SchemaManagerFactory.create(schemaRegistryConf).downloadSchema()
 
@@ -111,7 +111,7 @@ object functions {
   def from_confluent_avro(
     data: Column,
     readerSchema: String,
-    schemaRegistryConf: Map[String,String],
+    schemaRegistryConf: Map[String,String]
   ): Column = {
     new Column(AvroDataToCatalyst(
       data.expr,
@@ -159,7 +159,7 @@ object functions {
    */
   def to_avro(
     data: Column,
-    schemaRegistryConf: Map[String,String],
+    schemaRegistryConf: Map[String,String]
   ): Column = {
 
     val schemaProvider: SchemaProvider = createSchemaProvider(data, schemaRegistryConf)
@@ -178,7 +178,7 @@ object functions {
   def to_avro(
     data: Column,
     jsonFormatSchema: String,
-    schemaRegistryConf: Map[String,String],
+    schemaRegistryConf: Map[String,String]
   ): Column = {
     new Column(CatalystDataToAvro(
       data.expr,
@@ -198,7 +198,7 @@ object functions {
    */
   def to_confluent_avro(
     data: Column,
-    schemaRegistryConf: Map[String,String],
+    schemaRegistryConf: Map[String,String]
   ): Column = {
 
     val schemaProvider: SchemaProvider = createSchemaProvider(data, schemaRegistryConf)
@@ -217,7 +217,7 @@ object functions {
   def to_confluent_avro(
     data: Column,
     jsonFormatSchema: String,
-    schemaRegistryConf: Map[String,String],
+    schemaRegistryConf: Map[String,String]
    ): Column = {
 
     new Column(CatalystDataToAvro(

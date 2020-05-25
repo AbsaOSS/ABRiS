@@ -75,14 +75,14 @@ class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
   private val dummySchemaRegistryConfig = Map(
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "dummy_topic",
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name"
   )
 
 
   private val schemaRegistryConfig = Map(
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
     SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name",
+    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name"
   )
 
   it should "resolve schema id integer from schema and version" in {

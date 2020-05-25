@@ -54,7 +54,7 @@ class RegistryConfigSpec extends FlatSpec with BeforeAndAfter {
     val confValue = Map(
       SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
       SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo_name",
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace",
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace"
     )
 
     assert("foo_namespace.foo_name" == new RegistryConfig(confValue).subjectName())
@@ -62,7 +62,7 @@ class RegistryConfigSpec extends FlatSpec with BeforeAndAfter {
     val confKey = Map(
       SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.RECORD_NAME,
       SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo_name",
-      SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace",
+      SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace"
     )
 
     assert("foo_namespace.foo_name" == new RegistryConfig(confKey).subjectName())
@@ -73,7 +73,7 @@ class RegistryConfigSpec extends FlatSpec with BeforeAndAfter {
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "foo_topic",
       SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
       SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo_name",
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace",
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace"
     )
 
     assert("foo_topic-foo_namespace.foo_name" == new RegistryConfig(confValue).subjectName())
@@ -82,7 +82,7 @@ class RegistryConfigSpec extends FlatSpec with BeforeAndAfter {
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "foo_topic",
       SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
       SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo_name",
-      SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace",
+      SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "foo_namespace"
     )
 
     assert("foo_topic-foo_namespace.foo_name" == new RegistryConfig(confKey).subjectName())
@@ -93,7 +93,7 @@ class RegistryConfigSpec extends FlatSpec with BeforeAndAfter {
   it should "retrieve name and namespace for TopicRecordName strategy from schema" in {
     val confValue = Map(
       SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "foo_topic",
-      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
+      SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME
     )
 
     assert("foo_topic-Bleh.Blah" == new RegistryConfig(confValue).subjectName(schema))
