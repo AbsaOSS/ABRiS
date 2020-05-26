@@ -78,9 +78,7 @@ val schemaRegistryConfig = Map(
   SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC                      -> "topic_name",
   SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY               -> SchemaManager.SchemaStorageNamingStrategies.TOPIC_RECORD_NAME,
   SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY      -> "schema_name",
-  SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace",
-  SchemaManager.PARAM_VALUE_SCHEMA_ID                            -> "current_schema_id", // (optional) set to "latest" if you want the latest schema version to used
-  SchemaManager.PARAM_VALUE_SCHEMA_VERSION                       -> "current_schema_version" // (optional) set to "latest" if you want the latest schema version to used
+  SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "schema_namespace"
 )
 ```
 In this example the ```TOPIC_RECORD_NAME``` naming strategy is used, therefore we need to provide topic, name and namespace.
@@ -96,8 +94,12 @@ def writeAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): 
 ```
 Since we didn't provide a schema it will be generated automatically and then stored into Schema Registry.
 
+You can also set `SchemaManager.PARAM_VALUE_SCHEMA_ID` or `SchemaManager.PARAM_VALUE_SCHEMA_VERSION` and Abris will use it to download the schema and convert the data according to the specified schema. 
+In that case no new schema will be registered.
+
+
 ### Using schema registry and providing a schema
-The only difference from previous example is that we have one additional parameter for the schema.
+You can also provide the schema string directly:
 ```scala
 import za.co.absa.abris.avro.functions.to_avro
 
