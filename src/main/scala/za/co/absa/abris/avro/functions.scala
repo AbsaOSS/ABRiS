@@ -151,8 +151,10 @@ object functions {
   }
 
   /**
-   * Converts a column into binary of avro format and store the used schema in schema registry.
-   * Schema is generated automatically.
+   * Converts a column into binary of avro format
+   *
+   * If you provide schema Id or Version the schema is downloaded.
+   * Otherwise Schema is generated automatically from spark catalyst data type and stored in schema registry.
    *
    * @param data column to be converted to avro
    * @param schemaRegistryConf schema registry configuration
@@ -162,7 +164,7 @@ object functions {
     schemaRegistryConf: Map[String,String]
   ): Column = {
 
-    val schemaProvider: SchemaProvider = createSchemaProvider(data, schemaRegistryConf)
+    val schemaProvider: SchemaProvider = createSchemaProvider(schemaRegistryConf)
 
     new Column(CatalystDataToAvro(
       data.expr, schemaProvider, Some(schemaRegistryConf), confluentCompliant = false))
@@ -189,9 +191,11 @@ object functions {
   }
 
   /**
-   * Converts a column into binary of avro format, store the used schema in schema registry and prepend the schema id
-   * to avro payload (according to confluent avro format)
-   * Schema is generated automatically from spark catalyst data type.
+   * Converts a column into binary of avro format and prepend the schema id to avro payload
+   * (according to confluent avro format)
+   *
+   * If you provide schema Id or Version the schema is downloaded and it's id is prepended.
+   * Otherwise Schema is generated automatically from spark catalyst data type and stored in schema registry.
    *
    * @param data column to be converted to avro
    * @param schemaRegistryConf schema registry configuration
@@ -201,7 +205,7 @@ object functions {
     schemaRegistryConf: Map[String,String]
   ): Column = {
 
-    val schemaProvider: SchemaProvider = createSchemaProvider(data, schemaRegistryConf)
+    val schemaProvider: SchemaProvider = createSchemaProvider(schemaRegistryConf)
 
     new Column(CatalystDataToAvro(
       data.expr, schemaProvider, Some(schemaRegistryConf), confluentCompliant = true))
@@ -229,32 +233,15 @@ object functions {
   }
 
 
-  private def createSchemaProvider(data: Column, schemaRegistryConf: Map[String, String]) = {
+  private def createSchemaProvider(schemaRegistryConf: Map[String, String]) = {
     val registryConfig = new RegistryConfig(schemaRegistryConf)
-    val schemaProvider = if (registryConfig.isIdOrVersionDefined) {
+
+    if (registryConfig.isIdOrVersionDefined) {
       val schemaManager = SchemaManagerFactory.create(schemaRegistryConf)
       val schema = schemaManager.downloadSchema()
       SchemaProvider(schema.toString)
     } else {
-      val (name, namespace) = getMaybeSchemaNameAndNameSpace(schemaRegistryConf, isKey(data))
-      SchemaProvider(name, namespace)
-    }
-    schemaProvider
-  }
-
-  private def isKey(col: Column): Boolean = {
-    col.toString().toLowerCase == "key"
-  }
-
-  private def getMaybeSchemaNameAndNameSpace(params: Map[String, String], isKey: Boolean) = {
-    if (isKey) {
-      val keySchemaName = params.get(SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-      val keySchemaNamespace = params.get(SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
-      (keySchemaName, keySchemaNamespace)
-    } else {
-      val valueSchemaName = params.get(SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY)
-      val valueSchemaNamespace = params.get(SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
-      (valueSchemaName, valueSchemaNamespace)
+      SchemaProvider(registryConfig.schemaNameOption, registryConfig.schemaNameSpaceOption)
     }
   }
 
