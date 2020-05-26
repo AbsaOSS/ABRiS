@@ -59,10 +59,10 @@ class RegistryConfig(params: Map[String,String]) {
   def schemaVersionOption: Option[String] =
     params.get(if (isKey) PARAM_KEY_SCHEMA_VERSION else PARAM_VALUE_SCHEMA_VERSION)
 
-  private def schemaNameOption: Option[String] =
+  def schemaNameOption: Option[String] =
     params.get(if (isKey) PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY else PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY)
 
-  private def schemaNameSpaceOption: Option[String] = params.get(
+  def schemaNameSpaceOption: Option[String] = params.get(
     if (isKey) PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY else PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY)
 
   def subjectName(): String = {
