@@ -49,8 +49,9 @@
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
         <!-- Spark -->
-        <spark-23.version>2.3.2</spark-23.version>
-        <spark-24.version>2.4.2</spark-24.version>
+        <spark-23.version>2.3.4</spark-23.version>
+        <spark-24.version>2.4.6</spark-24.version>
+        <spark-30.version>3.0.0</spark-30.version>
 
         <spark.version>${spark-24.version}</spark.version>
 
@@ -75,7 +76,7 @@
 
 		<!--Libs-->
         <spark.avro.version>2.4.4</spark.avro.version>
-		<avro.version>1.9.1</avro.version>
+		<avro.version>1.9.2</avro.version>
 	</properties>
 
     <scm>
@@ -327,6 +328,12 @@
             <id>spark-2.4</id>
             <properties>
                 <spark.version>${spark-24.version}</spark.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-3.0</id>
+            <properties>
+                <spark.version>${spark-30.version}</spark.version>
             </properties>
         </profile>
 
