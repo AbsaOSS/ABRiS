@@ -86,8 +86,6 @@ class RegistryConfigSpec extends FlatSpec with BeforeAndAfter {
     )
 
     assert("foo_topic-foo_namespace.foo_name" == new RegistryConfig(confKey).subjectName())
-
-    println(schema.getName())
   }
 
   it should "retrieve name and namespace for TopicRecordName strategy from schema" in {

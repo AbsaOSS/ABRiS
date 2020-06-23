@@ -56,12 +56,12 @@ class ScalaAvroRecord(schema: Schema) extends GenericRecord with Comparable[Scal
 
   override def put(position: Int, value: Object): Unit = {
     values(position) = value match {
-      case v: ScalaAvroRecord                                => toRow(value.asInstanceOf[ScalaAvroRecord].values)
-      case v: java.nio.ByteBuffer                            => v.array()
-      case v: Fixed                                          => v.bytes()
-      case v: mutable.ListBuffer[Any]  if isListOfRecords(v) => convertToListOfRows(v)
-      case v: mutable.HashMap[Any,Any] if isMapOfRecords(v)  => convertToMapOfRows(v)
-      case default                                           => default
+      case v: ScalaAvroRecord => toRow(v.values)
+      case v: java.nio.ByteBuffer => v.array()
+      case v: Fixed => v.bytes()
+      case v: mutable.ListBuffer[Any] @unchecked if isListOfRecords(v) => convertToListOfRows(v)
+      case v: mutable.HashMap[Any,Any] @unchecked if isMapOfRecords(v) => convertToMapOfRows(v)
+      case default => default
     }
   }
 

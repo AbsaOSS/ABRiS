@@ -29,10 +29,9 @@ import org.apache.avro.{LogicalTypes, Schema, SchemaBuilder}
 import org.apache.spark.sql.avro.IncompatibleSchemaException
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{SpecificInternalRow, UnsafeArrayData}
-import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, DateTimeUtils, GenericArrayData}
+import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, ArrayData, GenericArrayData}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import za.co.absa.abris.examples.data.generation.FixedString
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -44,6 +43,8 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
  * A deserializer to deserialize data in avro format to data in catalyst format.
  */
 class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
+  import AvroDeserializer._
+
   private lazy val decimalConversions = new DecimalConversion()
 
   private val converter: Any => Any = rootCatalystType match {
@@ -114,7 +115,7 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
       // Before we upgrade Avro to 1.8 for logical type support, spark-avro converts Long to Date.
       // For backward compatibility, we still keep this conversion.
       case (LONG, DateType) => (updater, ordinal, value) =>
-        updater.setInt(ordinal, (value.asInstanceOf[Long] / DateTimeUtils.MILLIS_PER_DAY).toInt)
+        updater.setInt(ordinal, (value.asInstanceOf[Long] / MILLIS_PER_DAY).toInt)
 
       case (FLOAT, FloatType) => (updater, ordinal, value) =>
         updater.setFloat(ordinal, value.asInstanceOf[Float])
@@ -138,7 +139,6 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
       case (FIXED, BinaryType) => (updater, ordinal, value) =>
         updater.set(ordinal, value match {
           case a:GenericFixed => a.bytes().clone()
-          case a:FixedString => a.bytes().clone()
           case a:Array[Byte] => a.clone()
         })
 
@@ -176,8 +176,8 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
         val elementWriter = newWriter(avroType.getElementType, elementType, path)
         (updater, ordinal, value) =>
           val array = value match {
-            case array: GenericData.Array[Any] => array.asScala
-            case buffer: ListBuffer[Any] => buffer
+            case array: GenericData.Array[_] => array.asScala
+            case buffer: ListBuffer[_] => buffer
           }
 
           val len = array.size
@@ -207,8 +207,8 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
         val valueWriter = newWriter(avroType.getValueType, valueType, path)
         (updater, ordinal, value) =>
           val map = value match {
-            case m: java.util.Map[AnyRef, AnyRef] => m
-            case m: mutable.HashMap[AnyRef, AnyRef] => m.asJava
+            case m: java.util.Map[AnyRef, AnyRef] @unchecked => m
+            case m: mutable.HashMap[AnyRef, AnyRef] @unchecked => m.asJava
           }
 
           val keyArray = createArrayData(keyType, map.size())
@@ -410,4 +410,9 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
     override def setFloat(ordinal: Int, value: Float): Unit = array.setFloat(ordinal, value)
     override def setDecimal(ordinal: Int, value: Decimal): Unit = array.update(ordinal, value)
   }
+}
+
+object AvroDeserializer {
+  final val SECONDS_PER_DAY = 60 * 60 * 24L
+  final val MILLIS_PER_DAY = SECONDS_PER_DAY * 1000L
 }

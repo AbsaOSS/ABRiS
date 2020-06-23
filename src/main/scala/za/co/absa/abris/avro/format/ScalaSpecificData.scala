@@ -16,8 +16,6 @@
 
 package za.co.absa.abris.avro.format
 
-import java.util.Collection
-
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificData
 
@@ -42,14 +40,11 @@ class ScalaSpecificData extends SpecificData {
    * and use a custom implementation of Collection, but this library also uses those writers to convert
    * records into Array[Byte].
    */
-  override def isArray(datum: Object): Boolean = {
-    if (datum.isInstanceOf[Collection[Any]]) {
-      true
-    } else if (datum.isInstanceOf[Iterable[Any]] && !datum.isInstanceOf[Map[Any,Any]]) {
-      // does not make sense for a map to be an array, check unnecessary for Java since Map is not a Collection
-      true
-    } else {
-      datum.isInstanceOf[Array[Object]]
-    }
+  override def isArray(datum: Object): Boolean = datum match {
+    case _: java.util.Collection[_] => true
+    case _: Seq[_] => true
+    case _: Set[_] => true
+    case _: Array[Object] => true
+    case _ => false
   }
 }
