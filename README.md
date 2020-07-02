@@ -37,6 +37,7 @@ Detailed instructions for many use cases are in separated documents:
 
 - [How to use Abris with vanilla avro (with examples)](documentation/vanilla-avro-documentation.md)
 - [How to use Abris with Confluent avro (with examples)](documentation/confluent-avro-documentation.md)
+- [How to use Abris in Python (with examples)](documentation/python-documentation.md)
 
 Full runnable examples can be found in the ```za.co.absa.abris.examples``` package. You can also take a look at unit tests in package ```za.co.absa.abris.avro.sql```.
 
@@ -70,36 +71,6 @@ val securityRegistryConfig = valueRegistryConfig +
   ("basic.auth.credentials.source" -> "USER_INFO",
    "basic.auth.user.info" -> "srkey:srvalue")
 ```
- 
-
-
-### Using ABRiS with Python and PySpark
-
-ABRiS can also be used with PySpark to deserialize Avro payloads from Confluent Kafka. For that, we need to convert Python object into JVM ones. The snippet below shows how it can be achieved.
-
-```python
-import logging, traceback
-import requests
-from pyspark.sql import Column
-from pyspark.sql.column import *
-
-jvm_gateway = spark_context._gateway.jvm
-abris_avro  = jvm_gateway.za.co.absa.abris.avro
-naming_strategy = getattr(getattr(abris_avro.read.confluent.SchemaManager, "SchemaStorageNamingStrategies$"), "MODULE$").TOPIC_NAME()        
-
-schema_registry_config_dict = {"schema.registry.url": schema_registry_url,
-                               "schema.registry.topic": topic,
-                               "value.schema.id": "latest",
-                               "value.schema.naming.strategy": naming_strategy}
-
-conf_map = getattr(getattr(jvm_gateway.scala.collection.immutable.Map, "EmptyMap$"), "MODULE$")
-    for k, v in schema_registry_config_dict.items():
-        conf_map = getattr(conf_map, "$plus")(jvm_gateway.scala.Tuple2(k, v))
-        
-    deserialized_df = data_frame.select(Column(abris_avro.functions.from_confluent_avro(data_frame._jdf.col("value"), conf_map))
-                      .alias("data")).select("data.*")
-```
-
 
 ## Other Features
 
