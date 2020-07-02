@@ -239,7 +239,8 @@ object functions {
     if (registryConfig.isIdOrVersionDefined) {
       val schemaManager = SchemaManagerFactory.create(schemaRegistryConf)
       val schema = schemaManager.downloadSchema()
-      SchemaProvider(schema.toString)
+      val schemaId = schemaManager.schemaId
+      SchemaProvider(schema.toString, schemaId)
     } else {
       SchemaProvider(registryConfig.schemaNameOption, registryConfig.schemaNameSpaceOption)
     }
