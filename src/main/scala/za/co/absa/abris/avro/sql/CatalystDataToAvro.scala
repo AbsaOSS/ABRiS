@@ -35,7 +35,7 @@ case class CatalystDataToAvro(
   override def dataType: DataType = BinaryType
 
   private lazy val schemaId = schemaRegistryConf.flatMap { _ =>
-    schemaManager.schemaId
+    schemaProvider.schemaId
       .orElse(registerSchema(schemaProvider.wrappedSchema(child)))
       .filter(_ => confluentCompliant)
   }

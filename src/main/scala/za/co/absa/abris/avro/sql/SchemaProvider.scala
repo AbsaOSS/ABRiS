@@ -21,7 +21,8 @@ import org.apache.spark.sql.avro.SchemaConverters.toAvroType
 import org.apache.spark.sql.catalyst.expressions.Expression
 
 /**
- * This class encapsulate logic and data necessary to get an Avro Schema from various sources
+ * This class encapsulate schema data in serializable form required by transfer from Spark driver to Executors
+ * Download of the schema is responsibility of SchemaManager
  *
  * Abris library doesn't support serialization of primitive types, therefore if there is only one primitive type
  * it must be internally wrapped in record before it is serialized and the schema must be changed to match.
@@ -30,7 +31,9 @@ import org.apache.spark.sql.catalyst.expressions.Expression
  *
  * @param schemaGenerator function that generates schema
  */
-class SchemaProvider private(private val schemaGenerator: Expression => (Schema, Schema))
+class SchemaProvider private(
+    private val schemaGenerator: Expression => (Schema, Schema),
+    val schemaId: Option[Int] = None)
   extends Serializable {
 
   @transient private var cachedOriginalSchema: Schema = _
@@ -70,12 +73,16 @@ object SchemaProvider {
   val DEFAULT_SCHEMA_NAME = "defaultName"
   val DEFAULT_SCHEMA_NAMESPACE = "defaultNamespace"
 
-  def apply(schemaString: String): SchemaProvider = {
+  def apply(schemaString: String): SchemaProvider = apply(schemaString, None)
 
-    new SchemaProvider((_: Expression) => {
-      val schema = new Schema.Parser().parse(schemaString)
-      (schema, wrapSchema(schema, DEFAULT_SCHEMA_NAME, DEFAULT_SCHEMA_NAMESPACE))
-    })
+  def apply(schemaString: String, schemaId: Option[Int]): SchemaProvider = {
+    new SchemaProvider(
+      (_: Expression) => {
+        val schema = new Schema.Parser().parse(schemaString)
+        (schema, wrapSchema(schema, DEFAULT_SCHEMA_NAME, DEFAULT_SCHEMA_NAMESPACE))
+      },
+      schemaId
+    )
   }
 
   def apply(): SchemaProvider = {
