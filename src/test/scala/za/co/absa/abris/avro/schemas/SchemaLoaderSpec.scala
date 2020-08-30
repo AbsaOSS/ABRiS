@@ -28,7 +28,7 @@ class SchemaLoaderSpec extends FlatSpec {
   private val testDir = new File("testDirSchemaLoader")
 
   behavior of "SchemaLoader"
-/*
+
   it should "retrieve schemas from file systems" in {
     val expectedSchema = TestSchemas.COMPLEX_SCHEMA_SPEC
     val schemaFileName = "testSchemaName"
@@ -40,7 +40,7 @@ class SchemaLoaderSpec extends FlatSpec {
 
     assert(expectedSchema == loadedSchema)
   }
-*/
+
   private def writeIntoFS(schema: String, name: String): File = {
     val destination = new File(testDir, name)
     FileUtils.write(destination, schema)
