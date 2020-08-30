@@ -17,43 +17,50 @@
 
 package za.co.absa.abris.avro.read.confluent
 
+import java.util.concurrent.locks.ReentrantReadWriteLock
+
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.spark.internal.Logging
 import za.co.absa.abris.avro.schemas.RegistryConfig
 
 import scala.collection.JavaConverters._
+import scala.collection.concurrent
 
 /**
- * This factory allows us to mock the client for testing purposes
+ * This thread-safe factory creates [[SchemaManager]] and also manages the instances of [[SchemaRegistryClient]]
+ * used by allowing caching of the references in order to avoid creating instances in every call that can be
+ * used to cache schemas.
+ * This factory also allows us to mock the client for testing purposes.
  */
 object SchemaManagerFactory extends Logging {
 
-  private var clientInstance: Option[SchemaRegistryClient] = None
+  private val clientInstances: concurrent.Map[Map[String,String], SchemaRegistryClient] = concurrent.TrieMap()
 
-  def setClientInstance(client: SchemaRegistryClient): Unit = {
-    clientInstance = Option(client)
+  def addSRClientInstance(configs: Map[String, String], client: SchemaRegistryClient): Unit = {
+    clientInstances.put(configs, client)
   }
 
-  def resetClientInstance(): Unit = {
-    clientInstance = None
+  def resetSRClientInstance(): Unit = {
+   clientInstances.clear()
   }
 
   def create(configs: Map[String,String]): SchemaManager = new SchemaManager(
     new RegistryConfig(configs),
-    clientInstance.getOrElse(createRegistryClient(configs))
+    getOrCreateRegistryClient(configs)
   )
 
-  private def createRegistryClient(configs: Map[String,String]): SchemaRegistryClient = {
+  private def getOrCreateRegistryClient(configs: Map[String,String]): SchemaRegistryClient = {
+    clientInstances.getOrElseUpdate(configs, {
+      val settings = new KafkaAvroDeserializerConfig(configs.asJava)
+      val urls = settings.getSchemaRegistryUrls
+      val maxSchemaObject = settings.getMaxSchemasPerSubject
 
-    val settings = new KafkaAvroDeserializerConfig(configs.asJava)
+      logInfo(msg = s"Configuring new Schema Registry instance of type " +
+        s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
 
-    val urls = settings.getSchemaRegistryUrls
-    val maxSchemaObject = settings.getMaxSchemasPerSubject
-
-    logInfo(msg = s"Configuring new Schema Registry instance of type " +
-      s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
-
-    new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+      new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+    })
   }
+
 }

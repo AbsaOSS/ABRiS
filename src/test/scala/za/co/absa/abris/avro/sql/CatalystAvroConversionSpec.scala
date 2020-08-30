@@ -62,7 +62,12 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   }
 
   override def beforeEach() {
-    SchemaManagerFactory.setClientInstance(new MockSchemaRegistryClient())
+    val mockedSchemaRegistryClient = new MockSchemaRegistryClient()
+    SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(latestIdSchemaRegistryConfig, mockedSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(schemaRegistryConfigForKey, mockedSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(latestVersionSchemaRegistryConfig, mockedSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(latestSchemaRegistryConfigForKey, mockedSchemaRegistryClient)
   }
 
   val bareByteSchema = """{"type": "bytes"}""""

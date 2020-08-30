@@ -151,4 +151,5 @@ class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
     assert(schemaManager7.schemaId == None)
   }
 
+
 }
