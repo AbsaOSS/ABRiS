@@ -22,9 +22,9 @@ import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, Schem
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec, PrivateMethodTester}
 import za.co.absa.abris.avro.schemas.RegistryConfig
 
-class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach with PrivateMethodTester {
+import scala.reflect.runtime.{universe => ru}
 
-  val test = PrivateMethod[SchemaRegistryClient]('schemaRegistryClient_)
+class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
 
   private val schemaRegistryConfig1 = Map(
     SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
@@ -54,11 +54,11 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach with Pri
     val schemaManagerRef1 = SchemaManagerFactory.create(schemaRegistryConfig1)
     val schemaManagerRef2 = SchemaManagerFactory.create(schemaRegistryConfig1)
 
-    val field = schemaManagerRef1.getClass.getDeclaredField("schemaRegistryClient")
-    field.setAccessible(true)
+    val m = ru.runtimeMirror(schemaManagerRef1.getClass.getClassLoader)
+    val fieldTerm = ru.typeOf[SchemaManager].decl(ru.TermName("schemaRegistryClient")).asTerm
 
-    val res1 = field.get(schemaManagerRef1).asInstanceOf[SchemaRegistryClient]
-    val res2 = field.get(schemaManagerRef2).asInstanceOf[SchemaRegistryClient]
+    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
+    val res2 = m.reflect(schemaManagerRef2).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
     assert(res1.eq(res2))
   }
 
@@ -66,11 +66,11 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach with Pri
     val schemaManagerRef1 = SchemaManagerFactory.create(schemaRegistryConfig1)
     val schemaManagerRef2 = SchemaManagerFactory.create(schemaRegistryConfig2)
 
-    val field = schemaManagerRef1.getClass.getDeclaredField("schemaRegistryClient")
-    field.setAccessible(true)
+    val m = ru.runtimeMirror(schemaManagerRef1.getClass.getClassLoader)
+    val fieldTerm = ru.typeOf[SchemaManager].decl(ru.TermName("schemaRegistryClient")).asTerm
 
-    val res1 = field.get(schemaManagerRef1).asInstanceOf[SchemaRegistryClient]
-    val res2 = field.get(schemaManagerRef2).asInstanceOf[SchemaRegistryClient]
+    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
+    val res2 = m.reflect(schemaManagerRef2).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
     assert(!res1.eq(res2))
   }
 
