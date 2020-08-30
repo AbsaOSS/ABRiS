@@ -47,7 +47,9 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   )
 
   override def beforeEach() {
-    SchemaManagerFactory.setClientInstance(new MockSchemaRegistryClient())
+    val mockedSchemaRegistryClient = new MockSchemaRegistryClient()
+    SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig,mockedSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(latestSchemaRegistryConfig, mockedSchemaRegistryClient)
   }
 
   val recordByteSchema = """{
