@@ -23,27 +23,20 @@ import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCo
 import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.format.SparkAvroConversions
-import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 
 case class CatalystDataToAvro(
    child: Expression,
-   schemaProvider: SchemaProvider,
-   schemaRegistryConf: Option[Map[String,String]],
-   confluentCompliant: Boolean)
+   schemaString: String,
+   schemaId: Option[Int])
   extends UnaryExpression {
 
   override def dataType: DataType = BinaryType
 
-  private lazy val schemaId = schemaRegistryConf.flatMap { _ =>
-    schemaProvider.schemaId
-      .orElse(registerSchema(schemaProvider.wrappedSchema(child)))
-      .filter(_ => confluentCompliant)
-  }
+  @transient private lazy val avroSchema: Schema = AvroSchemaUtils.parse(schemaString)
 
   @transient private lazy val serializer: AvroSerializer =
-    new AvroSerializer(child.dataType, schemaProvider.originalSchema(child), child.nullable)
-
-  @transient private lazy val schemaManager = SchemaManagerFactory.create(schemaRegistryConf.get)
+    new AvroSerializer(child.dataType, avroSchema, child.nullable)
 
   override def nullSafeEval(input: Any): Any = {
     val avroData = serializer.serialize(input)
@@ -57,9 +50,17 @@ case class CatalystDataToAvro(
   }
 
   private def wrapWithRecord(avroData:Any) = {
-    val record = new GenericData.Record(schemaProvider.wrappedSchema(child))
+    val record = new GenericData.Record(wrapSchemaIfNeeded(avroSchema))
     record.put(0, avroData)
     record
+  }
+
+  private def wrapSchemaIfNeeded(schema: Schema) = {
+    if (schema.getType == Schema.Type.RECORD) {
+      schema
+    } else {
+      AvroSchemaUtils.wrapSchema(schema, "notUsedName", "notUsedNamespace")
+    }
   }
 
   override def prettyName: String = "to_avro"
@@ -69,7 +70,4 @@ case class CatalystDataToAvro(
     defineCodeGen(ctx, ev, input =>
       s"(byte[]) $expr.nullSafeEval($input)")
   }
-
-  private def registerSchema(schema: Schema): Option[Int] = Some(schemaManager.register(schema))
-
 }

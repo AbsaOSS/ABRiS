@@ -14,14 +14,14 @@
 
 
 ### Coordinates for Maven POM dependency
-#### Abris for Scala 2.11
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11)
 
-#### Abris for Scala 2.12
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12)
+| Scala  | Abris   |
+|:------:|:-------:|
+| 2.11   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11) |
+| 2.12   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12) |
 
 ## Supported Spark versions
-On spark 2.4.x Abris should work without any further requirements.
+On spark 3.0.x and 2.4.x Abris should work without any further requirements.
 
 On Spark 2.3.x you must declare dependency on ```org.apache.avro:avro:1.8.0``` or higher. (Spark 2.3.x uses Avro 1.7.x so you must overwrite this because ABRiS needs Avro 1.8.0+.)
 
@@ -29,9 +29,24 @@ On Spark 2.3.x you must declare dependency on ```org.apache.avro:avro:1.8.0``` o
 
 ABRiS API is in it's most basic form almost identical to Spark built-in support for Avro, but it provides additional functionality. Mainly it's support of schema registry and also seamless integration with confluent Avro data format.
 
-The API consists of four Spark SQL expressions: 
-* ```to_avro``` and ```from_avro``` used for normal Avro payload
-* ```to_confluent_avro``` and ```from_confluent_avro``` used for Confluent Avro data format
+The API consists of two Spark SQL expressions (`to_avro` and `from_avro`) and fluent configurator (`AbrisConfig`)
+
+Using the configurator you can choose from four basic config types:
+* `toSimpleAvro`, `toConfluentAvro`, `fromSimpleAvro` and `fromConfluentAvro`
+
+And configure what you want to do, mainly how to get the avro schema.
+
+Example of usage:
+```Scala
+val abrisConfig = AbrisConfig
+  .fromConfluentAvro
+  .downloadReaderSchemaByLatestVersion
+  .andTopicNameStrategy("topic123")
+  .usingSchemaRegistry("http://localhost:8081")
+
+import za.co.absa.abris.avro.functions.from_avro
+val deserialized = dataFrame.select(from_avro(col("value"), abrisConfig) as 'data)
+```
 
 Detailed instructions for many use cases are in separated documents:
 
@@ -50,51 +65,55 @@ The format of Avro binary data is defined in [Avro specification](http://avro.ap
 You can find more about Confluent and Schema Registry in [Confluent documentation](https://docs.confluent.io/current/schema-registry/index.html).
 
 
-### Schema Registry security settings
+### Schema Registry security and other additional settings
 
-Some settings are required when using Schema Registry, as explained above. However, there is more settings supported by Schema Registry as contained in ```io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig```.
+Only Schema registry client setting that is mandatory is the url, 
+but if you need to provide more the configurer allows you to provide a whole map.
 
-Among those are ```basic.auth.user.info``` and ```basic.auth.credentials.source``` required for user authentication.
-
-To make use of those, all that is required is to add them to the settings map as in the example below:
+For example you may want to provide `basic.auth.user.info` and `basic.auth.credentials.source` required for user authentication.
+You can do this this way:
 
 ```scala
-val commonRegistryConfig = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081"
+val registryConfig = Map(
+  AbrisConfig.SCHEMA_REGISTRY_URL -> "http://localhost:8081",
+  "basic.auth.credentials.source" -> "USER_INFO",
+  "basic.auth.user.info" -> "srkey:srvalue"
 )
 
-val valueRegistryConfig = commonRegistryConfig +
-  (SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name")
-
-val securityRegistryConfig = valueRegistryConfig + 
-  ("basic.auth.credentials.source" -> "USER_INFO",
-   "basic.auth.user.info" -> "srkey:srvalue")
+val abrisConfig = AbrisConfig
+  .fromConfluentAvro
+  .downloadReaderSchemaByLatestVersion
+  .andTopicNameStrategy("topic123")
+  .usingSchemaRegistry(registryConfig) // use the map instead of just url
 ```
 
 ## Other Features
 
-### Using schema manager to directly download or register schema
-You can use SchemaManager directly to download or upload a schema. The configuration is identical to one use for the rest of Abris.
-The SchemaManager API may be changed from version to version. It's still considered to be internal object of the library.
-
+### Generating Avro schema from Spark data frame column
+There is a helper method that allows you to generate schema automatically from spark column. 
+Assuming you have a data frame containing column "input". You can generate schema for data in that column like this:
 ```scala
-// Downloading schema:
-
-val schemaRegistryConfig = Map( ...configuration... )
-
-val schemaManager = SchemaManagerFactoryg.create(schemaRegistryConfig)
-val schema = schemaManager.downloadSchema()
+val schema = AvroSchemaUtils.toAvroSchema(dataFrame, "input")
 ```
 
+### Using schema manager to directly download or register schema
+You can use SchemaManager directly to do operations with schema registry. 
+The configuration is identical to Schema Registry Client.
+The SchemaManager is just a wrapper around the client providing helpful methods and abstractions.
+
 ```scala
+val schemaRegistryClientConfig = Map( ...configuration... )
+val schemaManager = SchemaManagerFactory.create(schemaRegistryClientConfig)
+
+// Downloading schema:
+val schema = schemaManager.getSchemaById(42)
+
 // Registering schema:
+val schemaString = "{...avro schema json...}"
+val subject = SchemaSubject.usingTopicNameStrategy("fooTopic")
+val schemaId = schemaManager.register(subject, schemaString)
 
-val schemaString = "...schema..."
-val schemaRegistryConfig = Map( ...configuration... )
-
-val schemaManager = SchemaManagerFactory.create(schemaRegistryConfig)
-val schemaId = schemaManager.register(schemaString)
+// and more, check SchemaManager's methods
 ```
 
 ### Data Conversions
@@ -114,17 +133,24 @@ val sqlSchema = new StructType(new StructField ....
 val avroSchema = SparkAvroConversions.toAvroSchema(sqlSchema, avro_schema_name, avro_schema_namespace)
 ```
 
-## IMPORTANT - Note on Schema Registry naming strategies
-The naming strategies RecordName and TopicRecordName allow for a topic to receive different payloads, i.e. payloads containing different schemas that do not have to be compatible, as explained [here](https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#subject-name-strategy).
+## Multiple schemas in one topic
+The naming strategies RecordName and TopicRecordName allow for a one topic to receive different payloads, 
+i.e. payloads containing different schemas that do not have to be compatible, 
+as explained [here](https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#subject-name-strategy).
 
-However, currently, there is no way for Spark to change Dataframes schemas on the fly, thus, if incompatible schemas are used on the same topic, the job will fail. Also, it would be cumbersome to write jobs that shift between schemas.
+When you read such data from Kafka they will be stored as binary column in a dataframe, 
+but once you convert them to Spark types they cannot be in one dataframe, 
+because all rows in dataframe must have the same schema.
 
-A possible solution would be for ABRiS to create an uber schema from all schemas expected to be part of a topic, which will be investigated in future releases.
+So if you have multiple incompatible types of avro data in a dataframe you must first sort them out to several dataframes.
+One for each schema. Then you can use Abris and convert the avro data.
 
 ## Avro Fixed type
-**Fixed** is an alternative way of encoding binary data in Avro. Unlike *bytes* type the fixed type doesn't store the length of the data in the payload, but in Avro schema itself.
+**Fixed** is an alternative way of encoding binary data in Avro. 
+Unlike *bytes* type the fixed type doesn't store the length of the data in the payload, but in Avro schema itself.
 
-The corresponding data type in Spark is **BinaryType**, but the inferred schema will always use bytes type for this kind of data. If you want to use the fixed type you must provide the appropriate Avro schema.
+The corresponding data type in Spark is **BinaryType**, but the inferred schema will always use bytes type for this kind of data. 
+If you want to use the fixed type you must provide the appropriate Avro schema.
 
 ---
 

@@ -22,7 +22,9 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
-import za.co.absa.abris.avro.read.confluent.{SchemaManager, SchemaManagerFactory}
+import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.avro.registry.SchemaSubject
+import za.co.absa.abris.config.AbrisConfig
 
 class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 {
@@ -34,22 +36,12 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
   import spark.implicits._
 
-  private val schemaRegistryConfig = Map(
-    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
-    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "record_name",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
-  )
-
-  private val latestSchemaRegistryConfig = schemaRegistryConfig ++ Map(
-    SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
-  )
+  private val dummyUrl = "dummyUrl"
+  private val schemaRegistryConfig = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl)
 
   override def beforeEach() {
     val mockedSchemaRegistryClient = new MockSchemaRegistryClient()
-    SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig,mockedSchemaRegistryClient)
-    SchemaManagerFactory.addSRClientInstance(latestSchemaRegistryConfig, mockedSchemaRegistryClient)
+    SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
   }
 
   val recordByteSchema = """{
@@ -86,13 +78,24 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val allData = createTestData(recordByteSchema)
     val dataFrame: DataFrame = allData.select(struct(allData.col(allData.columns.head)) as 'integers)
 
+    val toCAConfig = AbrisConfig
+      .toConfluentAvro
+      .provideAndRegisterSchema(recordByteSchema)
+      .usingTopicRecordNameStrategy("test_topic")
+      .usingSchemaRegistry(dummyUrl)
+
     val avroBytes = dataFrame
-      .select(to_confluent_avro('integers, schemaRegistryConfig) as 'avroBytes)
+      .select(to_avro('integers, toCAConfig) as 'avroBytes)
 
     avroBytes.collect() // force evaluation
 
+    val fromCAConfig = AbrisConfig
+      .fromConfluentAvro
+      .provideReaderSchema(recordEvolvedByteSchema)
+      .usingSchemaRegistry(dummyUrl)
+
     val result = avroBytes
-      .select(from_confluent_avro('avroBytes, recordEvolvedByteSchema, latestSchemaRegistryConfig)
+      .select(from_avro('avroBytes, fromCAConfig)
         as 'integersWithDefault)
 
     val expectedStruct = struct(allData.col(allData.columns.head), lit("green"))
@@ -106,22 +109,37 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val allData = createTestData(recordByteSchema)
     val dataFrame: DataFrame = allData.select(struct(allData.col(allData.columns.head)) as 'integers)
 
-    val avroBytes = dataFrame
-        .select(to_confluent_avro('integers, schemaRegistryConfig) as 'avroBytes)
+    val toCAConfig = AbrisConfig
+      .toConfluentAvro
+      .provideAndRegisterSchema(recordByteSchema)
+      .usingTopicRecordNameStrategy("test_topic")
+      .usingSchemaRegistry(dummyUrl)
+
+    val avroBytes = dataFrame.select(to_avro('integers, toCAConfig) as 'avroBytes)
 
     // To avoid race conditions between schema registration and reading the data are converted from spark to scala
     val avroRows = avroBytes.collect()
 
-    val schemaManager = SchemaManagerFactory.create(latestSchemaRegistryConfig)
-    schemaManager.register(recordEvolvedByteSchema)
+    val schemaManager = SchemaManagerFactory.create(schemaRegistryConfig)
+    val subject = SchemaSubject.usingTopicRecordNameStrategy(
+      "test_topic",
+      "record_name",
+      "all-types.test",
+    )
+
+    schemaManager.register(subject, recordEvolvedByteSchema)
 
     // Now when the last version of schema is registered, we will convert the data back to spark DataFrame
     val avroDF = spark.sparkContext.parallelize(avroRows, 2)
     val outputAvro = spark.createDataFrame(avroDF, avroBytes.schema)
 
-    val result = outputAvro
-        .select(from_confluent_avro('avroBytes, latestSchemaRegistryConfig)
-          as 'integersWithDefault)
+    val fromCAConfig = AbrisConfig
+      .fromConfluentAvro
+      .downloadReaderSchemaByLatestVersion
+      .andTopicRecordNameStrategy("test_topic", "record_name", "all-types.test")
+      .usingSchemaRegistry(dummyUrl)
+
+    val result = outputAvro.select(from_avro('avroBytes, fromCAConfig) as 'integersWithDefault)
 
     val expectedStruct = struct(allData.col(allData.columns.head), lit("green"))
     val expectedResult: DataFrame = allData.select(expectedStruct as 'integersWithDefault)

@@ -6,7 +6,8 @@ We Provide some examples, but most of the documentation is written for Scala, so
 PySpark is using [Py4J](https://www.py4j.org/) as an interface between Scala and Python so you can check the documentation to get better idea how to transform the code, 
 but mostly it should be clear form the following examples.
 
-### Examples
+### Examples (!!! outdated)
+Any help to update this to version 4.x.x is welcomed.
 ```Python
 from pyspark import SparkContext
 from pyspark.sql.column import Column, _to_java_column

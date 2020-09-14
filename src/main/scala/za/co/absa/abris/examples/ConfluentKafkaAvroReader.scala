@@ -16,41 +16,41 @@
 
 package za.co.absa.abris.examples
 
-import java.util.Properties
-
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.{DataFrame, Dataset, Row}
-import za.co.absa.abris.examples.utils.ExamplesUtils._
+import za.co.absa.abris.config.AbrisConfig
 
 object ConfluentKafkaAvroReader {
 
-  private val PARAM_JOB_NAME = "job.name"
-  private val PARAM_JOB_MASTER = "job.master"
-  private val PARAM_PAYLOAD_AVRO_SCHEMA = "payload.avro.schema"
-  private val PARAM_LOG_LEVEL = "log.level"
-  private val PARAM_OPTION_SUBSCRIBE = "option.subscribe"
-
-  private val PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY = "example.should.use.schema.registry"
+  val kafkaTopicName = "test_topic"
 
   def main(args: Array[String]): Unit = {
 
-    // there is an example file at /src/test/resources/AvroReadingExample.properties
-    checkArgs(args)
+    val spark = SparkSession
+      .builder()
+      .appName("WriterJob")
+      .master("local[2]")
+      .getOrCreate()
 
-    val properties = loadProperties(args)
 
-    val spark = getSparkSession(properties, PARAM_JOB_NAME, PARAM_JOB_MASTER, PARAM_LOG_LEVEL)
+    spark.sparkContext.setLogLevel("INFO")
 
-    val stream = spark
+    val dataFrame = spark
       .readStream
       .format("kafka")
+      .option("kafka.bootstrap.servers", "localhost:9092")
+      .option("subscribe", kafkaTopicName)
       .option("startingOffsets", "earliest")
-      .addOptions(properties) // 1. this method will add the properties starting with "option."
-                              // 2. security options can be set in the properties file
+      .load()
 
-    val deserialized = configureExample(stream.load(), properties)
+    val abrisConfig = AbrisConfig
+      .fromConfluentAvro
+      .downloadReaderSchemaByLatestVersion
+      .andTopicNameStrategy(kafkaTopicName)
+      .usingSchemaRegistry("http://localhost:8081")
 
-    // YOUR OPERATIONS CAN GO HERE
+    import za.co.absa.abris.avro.functions.from_avro
+    val deserialized = dataFrame.select(from_avro(col("value"), abrisConfig) as 'data)
 
     deserialized.printSchema()
 
@@ -60,20 +60,5 @@ object ConfluentKafkaAvroReader {
       .option("truncate", "false")
       .start()
       .awaitTermination()
-  }
-
-  private def configureExample(dataFrame: DataFrame, properties: Properties): Dataset[Row] = {
-
-    import za.co.absa.abris.avro.functions.from_confluent_avro
-
-    val schemaRegistryConfig = properties.getValueSchemaRegistryConfigurations(PARAM_OPTION_SUBSCRIBE)
-
-    if (properties.getProperty(PARAM_EXAMPLE_SHOULD_USE_SCHEMA_REGISTRY).toBoolean) {
-      dataFrame.select(from_confluent_avro(col("value"), schemaRegistryConfig) as 'data)
-    } else {
-      val source = scala.io.Source.fromFile(properties.getProperty(PARAM_PAYLOAD_AVRO_SCHEMA))
-      val schemaString = try source.mkString finally source.close()
-      dataFrame.select(from_confluent_avro(col("value"), schemaString, schemaRegistryConfig) as 'data)
-    }
   }
 }

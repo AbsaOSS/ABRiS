@@ -16,10 +16,12 @@
 
 package za.co.absa.abris.avro.parsing.utils
 
-import org.apache.avro.Schema
+import org.apache.avro.{Schema, SchemaBuilder}
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.avro.SchemaConverters.toAvroType
 
 import scala.collection.JavaConverters._
 
@@ -51,6 +53,25 @@ object AvroSchemaUtils {
     val hdfs = FileSystem.get(new Configuration())
     val stream = hdfs.open(new Path(path))
     try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()
+  }
+
+  def toAvroSchema(
+    dataFrame: DataFrame,
+    columnName: String,
+    recordName: String = "topLevelRecord",
+    nameSpace: String = ""
+  ): Schema = {
+    val fieldIndex = dataFrame.schema.fieldIndex(columnName)
+    val field = dataFrame.schema.fields(fieldIndex)
+
+    toAvroType(field.dataType, field.nullable, recordName, nameSpace)
+  }
+
+  def wrapSchema(schema: Schema, name: String, namespace: String): Schema = {
+    SchemaBuilder.record(name)
+      .namespace(namespace)
+      .fields().name(schema.getName).`type`(schema).noDefault()
+      .endRecord()
   }
 
 }
