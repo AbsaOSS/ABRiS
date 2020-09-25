@@ -122,7 +122,8 @@ class SchemaManager(
   private def exists(subject: String): Boolean = {
     Try(schemaRegistryClient.getLatestSchemaMetadata(subject)) match {
       case Success(_) => true
-      case Failure(e) if e.getMessage.contains("Subject not found") || e.getMessage.contains("No schema registered") =>
+      case Failure(e) if e.getMessage.contains("Subject not found") || e.getMessage.contains("No schema registered")
+        || e.getMessage.contains("No artifact with ID") =>
         logInfo(s"Subject not registered: '$subject'")
         false
       case Failure(e) =>
