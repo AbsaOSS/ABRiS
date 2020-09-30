@@ -124,7 +124,7 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     val subject = SchemaSubject.usingTopicRecordNameStrategy(
       "test_topic",
       "record_name",
-      "all-types.test",
+      "all-types.test"
     )
 
     schemaManager.register(subject, recordEvolvedByteSchema)

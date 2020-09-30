@@ -59,14 +59,14 @@ class ToStrategyConfigFragment(version: SchemaVersion, confluent: Boolean) {
 
   def andRecordNameStrategy(
     recordName: String,
-    recordNamespace: String,
+    recordNamespace: String
   ): ToSchemaDownloadingConfigFragment =
     toSDCFragment(SchemaSubject.usingRecordNameStrategy(recordName, recordNamespace))
 
   def andTopicRecordNameStrategy(
     topicName: String,
     recordName: String,
-    recordNamespace: String,
+    recordNamespace: String
   ): ToSchemaDownloadingConfigFragment =
     toSDCFragment(SchemaSubject.usingTopicRecordNameStrategy(topicName, recordName, recordNamespace))
 
@@ -115,7 +115,7 @@ class ToConfluentAvroRegistrationStrategyConfigFragment(schema: String, confluen
     toSRCFragment(SchemaSubject.usingRecordNameStrategy(AvroSchemaUtils.parse(schema)))
 
   def usingTopicRecordNameStrategy(
-    topicName: String,
+    topicName: String
   ): ToSchemaRegisteringConfigFragment =
     toSRCFragment(SchemaSubject.usingTopicRecordNameStrategy(topicName, AvroSchemaUtils.parse(schema)))
 
@@ -166,14 +166,14 @@ class FromStrategyConfigFragment(version: SchemaVersion, confluent: Boolean) {
 
   def andRecordNameStrategy(
     recordName: String,
-    recordNamespace: String,
+    recordNamespace: String
   ): FromSchemaDownloadingConfigFragment =
     toFSDCFragment(SchemaSubject.usingRecordNameStrategy(recordName, recordNamespace))
 
   def andTopicRecordNameStrategy(
     topicName: String,
     recordName: String,
-    recordNamespace: String,
+    recordNamespace: String
   ): FromSchemaDownloadingConfigFragment =
     toFSDCFragment(SchemaSubject.usingTopicRecordNameStrategy(topicName, recordName, recordNamespace))
 

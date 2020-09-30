@@ -44,14 +44,14 @@ object SchemaSubject{
 
   def usingRecordNameStrategy(
     recordName: String,
-    recordNamespace: String,
+    recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
     new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, dummySchema))
   }
 
   def usingRecordNameStrategy(
-    schema: Schema,
+    schema: Schema
   ): SchemaSubject = {
     new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false,  new AvroSchema(schema)))
   }
@@ -59,7 +59,7 @@ object SchemaSubject{
   def usingTopicRecordNameStrategy(
     topicName: String,
     recordName: String,
-    recordNamespace: String,
+    recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
     new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, dummySchema))
@@ -67,7 +67,7 @@ object SchemaSubject{
 
   def usingTopicRecordNameStrategy(
     topicName: String,
-    schema: Schema,
+    schema: Schema
   ): SchemaSubject = {
     new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, new AvroSchema(schema)))
   }
