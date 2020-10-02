@@ -22,7 +22,6 @@ import java.util.Properties
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import org.apache.spark.sql.{DataFrameWriter, Row, SparkSession}
 import org.slf4j.LoggerFactory
-import za.co.absa.abris.avro.read.confluent.SchemaManager
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -126,47 +125,6 @@ object ExamplesUtils {
           stream.option(keys._2, properties.getProperty(keys._1))
         })
       stream
-    }
-  }
-
-  implicit class SchemaRegistryConfiguration(props: Properties) {
-
-    def getValueSchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] =
-      getSchemaRegistryConfigurations(
-        Set(
-          SchemaManager.PARAM_SCHEMA_REGISTRY_URL,
-          SchemaManager.PARAM_VALUE_SCHEMA_ID,
-          SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY,
-          SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY,
-          SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
-        ),
-        subscribeParamKey
-      )
-
-    def getKeySchemaRegistryConfigurations(subscribeParamKey: String): Map[String,String] =
-      getSchemaRegistryConfigurations(
-        Set(
-          SchemaManager.PARAM_SCHEMA_REGISTRY_URL,
-          SchemaManager.PARAM_KEY_SCHEMA_ID,
-          SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY,
-          SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY,
-          SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY
-        ),
-        subscribeParamKey
-      )
-
-    def getSchemaRegistryConfigurations(keys: Set[String], subscribeParamKey: String): Map[String,String] = {
-
-      val confs = scala.collection.mutable.Map[String,String](
-        SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> props.getProperty(subscribeParamKey))
-
-      for (propKey <- keys) yield {
-        if (props.containsKey(propKey)) {
-          confs += propKey -> props.getProperty(propKey)
-        }
-      }
-
-      Map[String,String](confs.toSeq:_*)
     }
   }
 }

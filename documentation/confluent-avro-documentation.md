@@ -13,145 +13,77 @@ When converting from Confluent avro to Spark, there may be two schemas *reader s
  
  The schemas must be compatible.
  
-### Using schema registry for reader schema
-In this case the reader schema will be loaded from schema registry according to configuration.
-The writer schema will be loaded from the same registry.
+There are several ways how to get the reader schema, most of them are in the following config examples:
 
-example config:
 ```scala
-val config = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081"
-  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
-  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name",
-  SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
-)
+  val fromAvroConfig1: FromAvroConfig = AbrisConfig
+    .fromConfluentAvro
+    .provideReaderSchema("{ ...schema json...}")
+    .usingSchemaRegistry("http://registry-url")
+  
+  // or
+  val fromAvroConfig2: FromAvroConfig = AbrisConfig
+    .fromConfluentAvro
+    .downloadReaderSchemaById(66)
+    .usingSchemaRegistry("http://registry-url")
+
+  //or
+  val fromAvroConfig3: FromAvroConfig = AbrisConfig
+    .fromConfluentAvro
+    .downloadReaderSchemaByLatestVersion
+    .andTopicNameStrategy("topicName", true) // key schema
+    .usingSchemaRegistry("http://registry-url")
 ```
-the function:
+Once you have 'FromAvroConfig' you just need to pass it to Abris function:
 ```scala
-import za.co.absa.abris.avro.functions.from_confluent_avro
+import za.co.absa.abris.avro.functions.from_avro
 
-def readAvro(dataFrame: DataFrame, schemaRegistryConfig: Map[String, String]): DataFrame = {
+def readAvro(dataFrame: DataFrame, fromAvroConfig: FromAvroConfig): DataFrame = {
 
-  dataFrame.select(from_confluent_avro(col("value"), schemaRegistryConfig) as 'data).select("data.*")
+  dataFrame.select(from_avro(col("value"), fromAvroConfig) as 'data).select("data.*")
 }
 ```
- 
-### Providing Avro schema
-Other option is to provide the reader schema as a string. In that case the registry is used only for reader schema. 
-
-example config:
-```scala
-val config = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081"
-)
-```
-the function:
-```scala
-import za.co.absa.abris.avro.functions.from_confluent_avro
-
-def readAvro(dataFrame: DataFrame, schemaString: String, config: Map[String, String]): DataFrame = {
-
-  dataFrame.select(from_confluent_avro(col("value"), schemaString, config) as 'data).select("data.*")
-}
-```
-       
-### Using Schema Registry for key and value
-In case we are sending Avro data using Kafka we may want to serialize both the key and the value of the Kafka message.
-The serialization of Avro data is not really different when we are doing it for key or for value, but Schema Registry handles each of them slightly differently.
-
-The way the library knows whether you are working with key or value is the schema naming strategy.
-Use ```SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY``` for key and ```SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY``` for value. If the configuration contains **both** of them, it will **throw**!
-
-This is one way to create the configurations for key and value serialization:
-```scala
-val commonRegistryConfig = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081"
-)
-
-val keyRegistryConfig = commonRegistryConfig ++ Map(
-  SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
-  SchemaManager.PARAM_KEY_SCHEMA_ID -> "latest",
-  SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
-  SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
-)
-
-val valueRegistryConfig = commonRegistryConfig ++ Map(
-  SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name",
-  SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
-)
-```
-Let's assume that the Avro binary data for key are in the ```key``` column and the payload data are in the ```value``` column of the same DataFrame.
-
-```scala
-import za.co.absa.abris.avro.functions.from_confluent_avro
-
-val result: DataFrame  = dataFrame.select(
-    from_confluent_avro(col("key"), keyRegistryConfig) as 'key,
-    from_confluent_avro(col("value"), valueRegistryConfig) as 'value)
-```
-We just need to use the right configuration for the right column and that's it.
-
-
 
 ## Spark to Avro
 When converting data to Avro there is only one schema in play, but you have several options how to provide it:
- - You can provide it as a string or let Abris to generate it from data. In both cases the schema will be at the end registered to the registry.
+ - You can provide it as a string and let Abris register the schema for you.
  - You can specify a schema that already is in the registry. In that case Abris will download it and no registration is necessary.
 
-In `config` map you have to provide a schema registry configuration and strategy to create subject for a registered schema. 
-The config keys are identical to the ones used in previous examples.
+When registering the schema Abris will do it only if the same schema is not already registered. 
+So it's something like: register if not exist.
 
-### Generate schema from data and register
+Some configuration examples:
 ```scala
-import za.co.absa.abris.avro.functions.to_confluent_avro
+val toAvroConfig1: ToAvroConfig = AbrisConfig
+    .toConfluentAvro
+    .provideAndRegisterSchema("{ ...schema json... }")
+    .usingRecordNameStrategy() // name and namspce taken from schema
+    .usingSchemaRegistry("http://registry-url")
 
-def writeAvro(dataFrame: DataFrame, config: Map[String, String]): DataFrame = {
+val toAvroConfig2: ToAvroConfig = AbrisConfig
+    .toConfluentAvro
+    .provideAndRegisterSchema("{ ...schema json... }")
+    .usingTopicNameStrategy("fooTopic")
+    .usingSchemaRegistry("http://registry-url")
+
+val toAvroConfig3: ToAvroConfig = AbrisConfig
+    .toConfluentAvro
+    .downloadSchemaById(66)
+    .usingSchemaRegistry("http://registry-url")
+
+val toAvroConfig4: ToAvroConfig = AbrisConfig
+    .toConfluentAvro
+    .downloadSchemaByLatestVersion
+    .andTopicNameStrategy("fooTopic")
+    .usingSchemaRegistry("http://registry-url")
+```
+Once you have a config you can use it like this:
+```scala
+import za.co.absa.abris.avro.functions.to_avro
+
+def writeAvro(dataFrame: DataFrame, toAvroConfig: ToAvroConfig): DataFrame = {
   
   val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
-  dataFrame.select(to_confluent_avro(allColumns, config) as 'value)
+  dataFrame.select(to_avro(allColumns, toAvroConfig) as 'value)
 }
 ```
-
-### Use schema already in registry
-The code is identical to previous example. The only difference is the config that must contain `SchemaManager.PARAM_KEY_SCHEMA_ID` or `SchemaManager.PARAM_KEY_SCHEMA_VERSION`.
-In that case Abris will not register the schema. It will just use one identified by id or version and subject.
-
-### Providing avro schema string
-Provided schema will be registered.    
-```scala
-import za.co.absa.abris.avro.functions.to_confluent_avro
-
-def writeAvro(dataFrame: DataFrame, schemaString: String, config: Map[String, String]): DataFrame = {
-
-  val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
-  dataFrame.select(to_confluent_avro(allColumns, schemaString, config) as 'value)
-}
-```
-
-### Using Schema Registry for key and value
-As in the reading example, for writing you also have to specify the naming strategy parameter to let ABRiS know if you are using *value* or *key*.
-
-```scala
-val commonRegistryConfig = Map(
-  SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "example_topic",
-  SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://localhost:8081",
-  SchemaManager.PARAM_KEY_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "foo",
-  SchemaManager.PARAM_KEY_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "com.bar"
-)
-
-val keyRegistryConfig = commonRegistryConfig +
-  (SchemaManager.PARAM_KEY_SCHEMA_NAMING_STRATEGY -> "topic.record.name")
-
-val valueRegistryConfig = commonRegistryConfig +
-  (SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name")
-```
-Let's assume that we have the data that we want to serialize in a DataFrame in the **key** and **value** columns.
-
-```scala
-val result: DataFrame = dataFrame.select(
-  to_confluent_avro(col("key"), keyRegistryConfig) as 'key,
-  to_confluent_avro(col("value"), valueRegistryConfig) as 'value)
-```
-After serialization the data are again stored in the columns *key* and *value*, but now they are in Avro binary format.
-

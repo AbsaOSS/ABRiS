@@ -16,28 +16,28 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import java.security.InvalidParameterException
-
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.scalatest.{BeforeAndAfter, FlatSpec}
-import za.co.absa.abris.avro.schemas.RegistryConfig
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.registry.{LatestVersion, NumVersion, SchemaSubject}
+import za.co.absa.abris.config.AbrisConfig
 
 class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
 
-  private val schema =
-    "{\"type\": \"record\", \"name\": \"Blah\", \"fields\": [{ \"name\": \"name\", \"type\": \"string\" }]}"
+  private val schema = AvroSchemaUtils.parse(
+    "{\"type\": \"record\", \"name\": \"Blah\", \"fields\": [{ \"name\": \"name\", \"type\": \"string\" }]}")
 
 
-  val recordByteSchema = """{
+  val recordByteSchema = AvroSchemaUtils.parse("""{
      "namespace": "all-types.test",
      "type": "record",
      "name": "record_name",
      "fields":[
          {"name": "int", "type":  ["int", "null"] }
      ]
-  }"""
+  }""")
 
-  val recordEvolvedByteSchema1 = """{
+  val recordEvolvedByteSchema1 = AvroSchemaUtils.parse("""{
      "namespace": "all-types.test",
      "type": "record",
      "name": "record_name",
@@ -45,9 +45,9 @@ class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
          {"name": "int", "type": ["int", "null"] },
          {"name": "favorite_color", "type": "string", "default": "green"}
      ]
-  }"""
+  }""")
 
-  val recordEvolvedByteSchema2 = """{
+  val recordEvolvedByteSchema2 = AvroSchemaUtils.parse("""{
      "namespace": "all-types.test",
      "type": "record",
      "name": "record_name",
@@ -56,100 +56,53 @@ class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
          {"name": "favorite_color", "type": "string", "default": "green"},
          {"name": "favorite_badger", "type": "string", "default": "Honey badger"}
      ]
-  }"""
+  }""")
+
+  val registryUrl = "dummyUrl"
+  val registryConfig = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> registryUrl)
 
   behavior of "SchemaManager"
 
-  it should "throw if no strategy is specified" in {
-    val conf = Map[String,String]()
-    val schemaManager = new SchemaManager(new RegistryConfig(conf), new MockSchemaRegistryClient())
+  it should "return correct schema by id or subect and version" in {
+    SchemaManagerFactory.addSRClientInstance(registryConfig, new MockSchemaRegistryClient)
 
-    intercept[InvalidParameterException] {
-      schemaManager.downloadSchema()
-    }
-    intercept[InvalidParameterException] {
-      schemaManager.register(recordEvolvedByteSchema1)
-    }
+    val schemaManager = new SchemaManager(new MockSchemaRegistryClient())
+    val subject1 = SchemaSubject.usingTopicNameStrategy("foo")
+    val subject2 = SchemaSubject.usingTopicNameStrategy("bar")
+
+    val id1 = schemaManager.register(subject1, schema)                     // id1, version 1
+    val id2 = schemaManager.register(subject2, recordByteSchema)           // id2, version 1
+    val id3 = schemaManager.register(subject2, recordEvolvedByteSchema1)   // id3, version 2
+    val id4 = schemaManager.register(subject2, recordEvolvedByteSchema2)   // id4, version 3
+
+    assert(schemaManager.getSchemaById(id1) == schema)
+    assert(schemaManager.getSchemaById(id2) == recordByteSchema)
+    assert(schemaManager.getSchemaById(id3) == recordEvolvedByteSchema1)
+    assert(schemaManager.getSchemaById(id4) == recordEvolvedByteSchema2)
+
+    assert(schemaManager.getSchemaBySubjectAndVersion(subject1, NumVersion(1)) == schema)
+    assert(schemaManager.getSchemaBySubjectAndVersion(subject1, LatestVersion()) == schema)
+
+    assert(schemaManager.getSchemaBySubjectAndVersion(subject2, NumVersion(1)) == recordByteSchema)
+    assert(schemaManager.getSchemaBySubjectAndVersion(subject2, NumVersion(2)) == recordEvolvedByteSchema1)
+    assert(schemaManager.getSchemaBySubjectAndVersion(subject2, NumVersion(3)) == recordEvolvedByteSchema2)
+    assert(schemaManager.getSchemaBySubjectAndVersion(subject2, LatestVersion()) == recordEvolvedByteSchema2)
   }
 
-  private val dummySchemaRegistryConfig = Map(
-    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "dummy_topic",
-    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name"
-  )
+  it should "find already existing schema" in {
+    val schemaManager = new SchemaManager(new MockSchemaRegistryClient())
 
+    val subject = SchemaSubject.usingTopicNameStrategy("dummy_topic")
 
-  private val schemaRegistryConfig = Map(
-    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
-    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "dummy",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.name"
-  )
+    schemaManager.register(subject, recordByteSchema)
+    schemaManager.register(subject, recordEvolvedByteSchema1)
+    schemaManager.register(subject, recordEvolvedByteSchema2)
 
-  it should "resolve schema id integer from schema and version" in {
+    val maybeId = schemaManager.findEquivalentSchema(recordEvolvedByteSchema1, subject)
 
-    val client = new MockSchemaRegistryClient()
+    val resultSchema = schemaManager.getSchemaById(maybeId.get)
 
-    val dummySchemaManager = new SchemaManager(new RegistryConfig(dummySchemaRegistryConfig), client)
-    // register dummy schema so that ids and versions are different for the rest
-    dummySchemaManager.register(schema)                 // id 1, version 1
-
-
-    val regConfig = new RegistryConfig(schemaRegistryConfig)
-    val schemaManager1 = new SchemaManager(regConfig, client)
-    // now register several schemas for different topic to create more versions
-    schemaManager1.register(recordByteSchema)           // id 2, version 1
-    schemaManager1.register(recordEvolvedByteSchema1)   // id 3, version 2
-    schemaManager1.register(recordEvolvedByteSchema2)   // id 4, version 3
-
-
-    val schemaManager2 = new SchemaManager(new RegistryConfig(
-      schemaRegistryConfig ++ Map(
-        SchemaManager.PARAM_VALUE_SCHEMA_ID -> "4",
-        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "2"
-      )
-    ), client)
-
-    assert(schemaManager2.schemaId.get == 4)
-
-
-    val schemaManager3 = new SchemaManager(new RegistryConfig(
-      schemaRegistryConfig ++ Map(
-        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "2"
-      )
-    ), client)
-
-    assert(schemaManager3.schemaId.get == 3)
-
-
-    val schemaManager4 = new SchemaManager(new RegistryConfig(
-      schemaRegistryConfig ++ Map(
-        SchemaManager.PARAM_VALUE_SCHEMA_ID -> "latest"
-      )
-    ), client)
-
-    assert(schemaManager4.schemaId.get == 4)
-
-
-    val schemaManager5 = new SchemaManager(new RegistryConfig(
-      schemaRegistryConfig ++ Map(
-        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "latest"
-      )
-    ), client)
-
-    assert(schemaManager5.schemaId.get == 4)
-
-
-    val schemaManager6 = new SchemaManager(new RegistryConfig(
-      dummySchemaRegistryConfig ++ Map(
-        SchemaManager.PARAM_VALUE_SCHEMA_VERSION -> "latest"
-      )
-    ), client)
-
-    assert(schemaManager6.schemaId.get == 1)
-
-    val schemaManager7 = new SchemaManager(new RegistryConfig(dummySchemaRegistryConfig), client)
-    assert(schemaManager7.schemaId == None)
+    assert(resultSchema.equals(recordEvolvedByteSchema1))
   }
-
 
 }

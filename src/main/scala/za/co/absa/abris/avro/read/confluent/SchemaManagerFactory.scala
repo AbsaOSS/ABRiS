@@ -17,12 +17,9 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import java.util.concurrent.locks.ReentrantReadWriteLock
-
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.spark.internal.Logging
-import za.co.absa.abris.avro.schemas.RegistryConfig
 
 import scala.collection.JavaConverters._
 import scala.collection.concurrent
@@ -45,10 +42,7 @@ object SchemaManagerFactory extends Logging {
    clientInstances.clear()
   }
 
-  def create(configs: Map[String,String]): SchemaManager = new SchemaManager(
-    new RegistryConfig(configs),
-    getOrCreateRegistryClient(configs)
-  )
+  def create(configs: Map[String,String]): SchemaManager = new SchemaManager(getOrCreateRegistryClient(configs))
 
   private def getOrCreateRegistryClient(configs: Map[String,String]): SchemaRegistryClient = {
     clientInstances.getOrElseUpdate(configs, {

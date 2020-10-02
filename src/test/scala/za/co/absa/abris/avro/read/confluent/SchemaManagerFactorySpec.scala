@@ -16,31 +16,17 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import java.security.InvalidParameterException
-
-import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, SchemaRegistryClient}
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FlatSpec, PrivateMethodTester}
-import za.co.absa.abris.avro.schemas.RegistryConfig
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
+import org.scalatest.{BeforeAndAfterEach, FlatSpec}
+import za.co.absa.abris.config.AbrisConfig
 
 import scala.reflect.runtime.{universe => ru}
 
 class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
 
-  private val schemaRegistryConfig1 = Map(
-    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
-    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://dummy",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
-  )
+  private val schemaRegistryConfig1 = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> "http://dummy")
 
-  private val schemaRegistryConfig2 = Map(
-    SchemaManager.PARAM_SCHEMA_REGISTRY_TOPIC -> "test_topic",
-    SchemaManager.PARAM_SCHEMA_REGISTRY_URL -> "http://dummy_sr_2",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMING_STRATEGY -> "topic.record.name",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAME_FOR_RECORD_STRATEGY -> "native_complete",
-    SchemaManager.PARAM_VALUE_SCHEMA_NAMESPACE_FOR_RECORD_STRATEGY -> "all-types.test"
-  )
+  private val schemaRegistryConfig2 = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> "http://dummy_sr_2")
 
   override def beforeEach(): Unit = {
     super.beforeEach()

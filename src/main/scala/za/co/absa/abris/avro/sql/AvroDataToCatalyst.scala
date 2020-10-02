@@ -123,7 +123,7 @@ case class AvroDataToCatalyst(
   }
 
   private def getWriterSchema(id: Int): Schema = {
-    Try(schemaManager.downloadById(id)) match {
+    Try(schemaManager.getSchemaById(id)) match {
       case Success(schema)  => schema
       case Failure(e)       => throw new RuntimeException("Not able to load writer schema", e)
     }
@@ -136,5 +136,4 @@ case class AvroDataToCatalyst(
 
     reader.read(reader, decoder)
   }
-
 }
