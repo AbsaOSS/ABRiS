@@ -25,6 +25,10 @@ On spark 3.0.x and 2.4.x Abris should work without any further requirements.
 
 On Spark 2.3.x you must declare dependency on ```org.apache.avro:avro:1.8.0``` or higher. (Spark 2.3.x uses Avro 1.7.x so you must overwrite this because ABRiS needs Avro 1.8.0+.)
 
+## Older Versions
+This is documentation for Abris **version 4**. Documentation for **version 3** is located in 
+[branch-3.2](https://github.com/AbsaOSS/ABRiS/tree/branch-3.2).
+
 ## Usage
 
 ABRiS API is in it's most basic form almost identical to Spark built-in support for Avro, but it provides additional functionality. Mainly it's support of schema registry and also seamless integration with confluent Avro data format.
