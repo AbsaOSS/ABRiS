@@ -2,9 +2,9 @@ name: Build Scala 2.12, Spark 2.4
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, branch-3.2 ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, branch-3.2 ]
 
 jobs:
   build:
