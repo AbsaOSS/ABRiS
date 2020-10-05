@@ -88,6 +88,24 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     shouldEqualByData(dataFrame, result)
   }
 
+  val stringTypeSchema = """["string", "null"]"""
+
+  it should "convert string type with bare schema to avro an back" in {
+
+    val allDate: DataFrame = getTestingDataFrame
+    val dataFrame: DataFrame = allDate.select('string)
+
+    val avroBytes = dataFrame
+      .select(to_avro('string, stringTypeSchema) as 'avroBytes)
+
+    avroBytes.collect() // force evaluation
+
+    val result = avroBytes
+      .select(from_avro('avroBytes, stringTypeSchema) as 'string)
+
+    shouldEqualByData(dataFrame, result)
+  }
+
   val recordByteSchema = """{
      "namespace": "all-types.test",
      "type": "record",
