@@ -16,8 +16,8 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.scalatest.{BeforeAndAfter, FlatSpec}
+import za.co.absa.abris.avro.AbrisMockSchemaRegistryClient
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.registry.{LatestVersion, NumVersion, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
@@ -64,9 +64,7 @@ class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
   behavior of "SchemaManager"
 
   it should "return correct schema by id or subect and version" in {
-    SchemaManagerFactory.addSRClientInstance(registryConfig, new MockSchemaRegistryClient)
-
-    val schemaManager = new SchemaManager(new MockSchemaRegistryClient())
+    val schemaManager = new SchemaManager(new AbrisMockSchemaRegistryClient())
     val subject1 = SchemaSubject.usingTopicNameStrategy("foo")
     val subject2 = SchemaSubject.usingTopicNameStrategy("bar")
 
@@ -90,7 +88,7 @@ class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
   }
 
   it should "find already existing schema" in {
-    val schemaManager = new SchemaManager(new MockSchemaRegistryClient())
+    val schemaManager = new SchemaManager(new AbrisMockSchemaRegistryClient())
 
     val subject = SchemaSubject.usingTopicNameStrategy("dummy_topic")
 
@@ -105,4 +103,20 @@ class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
     assert(resultSchema.equals(recordEvolvedByteSchema1))
   }
 
+  "exists" should "return true when schema is in registry" in {
+    val schemaManager = new SchemaManager(new AbrisMockSchemaRegistryClient())
+
+    val subject = SchemaSubject.usingTopicNameStrategy("dummy_topic")
+    schemaManager.register(subject, recordByteSchema)
+    val schemaExists = schemaManager.exists(subject)
+
+    assert(schemaExists == true)
+  }
+
+  "exists" should "return false when schema is not in registry" in {
+    val schemaManager = new SchemaManager(new AbrisMockSchemaRegistryClient())
+    val schemaExists = schemaManager.exists(SchemaSubject.usingTopicNameStrategy("foo"))
+
+    assert(schemaExists == false)
+  }
 }

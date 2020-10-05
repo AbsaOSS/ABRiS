@@ -16,10 +16,10 @@
 
 package za.co.absa.abris.avro.sql
 
-import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.spark.sql.functions.{lit, struct}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import za.co.absa.abris.avro.AbrisMockSchemaRegistryClient
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
@@ -40,7 +40,7 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   private val schemaRegistryConfig = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl)
 
   override def beforeEach() {
-    val mockedSchemaRegistryClient = new MockSchemaRegistryClient()
+    val mockedSchemaRegistryClient = new AbrisMockSchemaRegistryClient()
     SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
   }
 

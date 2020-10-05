@@ -87,12 +87,8 @@ class SchemaManager(schemaRegistryClient: SchemaRegistryClient) extends Logging 
   def exists(subject: SchemaSubject): Boolean = {
     Try(schemaRegistryClient.getLatestSchemaMetadata(subject.asString)) match {
       case Success(_) => true
-      case Failure(e) if e.getMessage.contains("Subject not found") || e.getMessage.contains("No schema registered") =>
-        logInfo(s"Subject not registered: '$subject'")
-        false
-      case Failure(e) =>
-        logError(s"Problems found while retrieving metadata for subject '$subject'", e)
-        false
+      case Failure(e: RestClientException) if e.getStatus == 404 => false
+      case Failure(e) => throw e
     }
   }
 

@@ -16,11 +16,11 @@
 
 package za.co.absa.abris.avro.sql
 
-import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.struct
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import za.co.absa.abris.avro.AbrisMockSchemaRegistryClient
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -51,7 +51,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   }
 
   override def beforeEach() {
-    val mockedSchemaRegistryClient = new MockSchemaRegistryClient()
+    val mockedSchemaRegistryClient = new AbrisMockSchemaRegistryClient()
     SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
   }
 
