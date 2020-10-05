@@ -18,6 +18,8 @@ package za.co.absa.abris.examples
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
+import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.avro.registry.SchemaSubject
 import za.co.absa.abris.config.AbrisConfig
 
 object ConfluentKafkaAvroReader {
@@ -25,6 +27,10 @@ object ConfluentKafkaAvroReader {
   val kafkaTopicName = "test_topic"
 
   def main(args: Array[String]): Unit = {
+
+    val schemaManager = SchemaManagerFactory.create(Map(AbrisConfig.SCHEMA_REGISTRY_URL ->"http://localhost:8081"))
+    val schemaExists = schemaManager.exists(SchemaSubject.usingTopicNameStrategy("foo"))
+
 
     val spark = SparkSession
       .builder()
