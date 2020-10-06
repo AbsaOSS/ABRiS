@@ -11,7 +11,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>za.co.absa</groupId>
 	<artifactId>abris_2.12</artifactId>
-	<version>3.2.3-SNAPSHOT</version>
+	<version>4.0.0</version>
 	<name>abris</name>
 	<description>Provides seamless integration between Avro and Spark Structured APIs.</description>
 	<url>https://github.com/AbsaOSS/ABRiS</url>
@@ -82,7 +82,7 @@
         <connection>scm:git:git://github.com/AbsaOSS/ABRiS.git</connection>
         <developerConnection>scm:git:ssh://github.com/AbsaOSS/ABRiS.git</developerConnection>
         <url>https://github.com/AbsaOSS/ABRiS/tree/master</url>
-      <tag>abris_2.11-2.2.0</tag>
+      <tag>v4.0.0</tag>
   </scm>
 
 	<licenses>
