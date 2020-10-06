@@ -80,7 +80,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/AbsaOSS/ABRiS.git</connection>
-        <developerConnection>scm:git:ssh://github.com:AbsaOSS/ABRiS.git</developerConnection>
+        <developerConnection>scm:git:ssh://github.com/AbsaOSS/ABRiS.git</developerConnection>
         <url>https://github.com/AbsaOSS/ABRiS/tree/master</url>
       <tag>abris_2.11-2.2.0</tag>
   </scm>
