@@ -7,44 +7,45 @@
 	OF ANY KIND, either express or implied. ~ See the License for the specific
 	language governing permissions and ~ limitations under the License. -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>za.co.absa</groupId>
-	<artifactId>abris_2.12</artifactId>
-	<version>4.0.1-SNAPSHOT</version>
-	<name>abris</name>
-	<description>Provides seamless integration between Avro and Spark Structured APIs.</description>
-	<url>https://github.com/AbsaOSS/ABRiS</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>za.co.absa</groupId>
+    <artifactId>abris_2.12</artifactId>
+    <version>4.0.1-SNAPSHOT</version>
+    <name>abris</name>
+    <description>Provides seamless integration between Avro and Spark Structured APIs.</description>
+    <url>https://github.com/AbsaOSS/ABRiS</url>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
-	<!-- Confluent repository since their dependencies are not available in Maven Central -->
-	<repositories>
-		<repository>
-			<id>confluent</id>
-			<url>http://packages.confluent.io/maven/</url>
-		</repository>
-	</repositories>
+    <!-- Confluent repository since their dependencies are not available in Maven Central -->
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <url>http://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<!--Maven-->
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.deploy.plugin.version>2.8.1</maven.deploy.plugin.version>
-		<maven.sources.version>3.0.1</maven.sources.version>
-		<gpg.plugin.version>1.6</gpg.plugin.version>
-		<surefire.version>3.0.0-M1</surefire.version>
+        <!--Maven-->
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.deploy.plugin.version>2.8.1</maven.deploy.plugin.version>
+        <maven.sources.version>3.0.1</maven.sources.version>
+        <gpg.plugin.version>1.6</gpg.plugin.version>
+        <surefire.version>3.0.0-M1</surefire.version>
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
@@ -62,59 +63,59 @@
         <scala.version>${scala_2.12.version}</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
 
-		<!--Tests-->
-		<scalatestplus.mockito.version>3.1.0.0</scalatestplus.mockito.version>
-		<scalatest.version>3.1.0</scalatest.version>
-		<scalatest.maven.version>2.0.0</scalatest.maven.version>
-		<scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
+        <!--Tests-->
+        <scalatestplus.mockito.version>3.1.0.0</scalatestplus.mockito.version>
+        <scalatest.version>3.1.0</scalatest.version>
+        <scalatest.maven.version>2.0.0</scalatest.maven.version>
+        <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
-		<!--Platforms-->
-		<spark.version>2.4.4</spark.version>
-		<kafka.spark.version>0-10</kafka.spark.version>
-		<confluent.version>5.5.1</confluent.version>
+        <!--Platforms-->
+        <spark.version>2.4.4</spark.version>
+        <kafka.spark.version>0-10</kafka.spark.version>
+        <confluent.version>5.5.1</confluent.version>
 
-		<!--Libs-->
+        <!--Libs-->
         <spark.avro.version>2.4.6</spark.avro.version>
-		<avro.version>1.9.2</avro.version>
-	</properties>
+        <avro.version>1.9.2</avro.version>
+    </properties>
 
     <scm>
         <connection>scm:git:git://github.com/AbsaOSS/ABRiS.git</connection>
         <developerConnection>scm:git:ssh://github.com/AbsaOSS/ABRiS.git</developerConnection>
         <url>https://github.com/AbsaOSS/ABRiS/tree/master</url>
-      <tag>abris_2.11-2.2.0</tag>
-  </scm>
+        <tag>abris_2.11-2.2.0</tag>
+    </scm>
 
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-	<organization>
-		<name>ABSA Group Limited</name>
-		<url>https://www.absa.africa</url>
-	</organization>
+    <organization>
+        <name>ABSA Group Limited</name>
+        <url>https://www.absa.africa</url>
+    </organization>
 
-	<developers>
-		<developer>
-			<id>felipemmelo</id>
-			<name>Felipe Melo</name>
-			<timezone>Europe/Prague</timezone>
-			<url>https://github.com/felipemmelo</url>
-		</developer>
+    <developers>
+        <developer>
+            <id>felipemmelo</id>
+            <name>Felipe Melo</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/felipemmelo</url>
+        </developer>
         <developer>
             <id>cerveada</id>
             <name>Adam Cervenka</name>
             <timezone>Europe/Prague</timezone>
             <url>https://github.com/cerveada</url>
         </developer>
-	</developers>
+    </developers>
 
     <dependencies>
-		<!-- Tests -->
+        <!-- Tests -->
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
@@ -128,10 +129,10 @@
             <scope>test</scope>
         </dependency>
 
-		<!-- Avro -->
-		<dependency>
-			<groupId>org.apache.avro</groupId>
-			<artifactId>avro</artifactId>
+        <!-- Avro -->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
             <version>${avro.version}</version>
             <exclusions>
                 <exclusion>
@@ -142,9 +143,9 @@
             </exclusions>
         </dependency>
 
-		<!-- Spark -->
-		<dependency>
-			<groupId>org.apache.spark</groupId>
+        <!-- Spark -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
@@ -187,112 +188,112 @@
             <artifactId>kafka-avro-serializer</artifactId>
             <version>${confluent.version}</version>
         </dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>kafka-schema-registry-client</artifactId>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-schema-registry-client</artifactId>
             <version>${confluent.version}</version>
         </dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-config</artifactId>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>common-config</artifactId>
             <version>${confluent.version}</version>
         </dependency>
-		<dependency>
-			<groupId>io.confluent</groupId>
-			<artifactId>common-utils</artifactId>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>common-utils</artifactId>
             <version>${confluent.version}</version>
         </dependency>
 
-	</dependencies>
+    </dependencies>
 
-	<build>
-		<sourceDirectory>src/main/scala</sourceDirectory>
-		<testSourceDirectory>src/test/scala</testSourceDirectory>
+    <build>
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
 
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
 
-		<plugins>
-			<plugin>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>${maven.deploy.plugin.version}</version>
-				<executions>
-					<execution>
-						<id>default-deploy</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>deploy</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+        <plugins>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven.deploy.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-			<!-- the Maven Scala plugin will compile Scala source files -->
-			<plugin>
-				<groupId>net.alchim31.maven</groupId>
-				<artifactId>scala-maven-plugin</artifactId>
-				<version>${scala.maven.plugin.version}</version>
-				<configuration>
-					<scalaVersion>${scala.version}</scalaVersion>
+            <!-- the Maven Scala plugin will compile Scala source files -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>${scala.maven.plugin.version}</version>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
                     <scalaCompatVersion>${scala.compat.version}</scalaCompatVersion>
-				</configuration>
-				<executions>
-					<execution>
-						<id>scala-compile</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>add-source</goal>
-							<goal>compile</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>scala-test-compile</id>
-						<phase>process-test-resources</phase>
-						<goals>
-							<goal>testCompile</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>doc-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>scala-compile</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>doc-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-			<!-- disable surefire -->
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${surefire.version}</version>
-				<configuration>
-					<skipTests>true</skipTests>
-				</configuration>
-			</plugin>
+            <!-- disable surefire -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
 
-			<!-- enable scalatest -->
-			<plugin>
-				<groupId>org.scalatest</groupId>
-				<artifactId>scalatest-maven-plugin</artifactId>
-				<version>${scalatest.maven.version}</version>
-				<configuration>
-					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-					<junitxml>.</junitxml>
-					<filereports>TestSuite.txt</filereports>
-				</configuration>
-				<executions>
-					<execution>
-						<id>test</id>
-						<goals>
-							<goal>test</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+            <!-- enable scalatest -->
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>${scalatest.maven.version}</version>
+                <configuration>
+                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                    <junitxml>.</junitxml>
+                    <filereports>TestSuite.txt</filereports>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -304,10 +305,10 @@
             </plugin>
 
         </plugins>
-	</build>
+    </build>
 
 
-	<profiles>
+    <profiles>
 
         <!-- Cross-building profiles -->
         <profile>
@@ -378,54 +379,54 @@
             </build>
         </profile>
 
-		<profile>
-			<id>public</id>
-			<build>
-				<plugins>
-					<!-- generates sources.jar -->
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>${maven.sources.version}</version>
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
+        <profile>
+            <id>public</id>
+            <build>
+                <plugins>
+                    <!-- generates sources.jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven.sources.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
 
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>${gpg.plugin.version}</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${gpg.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
 
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
                         <version>${nexus.staging.plugin.version}</version>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>false</autoReleaseAfterClose>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
