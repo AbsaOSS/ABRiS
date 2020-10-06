@@ -83,7 +83,7 @@
         <connection>scm:git:git://github.com/AbsaOSS/ABRiS.git</connection>
         <developerConnection>scm:git:ssh://github.com/AbsaOSS/ABRiS.git</developerConnection>
         <url>https://github.com/AbsaOSS/ABRiS/tree/master</url>
-        <tag>abris_2.11-2.2.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <licenses>
@@ -301,6 +301,7 @@
                 <version>2.5.3</version>
                 <configuration>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
+                    <releaseProfiles>release</releaseProfiles>
                 </configuration>
             </plugin>
 
@@ -380,7 +381,7 @@
         </profile>
 
         <profile>
-            <id>public</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <!-- generates sources.jar -->
