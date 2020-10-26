@@ -38,7 +38,7 @@ val fromAvroConfig2: FromAvroConfig = AbrisConfig
 val fromAvroConfig3: FromAvroConfig = AbrisConfig
     .fromSimpleAvro
     .downloadSchemaByVersion(3)
-    .andTopicNameStrategy("topicFoo", true) // schema for key column
+    .andTopicNameStrategy("topicFoo", isKey=true) // Use isKey=true for the key schema and isKey=false for the value schema
     .usingSchemaRegistry("http://registry-url")
 
 // ...
@@ -107,5 +107,48 @@ def writeAvro(dataFrame: DataFrame, toAvroConfig: ToAvroConfig): DataFrame = {
 
   val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)  
   dataFrame.select(to_avro(allColumns, toAvroConfig) as 'value)
+}
+```
+
+
+### Generate schema from data
+Unlike previous versions of ABRiS, the schema must be provided to the configuration, i.e. it is not automatically 
+generated during the evaluation for every record.
+
+Given a dataframe, the schema can be generated and registered as shown below.
+
+```scala
+import org.apache.spark.sql.avro.SchemaConverters.toAvroType
+import za.co.absa.abris.avro.functions.to_avro
+
+val schemaRegistryClientConfig = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> "http://localhost:8081")
+val schemaManager = SchemaManagerFactory.create(schemaRegistryClientConfig)
+
+// generate schema with only one column and record name strategy
+def generateDataFrameSchema1(dataFrame: DataFrame, schemaManager: SchemaManager): Int = {
+  AvroSchemaUtils.toAvroSchema(dataFrame, "input", "recordName", "namespace")
+}
+
+// generate schema with multiple columns and topic name strategy
+def generateDataFrameSchema2(dataFrame: DataFrame, schemaManager: SchemaManager): Int = {
+  val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
+  val expression = allColumns.expr
+  toAvroType(expression.dataType, expression.nullable)
+}
+
+// generate schema with multiple columns and topic record name strategy
+def registerDataFrameSchema3(dataFrame: DataFrame, schemaManager: SchemaManager): Int = {
+  val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
+  val expression = allColumns.expr
+  toAvroType(expression.dataType, expression.nullable, "recordName", "namespace")
+}
+```
+
+Once you have the schema, you can pass it to the configuration:
+```scala
+def createConfig(schema: Schema): ToAvroConfig = {
+  AbrisConfig
+    .toSimpleAvro
+    .provideSchema(schema.toString)
 }
 ```
