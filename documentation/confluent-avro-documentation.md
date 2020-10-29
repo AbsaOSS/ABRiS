@@ -94,39 +94,47 @@ def writeAvro(dataFrame: DataFrame, toAvroConfig: ToAvroConfig): DataFrame = {
 ```
 
 ### Generate schema from data and register
-Unlike previous versions of ABRiS, the schema must be provided to the configuration, i.e. it is not automatically 
-generated during the evaluation for every record.
+Unlike previous versions of ABRiS, the schema is not automatically generated during the evaluation for every record, but
+must be provided to the configuration.
 
-Given a dataframe, the schema can be generated and registered as shown below.
+Given a dataframe, the Avro schema can be generated as shown below.
 
 ```scala
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils.toAvroSchema
 import org.apache.spark.sql.avro.SchemaConverters.toAvroType
-import za.co.absa.abris.avro.functions.to_avro
 
+// generate schema for dataframe with only one column
+def generateSchema1(dataFrame: DataFrame): Schema =
+  toAvroSchema(dataFrame, "input", "recordName", "namespace")
+
+// generate schema for dataframe with multiple columns
+def generateSchema2(dataFrame: DataFrame): Schema = {
+  val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
+  val expression = allColumns.expr
+  toAvroType(expression.dataType, expression.nullable)
+}
+```
+
+When the schema is generated, it can be registered, and the schema id obtained:
+
+```scala
 val schemaRegistryClientConfig = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> "http://localhost:8081")
 val schemaManager = SchemaManagerFactory.create(schemaRegistryClientConfig)
 
-// register schema with only one column and record name strategy
-def registerDataFrameSchema1(dataFrame: DataFrame, schemaManager: SchemaManager): Int = {
-  val schema = AvroSchemaUtils.toAvroSchema(dataFrame, "input", "recordName", "namespace")
-  val subject = SchemaSubject.usingRecordNameStrategy(schema)
-  schemaManager.register(subject, schema)
-}
-
-// register schema with multiple columns and topic name strategy
-def registerDataFrameSchema2(dataFrame: DataFrame, schemaManager: SchemaManager): Int = {
-  val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
-  val expression = allColumns.expr
-  val schema = toAvroType(expression.dataType, expression.nullable)
+// register schema with topic name strategy
+def registerSchema1(schema: Schema, schemaManager: SchemaManager): Int = {
   val subject = SchemaSubject.usingTopicNameStrategy("topic", isKey=true) // Use isKey=true for the key schema and isKey=false for the value schema
   schemaManager.register(subject, schema)
 }
 
-// register schema with multiple columns and topic record name strategy
-def registerDataFrameSchema3(dataFrame: DataFrame, schemaManager: SchemaManager): Int = {
-  val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
-  val expression = allColumns.expr
-  val schema = toAvroType(expression.dataType, expression.nullable, "recordName", "namespace")
+// register schema with record name strategy
+def registerSchema2(schema: Schema, schemaManager: SchemaManager): Int = {
+  val subject = SchemaSubject.usingRecordNameStrategy(schema)
+  schemaManager.register(subject, schema)
+}
+
+// register schema with topic record name strategy
+def registerSchema3(schema: Schema, schemaManager: SchemaManager): Int = {
   val subject = SchemaSubject.usingTopicRecordNameStrategy("topic", schema)
   schemaManager.register(subject, schema)
 }
@@ -134,11 +142,9 @@ def registerDataFrameSchema3(dataFrame: DataFrame, schemaManager: SchemaManager)
 
 Once you have the schema id, you can pass it to the configuration:
 ```scala
-def createConfig(schemaId: Int): ToAvroConfig = {
-  AbrisConfig
-    .toConfluentAvro
-    .downloadSchemaById(schemaId)
-    .usingSchemaRegistry("http://localhost:8081")
-}
+def createConfig(schemaId: Int): ToAvroConfig = AbrisConfig
+  .toConfluentAvro
+  .downloadSchemaById(schemaId)
+  .usingSchemaRegistry("http://localhost:8081")
 ```
 
