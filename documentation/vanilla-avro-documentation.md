@@ -109,3 +109,7 @@ def writeAvro(dataFrame: DataFrame, toAvroConfig: ToAvroConfig): DataFrame = {
   dataFrame.select(to_avro(allColumns, toAvroConfig) as 'value)
 }
 ```
+
+### Generate schema from data and register
+
+See [here](confluent-avro-documentation.md#generate-schema-from-data-and-register)
