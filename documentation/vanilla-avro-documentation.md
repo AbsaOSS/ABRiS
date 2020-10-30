@@ -38,7 +38,7 @@ val fromAvroConfig2: FromAvroConfig = AbrisConfig
 val fromAvroConfig3: FromAvroConfig = AbrisConfig
     .fromSimpleAvro
     .downloadSchemaByVersion(3)
-    .andTopicNameStrategy("topicFoo", true) // schema for key column
+    .andTopicNameStrategy("topicFoo", isKey=true) // Use isKey=true for the key schema and isKey=false for the value schema
     .usingSchemaRegistry("http://registry-url")
 
 // ...
@@ -109,3 +109,7 @@ def writeAvro(dataFrame: DataFrame, toAvroConfig: ToAvroConfig): DataFrame = {
   dataFrame.select(to_avro(allColumns, toAvroConfig) as 'value)
 }
 ```
+
+### Generate schema from data and register
+
+See [here](confluent-avro-documentation.md#generate-schema-from-data-and-register)
