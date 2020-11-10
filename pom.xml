@@ -71,11 +71,11 @@
 		<!--Platforms-->
 		<spark.version>2.4.4</spark.version>
 		<kafka.spark.version>0-10</kafka.spark.version>
-		<confluent.version>5.3.1</confluent.version>
+		<confluent.version>5.3.4</confluent.version>
 
 		<!--Libs-->
         <spark.avro.version>2.4.4</spark.avro.version>
-		<avro.version>1.9.2</avro.version>
+		<avro.version>1.8.2</avro.version>
 	</properties>
 
     <scm>
@@ -128,23 +128,9 @@
             <scope>test</scope>
         </dependency>
 
-		<!-- Avro -->
-		<dependency>
-			<groupId>org.apache.avro</groupId>
-			<artifactId>avro</artifactId>
-            <version>${avro.version}</version>
-            <exclusions>
-                <exclusion>
-                    <!-- use the jackson libraries specified by Spark sql -->
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-		<!-- Spark -->
-		<dependency>
-			<groupId>org.apache.spark</groupId>
+        <!-- Spark -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
@@ -165,6 +151,20 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-avro_${scala.compat.version}</artifactId>
             <version>${spark.avro.version}</version>
+        </dependency>
+
+		<!-- Avro -->
+		<dependency>
+			<groupId>org.apache.avro</groupId>
+			<artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+            <exclusions>
+                <exclusion>
+                    <!-- use the jackson libraries specified by Spark sql -->
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Spark Kafka -->
