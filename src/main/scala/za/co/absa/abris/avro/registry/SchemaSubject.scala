@@ -16,7 +16,6 @@
 
 package za.co.absa.abris.avro.registry
 
-import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import io.confluent.kafka.serializers.subject.{RecordNameStrategy, TopicNameStrategy, TopicRecordNameStrategy}
 import org.apache.avro.Schema
 
@@ -53,7 +52,7 @@ object SchemaSubject{
   def usingRecordNameStrategy(
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false,  new AvroSchema(schema)))
+    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, schema))
   }
 
   def usingTopicRecordNameStrategy(
@@ -69,9 +68,9 @@ object SchemaSubject{
     topicName: String,
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, new AvroSchema(schema)))
+    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, schema))
   }
 
   private def createDummySchema(name: String, namespace: String) =
-    new AvroSchema(Schema.createRecord(name, "", namespace, false))
+    Schema.createRecord(name, "", namespace, false)
 }

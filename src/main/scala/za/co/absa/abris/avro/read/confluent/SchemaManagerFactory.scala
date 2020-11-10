@@ -25,7 +25,7 @@ import scala.collection.JavaConverters._
 import scala.collection.concurrent
 
 /**
- * This thread-safe factory creates [[SchemaManager]] and also manages the instances of [[SchemaRegistryClient]]
+ * This thread-safe factory creates [[SchemaManager]] and also manages the instances of SchemaRegistryClient
  * used by allowing caching of the references in order to avoid creating instances in every call that can be
  * used to cache schemas.
  * This factory also allows us to mock the client for testing purposes.
