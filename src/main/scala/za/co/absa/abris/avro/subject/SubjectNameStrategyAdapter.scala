@@ -19,13 +19,12 @@ package za.co.absa.abris.avro.subject
 import io.confluent.kafka.serializers.subject.TopicNameStrategy
 import io.confluent.kafka.serializers.subject.strategy.SubjectNameStrategy
 import org.apache.avro.Schema
-import io.confluent.kafka.schemaregistry.avro.AvroSchema
 
-private[avro] class SubjectNameStrategyAdapter(strategy: SubjectNameStrategy) {
+private[avro] class SubjectNameStrategyAdapter(strategy: SubjectNameStrategy[Schema]) {
 
-  def subjectName(topic: String, isKey: Boolean, schema: Schema): String = strategy.subjectName(topic, isKey, new AvroSchema(schema))
+  def subjectName(topic: String, isKey: Boolean, schema: Schema): String = strategy.subjectName(topic, isKey, schema)
 
-  def isAdapteeType(c: Class[_ <: SubjectNameStrategy]) : Boolean = strategy.getClass == c
+  def isAdapteeType(c: Class[_ <: SubjectNameStrategy[Schema]]) : Boolean = strategy.getClass == c
 
   /**
     * Checks if the Schema definition is compatible with the adaptee strategy
