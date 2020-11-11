@@ -56,11 +56,16 @@
 
         <spark.version>${spark-24.version}</spark.version>
 
-        <!--Scala-->
+        <!-- Cross build properties -->
+
+        <default.scala.compat.version>2.12</default.scala.compat.version>
+        <default.scala.version>${scala_2.12.version}</default.scala.version>
+
         <scala_2.11.version>2.11.12</scala_2.11.version>
         <scala_2.12.version>2.12.10</scala_2.12.version>
 
-        <scala.version>${scala_2.12.version}</scala.version>
+        <!-- Controlled by `scala-cross-build` plugin -->
+        <scala.version>2.12.10</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
 
         <!--Tests-->
@@ -302,6 +307,18 @@
                 <configuration>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <releaseProfiles>release</releaseProfiles>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.wajda</groupId>
+                <artifactId>scala-cross-build-maven-plugin</artifactId>
+                <version>0.2.1</version>
+                <configuration>
+                    <scalaBinaryVersionProperty>scala.compat.version</scalaBinaryVersionProperty>
+                    <scalaVersionProperty>scala.version</scalaVersionProperty>
+                    <defaultScalaBinaryVersion>${default.scala.compat.version}</defaultScalaBinaryVersion>
+                    <defaultScalaVersion>${default.scala.version}</defaultScalaVersion>
                 </configuration>
             </plugin>
 
