@@ -81,12 +81,16 @@
         <!--Libs-->
         <spark.avro.version>2.4.6</spark.avro.version>
         <avro.version>1.8.2</avro.version>
+
+        <scm.url>http://github.com/AbsaOSS/ABRiS/tree/master</scm.url>
+        <scm.connection></scm.connection> <!-- set via -Dscm.connection=... -->
+        <scm.developerConnection></scm.developerConnection> <!-- set via -Dscm.developerConnection=... -->
     </properties>
 
     <scm>
-        <connection>scm:git:git://github.com/AbsaOSS/ABRiS.git</connection>
-        <developerConnection>scm:git:ssh://github.com/AbsaOSS/ABRiS.git</developerConnection>
-        <url>http://github.com/AbsaOSS/ABRiS/tree/master</url>
+        <url>${scm.url}</url>
+        <connection>${scm.connection}</connection>
+        <developerConnection>${scm.developerConnection}</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
