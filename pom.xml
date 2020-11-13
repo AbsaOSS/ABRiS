@@ -7,12 +7,11 @@
 	OF ANY KIND, either express or implied. ~ See the License for the specific
 	language governing permissions and ~ limitations under the License. -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>za.co.absa</groupId>
     <artifactId>abris_2.12</artifactId>
-    <version>4.0.1-SNAPSHOT</version>
+    <version>4.0.2-SNAPSHOT</version>
     <name>abris</name>
     <description>Provides seamless integration between Avro and Spark Structured APIs.</description>
     <url>https://github.com/AbsaOSS/ABRiS</url>
@@ -82,9 +81,9 @@
         <spark.avro.version>2.4.6</spark.avro.version>
         <avro.version>1.8.2</avro.version>
 
-        <scm.url>http://github.com/AbsaOSS/ABRiS/tree/master</scm.url>
-        <scm.connection></scm.connection> <!-- set via -Dscm.connection=... -->
-        <scm.developerConnection></scm.developerConnection> <!-- set via -Dscm.developerConnection=... -->
+        <scm.url><!-- defined outside the pom --></scm.url>
+        <scm.connection><!-- defined outside the pom --></scm.connection>
+        <scm.developerConnection><!-- defined outside the pom --></scm.developerConnection>
     </properties>
 
     <scm>
@@ -411,6 +410,13 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <!-- Prevent `gpg` from using pinentry programs -->
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
