@@ -82,9 +82,9 @@
         <spark.avro.version>2.4.6</spark.avro.version>
         <avro.version>1.8.2</avro.version>
 
-        <scm.url>http://github.com/AbsaOSS/ABRiS/tree/master</scm.url>
-        <scm.connection></scm.connection> <!-- set via -Dscm.connection=... -->
-        <scm.developerConnection></scm.developerConnection> <!-- set via -Dscm.developerConnection=... -->
+        <scm.url><!-- defined outside the pom --></scm.url>
+        <scm.connection><!-- defined outside the pom --></scm.connection>
+        <scm.developerConnection><!-- defined outside the pom --></scm.developerConnection>
     </properties>
 
     <scm>
