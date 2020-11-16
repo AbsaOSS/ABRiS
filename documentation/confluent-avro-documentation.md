@@ -109,7 +109,7 @@ def generateSchema1(dataFrame: DataFrame): Schema =
 
 // generate schema for dataframe with multiple columns
 def generateSchema2(dataFrame: DataFrame): Schema = {
-  val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
+  val allColumns = struct(dataFrame.columns.map(c => dataFrame(c)): _*)
   val expression = allColumns.expr
   toAvroType(expression.dataType, expression.nullable)
 }
