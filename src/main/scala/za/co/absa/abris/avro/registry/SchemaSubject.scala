@@ -25,7 +25,9 @@ import org.apache.avro.Schema
  * https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#how-the-naming-strategies-work
  *
  */
-class SchemaSubject(val asString: String)
+class SchemaSubject(val asString: String) {
+  override def toString: String = asString
+}
 
 object SchemaSubject{
   private val TOPIC_NAME_STRATEGY = new TopicNameStrategy()
