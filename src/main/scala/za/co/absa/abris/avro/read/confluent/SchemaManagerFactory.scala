@@ -17,7 +17,12 @@
 
 package za.co.absa.abris.avro.read.confluent
 
+import java.util
+import java.util.List
+
+import io.confluent.common.config.ConfigException
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
+import io.confluent.kafka.schemaregistry.testutil.MockSchemaRegistry
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.spark.internal.Logging
 
@@ -50,11 +55,35 @@ object SchemaManagerFactory extends Logging {
       val urls = settings.getSchemaRegistryUrls
       val maxSchemaObject = settings.getMaxSchemasPerSubject
 
-      logInfo(msg = s"Configuring new Schema Registry instance of type " +
-        s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
+      validateAndMaybeGetMockScope(urls) match {
+        case Some(scope) =>
+          logInfo(msg = s"Configuring new Schema Registry instance of type " +
+            s"'${classOf[MockSchemaRegistry].getCanonicalName}'")
 
-      new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+          MockSchemaRegistry.getClientForScope(scope)
+        case None =>
+          logInfo(msg = s"Configuring new Schema Registry instance of type " +
+            s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
+
+          new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+      }
     })
+  }
+
+  private def validateAndMaybeGetMockScope(urls: util.List[String]): Option[String] = {
+    val mockScopes = urls.asScala
+      .filter(_.startsWith("mock://"))
+      .map(_.substring("mock://".length))
+
+    if (mockScopes.isEmpty) {
+      None
+    } else if (mockScopes.size > 1) {
+      throw new ConfigException("Only one mock scope is permitted for 'schema.registry.url'. Got: " + urls)
+    } else if (urls.size > mockScopes.size) {
+      throw new ConfigException("Cannot mix mock and real urls for 'schema.registry.url'. Got: " + urls)
+    } else {
+      mockScopes.headOption
+    }
   }
 
 }
