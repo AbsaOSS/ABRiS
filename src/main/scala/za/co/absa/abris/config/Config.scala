@@ -153,8 +153,8 @@ class FromSimpleAvroConfigFragment{
   def downloadSchemaByVersion(schemaVersion: Int): FromStrategyConfigFragment =
     new FromStrategyConfigFragment(NumVersion(schemaVersion), false)
 
-  def provideSchema(schema: String): FromAvroConfig =
-    new FromAvroConfig(schema, None)
+  def provideSchema(schema: String, writerSchema: String = ""): FromAvroConfig =
+    new FromAvroConfig(schema, if (writerSchema.isEmpty) Some(schema) else Some(writerSchema), None, false)
 }
 
 class FromStrategyConfigFragment(version: SchemaVersion, confluent: Boolean) {
@@ -192,11 +192,11 @@ class FromSchemaDownloadingConfigFragment(
     case Left(coordinate) => {
       val schemaManager = SchemaManagerFactory.create(config)
       val schema = schemaManager.getSchema(coordinate)
-      new FromAvroConfig(schema.toString, if (confluent) Some(config) else None)
+      new FromAvroConfig(schema.toString, None, if (confluent) Some(config) else None, confluent)
     }
     case Right(schemaString) =>
       if (confluent) {
-        new FromAvroConfig(schemaString, Some(config))
+        new FromAvroConfig(schemaString, None, Some(config), confluent)
       } else {
         throw new UnsupportedOperationException("Unsupported config permutation")
       }
@@ -218,4 +218,4 @@ class FromConfluentAvroConfigFragment {
 }
 
 
-class FromAvroConfig(val schemaString: String, val schemaRegistryConf: Option[Map[String,String]])
+case class FromAvroConfig(schemaString: String, writerSchema: Option[String], schemaRegistryConf: Option[Map[String,String]], confluent: Boolean = false)
