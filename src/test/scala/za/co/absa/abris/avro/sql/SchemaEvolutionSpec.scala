@@ -19,11 +19,10 @@ package za.co.absa.abris.avro.sql
 import org.apache.spark.sql.functions.{lit, struct}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-import za.co.absa.abris.avro.AbrisMockSchemaRegistryClient
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
-import za.co.absa.abris.avro.registry.SchemaSubject
+import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
 
 class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach

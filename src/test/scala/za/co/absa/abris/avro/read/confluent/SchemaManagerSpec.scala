@@ -17,9 +17,8 @@
 package za.co.absa.abris.avro.read.confluent
 
 import org.scalatest.{BeforeAndAfter, FlatSpec}
-import za.co.absa.abris.avro.AbrisMockSchemaRegistryClient
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.registry.{LatestVersion, NumVersion, SchemaSubject}
+import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, LatestVersion, NumVersion, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
 
 class schemaManagerSpec extends FlatSpec with BeforeAndAfter {

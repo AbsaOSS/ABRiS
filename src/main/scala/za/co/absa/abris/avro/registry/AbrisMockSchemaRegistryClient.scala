@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.avro
-
-import java.io.IOException
+package za.co.absa.abris.avro.registry
 
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException
 import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, SchemaMetadata}
 
+import java.io.IOException
 
-private class AbrisMockSchemaRegistryClient extends MockSchemaRegistryClient {
+
+class AbrisMockSchemaRegistryClient extends MockSchemaRegistryClient {
 
   /**
    * MockSchemaRegistryClient is throwing different Exception than the mocked client, this is a workaround
@@ -33,7 +33,7 @@ private class AbrisMockSchemaRegistryClient extends MockSchemaRegistryClient {
     try (super.getLatestSchemaMetadata(subject))
     catch {
       case e: IOException if e.getMessage == "No schema registered under subject!"
-        => throw new RestClientException("No schema registered under subject!", 404,40401)
+        => throw new RestClientException("No schema registered under subject!", 404, 40401)
     }
   }
 }

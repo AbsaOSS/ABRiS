@@ -20,12 +20,11 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.struct
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-import za.co.absa.abris.avro.AbrisMockSchemaRegistryClient
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
-import za.co.absa.abris.avro.registry.SchemaSubject
+import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.abris.examples.data.generation.{ComplexRecordsGenerator, TestSchemas}
 
