@@ -56,11 +56,13 @@ case class AvroDataToCatalyst(
   // Avro schema that was used for data serialization
   @transient private lazy val writerSchema = config.writerSchema.map(s => AvroSchemaUtils.parse(s))
 
+  // Reused GenericDatumReaders per writer schema
   @transient private lazy val vanillaReader: GenericDatumReader[Any] = new GenericDatumReader[Any](writerSchema.getOrElse(avroSchema), avroSchema)
   @transient private lazy val confluentReaderCache: ConcurrentHashMap[Int, GenericDatumReader[Any]] = new ConcurrentHashMap[Int, GenericDatumReader[Any]]()
 
   @transient private var decoder: BinaryDecoder = _
 
+  // Reused result object (usually of type IndexedRecord)
   @transient private var result: Any = _
 
   override def nullSafeEval(input: Any): Any = {
