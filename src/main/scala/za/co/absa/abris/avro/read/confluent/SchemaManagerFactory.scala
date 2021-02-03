@@ -18,10 +18,8 @@
 package za.co.absa.abris.avro.read.confluent
 
 import java.util
-import java.util.List
 import io.confluent.common.config.ConfigException
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
-import io.confluent.kafka.schemaregistry.testutil.MockSchemaRegistry
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.spark.internal.Logging
 import za.co.absa.abris.avro.registry.AbrisMockSchemaRegistryClient
@@ -55,35 +53,38 @@ object SchemaManagerFactory extends Logging {
       val urls = settings.getSchemaRegistryUrls
       val maxSchemaObject = settings.getMaxSchemasPerSubject
 
-      validateAndMaybeGetMockScope(urls) match {
-        case Some(scope) =>
-          logInfo(msg = s"Configuring new Schema Registry instance of type " +
-            s"'${classOf[MockSchemaRegistry].getCanonicalName}'")
+      if (hasValidMockURL(urls)) {
+        logInfo(msg = s"Configuring new Schema Registry instance of type " +
+          s"'${classOf[AbrisMockSchemaRegistryClient].getCanonicalName}'")
 
-          new AbrisMockSchemaRegistryClient()
-        case None =>
-          logInfo(msg = s"Configuring new Schema Registry instance of type " +
-            s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
+        new AbrisMockSchemaRegistryClient()
+      } else {
+        logInfo(msg = s"Configuring new Schema Registry instance of type " +
+          s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
 
-          new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+        new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
       }
     })
   }
 
-  private def validateAndMaybeGetMockScope(urls: util.List[String]): Option[String] = {
-    val mockScopes = urls.asScala
+  /**
+   * Checks whether the urls contain a mock registry.
+   * This is doing the same check as the confluent serializer does in order to
+   * check if the user wants to use a mocked registry e.g. for testing.
+   * @return true/false or an exception if the configuration is wrong
+   */
+  private def hasValidMockURL(urls: util.List[String]): Boolean = {
+    val mockURLs = urls.asScala
       .filter(_.startsWith("mock://"))
-      .map(_.substring("mock://".length))
 
-    if (mockScopes.isEmpty) {
-      None
-    } else if (mockScopes.size > 1) {
+    if (mockURLs.isEmpty) {
+      false
+    } else if (mockURLs.size > 1) {
       throw new ConfigException("Only one mock scope is permitted for 'schema.registry.url'. Got: " + urls)
-    } else if (urls.size > mockScopes.size) {
+    } else if (urls.size > mockURLs.size) {
       throw new ConfigException("Cannot mix mock and real urls for 'schema.registry.url'. Got: " + urls)
     } else {
-      mockScopes.headOption
+      true
     }
   }
-
 }
