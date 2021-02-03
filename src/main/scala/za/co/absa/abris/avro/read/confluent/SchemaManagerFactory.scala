@@ -19,12 +19,12 @@ package za.co.absa.abris.avro.read.confluent
 
 import java.util
 import java.util.List
-
 import io.confluent.common.config.ConfigException
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
 import io.confluent.kafka.schemaregistry.testutil.MockSchemaRegistry
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.spark.internal.Logging
+import za.co.absa.abris.avro.registry.AbrisMockSchemaRegistryClient
 
 import scala.collection.JavaConverters._
 import scala.collection.concurrent
@@ -60,7 +60,7 @@ object SchemaManagerFactory extends Logging {
           logInfo(msg = s"Configuring new Schema Registry instance of type " +
             s"'${classOf[MockSchemaRegistry].getCanonicalName}'")
 
-          MockSchemaRegistry.getClientForScope(scope)
+          new AbrisMockSchemaRegistryClient()
         case None =>
           logInfo(msg = s"Configuring new Schema Registry instance of type " +
             s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
