@@ -61,7 +61,7 @@ case class AvroDataToCatalyst(
 
   @transient private var decoder: BinaryDecoder = _
 
-  @transient val deserializer = new AvroDeserializer(avroSchema, dataType)
+  @transient private lazy val deserializer = new AvroDeserializer(avroSchema, dataType)
 
   // Reused result object (usually of type IndexedRecord)
   @transient private var result: Any = _
