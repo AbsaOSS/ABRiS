@@ -17,8 +17,6 @@
 package za.co.absa.abris.avro.sql
 
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentHashMap
-
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
@@ -32,6 +30,7 @@ import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManagerFactory}
 import za.co.absa.abris.config.FromAvroConfig
 
+import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -46,7 +45,7 @@ case class AvroDataToCatalyst(
 
   override def nullable: Boolean = true
 
-  val confluentCompliant = config.confluent
+  private val confluentCompliant = config.confluent
 
   @transient private lazy val schemaManager = SchemaManagerFactory.create(config.schemaRegistryConf.get)
 
@@ -58,9 +57,11 @@ case class AvroDataToCatalyst(
 
   // Reused GenericDatumReaders per writer schema
   @transient private lazy val vanillaReader: GenericDatumReader[Any] = new GenericDatumReader[Any](writerSchema.getOrElse(avroSchema), avroSchema)
-  @transient private lazy val confluentReaderCache: ConcurrentHashMap[Int, GenericDatumReader[Any]] = new ConcurrentHashMap[Int, GenericDatumReader[Any]]()
+  @transient private lazy val confluentReaderCache: mutable.HashMap[Int, GenericDatumReader[Any]] = new mutable.HashMap[Int, GenericDatumReader[Any]]()
 
   @transient private var decoder: BinaryDecoder = _
+
+  @transient val deserializer = new AvroDeserializer(avroSchema, dataType)
 
   // Reused result object (usually of type IndexedRecord)
   @transient private var result: Any = _
@@ -70,7 +71,6 @@ case class AvroDataToCatalyst(
     try {
       val intermediateData = decode(binary)
 
-      val deserializer = new AvroDeserializer(avroSchema, dataType)
       deserializer.deserialize(intermediateData)
 
     } catch {
@@ -128,14 +128,15 @@ case class AvroDataToCatalyst(
     val length = buffer.limit() - 1 - ConfluentConstants.SCHEMA_ID_SIZE_BYTES
     decoder = DecoderFactory.get().binaryDecoder(buffer.array(), start, length, decoder)
 
-    val reader = Option(confluentReaderCache.get(schemaId)).getOrElse{
+    val reader = confluentReaderCache.getOrElseUpdate(schemaId, {
       val writerSchema = getWriterSchema(schemaId)
       val reader = new GenericDatumReader[Any](writerSchema, avroSchema)
       confluentReaderCache.put(schemaId, reader)
       reader
-    }
+    })
 
-    reader.read(result, decoder)
+    result = reader.read(result, decoder)
+    result
   }
 
   private def getWriterSchema(id: Int): Schema = {
@@ -148,6 +149,7 @@ case class AvroDataToCatalyst(
   private def decodeVanillaAvro(payload: Array[Byte]): Any = {
 
     decoder = DecoderFactory.get().binaryDecoder(payload, 0, payload.length, decoder)
-    vanillaReader.read(result, decoder)
+    result = vanillaReader.read(result, decoder)
+    result
   }
 }
