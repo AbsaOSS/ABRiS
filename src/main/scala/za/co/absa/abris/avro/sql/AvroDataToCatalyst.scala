@@ -45,7 +45,7 @@ case class AvroDataToCatalyst(
 
   override def nullable: Boolean = true
 
-  private val confluentCompliant = config.confluent
+  private val confluentCompliant = config.schemaRegistryConf.isDefined
 
   @transient private lazy val schemaManager = SchemaManagerFactory.create(config.schemaRegistryConf.get)
 
