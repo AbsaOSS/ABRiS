@@ -130,9 +130,7 @@ case class AvroDataToCatalyst(
 
     val reader = confluentReaderCache.getOrElseUpdate(schemaId, {
       val writerSchema = getWriterSchema(schemaId)
-      val reader = new GenericDatumReader[Any](writerSchema, avroSchema)
-      confluentReaderCache.put(schemaId, reader)
-      reader
+      new GenericDatumReader[Any](writerSchema, avroSchema)
     })
 
     result = reader.read(result, decoder)
