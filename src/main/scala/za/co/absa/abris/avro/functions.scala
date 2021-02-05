@@ -63,9 +63,7 @@ object functions {
   def from_avro(column: Column, config: FromAvroConfig): Column = {
     new Column(AvroDataToCatalyst(
       column.expr,
-      config.schemaString,
-      config.schemaRegistryConf,
-      config.schemaRegistryConf.isDefined
+      config
     ))
   }
 

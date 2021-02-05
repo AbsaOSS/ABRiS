@@ -17,7 +17,6 @@
 package za.co.absa.abris.avro.sql
 
 import java.nio.ByteBuffer
-
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
@@ -29,15 +28,15 @@ import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression,
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManagerFactory}
+import za.co.absa.abris.config.FromAvroConfig
 
+import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 case class AvroDataToCatalyst(
    child: Expression,
-   jsonFormatSchema: String,
-   schemaRegistryConf: Option[Map[String,String]],
-   confluentCompliant: Boolean)
+   config: FromAvroConfig)
   extends UnaryExpression with ExpectsInputTypes {
 
   override def inputTypes: Seq[BinaryType.type] = Seq(BinaryType)
@@ -46,19 +45,32 @@ case class AvroDataToCatalyst(
 
   override def nullable: Boolean = true
 
-  @transient private lazy val schemaManager = SchemaManagerFactory.create(schemaRegistryConf.get)
+  private val confluentCompliant = config.schemaRegistryConf.isDefined
 
-  @transient private lazy val avroSchema = AvroSchemaUtils.parse(jsonFormatSchema)
+  @transient private lazy val schemaManager = SchemaManagerFactory.create(config.schemaRegistryConf.get)
 
-  @transient private var reader: GenericDatumReader[Any] = _
+  // Avro schema to be used for reading
+  @transient private lazy val avroSchema = AvroSchemaUtils.parse(config.schemaString)
+
+  // Avro schema that was used for data serialization
+  @transient private lazy val writerSchema = config.writerSchema.map(s => AvroSchemaUtils.parse(s))
+
+  // Reused GenericDatumReaders per writer schema
+  @transient private lazy val vanillaReader: GenericDatumReader[Any] = new GenericDatumReader[Any](writerSchema.getOrElse(avroSchema), avroSchema)
+  @transient private lazy val confluentReaderCache: mutable.HashMap[Int, GenericDatumReader[Any]] = new mutable.HashMap[Int, GenericDatumReader[Any]]()
+
   @transient private var decoder: BinaryDecoder = _
+
+  @transient private lazy val deserializer = new AvroDeserializer(avroSchema, dataType)
+
+  // Reused result object (usually of type IndexedRecord)
+  @transient private var result: Any = _
 
   override def nullSafeEval(input: Any): Any = {
     val binary = input.asInstanceOf[Array[Byte]]
     try {
       val intermediateData = decode(binary)
 
-      val deserializer = new AvroDeserializer(avroSchema, dataType)
       deserializer.deserialize(intermediateData)
 
     } catch {
@@ -116,10 +128,13 @@ case class AvroDataToCatalyst(
     val length = buffer.limit() - 1 - ConfluentConstants.SCHEMA_ID_SIZE_BYTES
     decoder = DecoderFactory.get().binaryDecoder(buffer.array(), start, length, decoder)
 
-    val writerSchema = getWriterSchema(schemaId)
-    reader = new GenericDatumReader[Any](writerSchema, avroSchema)
+    val reader = confluentReaderCache.getOrElseUpdate(schemaId, {
+      val writerSchema = getWriterSchema(schemaId)
+      new GenericDatumReader[Any](writerSchema, avroSchema)
+    })
 
-    reader.read(reader, decoder)
+    result = reader.read(result, decoder)
+    result
   }
 
   private def getWriterSchema(id: Int): Schema = {
@@ -131,9 +146,8 @@ case class AvroDataToCatalyst(
 
   private def decodeVanillaAvro(payload: Array[Byte]): Any = {
 
-    decoder =  DecoderFactory.get().binaryDecoder(payload, 0, payload.length, decoder)
-    reader = new GenericDatumReader[Any](avroSchema)
-
-    reader.read(reader, decoder)
+    decoder = DecoderFactory.get().binaryDecoder(payload, 0, payload.length, decoder)
+    result = vanillaReader.read(result, decoder)
+    result
   }
 }

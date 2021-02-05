@@ -145,4 +145,36 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
 
     shouldEqualByData(expectedResult, result)
   }
+
+  it should "convert to simple avro with old schema and back with evolved reader schema (providing the schema)" in {
+
+    val allData = createTestData(recordByteSchema)
+    val dataFrame: DataFrame = allData.select(struct(allData.col(allData.columns.head)) as 'integers)
+
+    // Serialize record with a writer schema
+    val toCAConfig = AbrisConfig
+      .toSimpleAvro
+      .provideSchema(recordByteSchema)
+
+    val avroBytes = dataFrame
+      .select(to_avro('integers, toCAConfig) as 'avroBytes)
+
+    avroBytes.collect() // force evaluation
+
+    // Deserialize record specifying a reader and a writer schema
+    // Avro will decode using the writer schema and then match with the
+    // reader schema. Thus e.g. new fields with a default value will also show up.
+    val fromCAConfig = AbrisConfig
+      .fromSimpleAvro
+      .provideSchema(recordEvolvedByteSchema, recordByteSchema)
+
+    val result = avroBytes
+      .select(from_avro('avroBytes, fromCAConfig)
+        as 'integersWithDefault)
+
+    val expectedStruct = struct(allData.col(allData.columns.head), lit("green"))
+    val expectedResult: DataFrame = allData.select(expectedStruct as 'integersWithDefault)
+
+    shouldEqualByData(expectedResult, result)
+  }
 }
