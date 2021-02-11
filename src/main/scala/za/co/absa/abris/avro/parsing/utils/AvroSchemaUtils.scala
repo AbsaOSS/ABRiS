@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.avro.SchemaConverters.toAvroType
+import org.apache.spark.sql.functions.struct
 
 import scala.collection.JavaConverters._
 
@@ -66,6 +67,34 @@ object AvroSchemaUtils {
 
     toAvroType(field.dataType, field.nullable, recordName, nameSpace)
   }
+
+  def toAvroSchema(
+    dataFrame: DataFrame,
+    columnNames: Seq[String],
+  ): Schema = toAvroSchema(dataFrame, columnNames, "topLevelRecord", "")
+
+  def toAvroSchema(
+    dataFrame: DataFrame,
+    columnNames: Seq[String],
+    recordName: String,
+    nameSpace: String
+  ): Schema = {
+    val allColumns = struct(columnNames.map(dataFrame.col): _*)
+    val expression = allColumns.expr
+
+    toAvroType(expression.dataType, expression.nullable, recordName, nameSpace)
+  }
+
+  def toAvroSchema(
+    dataFrame: DataFrame
+  ): Schema = toAvroSchema(dataFrame, "topLevelRecord", "")
+
+  def toAvroSchema(
+    dataFrame: DataFrame,
+    recordName: String,
+    nameSpace: String
+  ): Schema =
+    toAvroSchema(dataFrame, dataFrame.columns, recordName, nameSpace)
 
   def wrapSchema(schema: Schema, name: String, namespace: String): Schema = {
     SchemaBuilder.record(name)
