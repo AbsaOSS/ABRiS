@@ -70,7 +70,7 @@ object AvroSchemaUtils {
 
   def toAvroSchema(
     dataFrame: DataFrame,
-    columnNames: Seq[String],
+    columnNames: Seq[String]
   ): Schema = toAvroSchema(dataFrame, columnNames, "topLevelRecord", "")
 
   def toAvroSchema(
