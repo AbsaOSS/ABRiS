@@ -6,67 +6,63 @@ We Provide some examples, but most of the documentation is written for Scala, so
 PySpark is using [Py4J](https://www.py4j.org/) as an interface between Scala and Python so you can check the documentation to get better idea how to transform the code, 
 but mostly it should be clear form the following examples.
 
-### Examples (!!! outdated)
-Any help to update this to version 4.x.x is welcomed.
-```Python
+### Examples
+
+```python
 from pyspark import SparkContext
 from pyspark.sql.column import Column, _to_java_column
 
-def from_avro(col, topic, schema_registry_url):
+def from_avro(col, config):
     """
     avro deserialize
 
-    :param col: column name "key" or "value"
-    :param topic: kafka topic
-    :param schema_registry_url: schema registry http address
-    :return:
+    :param col (PySpark column / str): column name "key" or "value"
+    :param config (za.co.absa.abris.config.FromAvroConfig): abris config, generated from abris_config helper function
+    :return: PySpark Column
     """
     jvm_gateway = SparkContext._active_spark_context._gateway.jvm
     abris_avro = jvm_gateway.za.co.absa.abris.avro
-    naming_strategy = getattr(
-        getattr(abris_avro.read.confluent.SchemaManager, "SchemaStorageNamingStrategies$"),
-        "MODULE$"
-    ).TOPIC_NAME()
 
-    schema_registry_config_dict = {
-        "schema.registry.url": schema_registry_url,
-        "schema.registry.topic": topic,
-        "{col}.schema.id".format(col=col): "latest",
-        "{col}.schema.naming.strategy".format(col=col): naming_strategy
-    }
+    return Column(abris_avro.functions.from_avro(_to_java_column(col), config))
 
-    conf_map = getattr(getattr(jvm_gateway.scala.collection.immutable.Map, "EmptyMap$"), "MODULE$")
-    for k, v in schema_registry_config_dict.items():
-        conf_map = getattr(conf_map, "$plus")(jvm_gateway.scala.Tuple2(k, v))
-
-    return Column(abris_avro.functions.from_confluent_avro(_to_java_column(col), conf_map))
-
-
-def to_avro(col, topic, schema_registry_url):
+def to_avro(col, config):
     """
-    avro  serialize
-    :param col: column name "key" or "value"
-    :param topic: kafka topic
-    :param schema_registry_url: schema registry http address
-    :return:
+    avro serialize
+    :param col (PySpark column / str): column name "key" or "value"
+    :param config (za.co.absa.abris.config.FromAvroConfig): abris config, generated from abris_config helper function
+    :return: PySpark Column
     """
     jvm_gateway = SparkContext._active_spark_context._gateway.jvm
     abris_avro = jvm_gateway.za.co.absa.abris.avro
-    naming_strategy = getattr(
-        getattr(abris_avro.read.confluent.SchemaManager, "SchemaStorageNamingStrategies$"),
-        "MODULE$"
-    ).TOPIC_NAME()
 
-    schema_registry_config_dict = {
-        "schema.registry.url": schema_registry_url,
-        "schema.registry.topic": topic,
-        "{col}.schema.id".format(col=col): "latest", 
-        "{col}.schema.naming.strategy".format(col=col): naming_strategy
-    }
+    return Column(abris_avro.functions.to_avro(_to_java_column(col), config))
 
-    conf_map = getattr(getattr(jvm_gateway.scala.collection.immutable.Map, "EmptyMap$"), "MODULE$")
-    for k, v in schema_registry_config_dict.items():
-        conf_map = getattr(conf_map, "$plus")(jvm_gateway.scala.Tuple2(k, v))
+def abris_config(config_map, topic, is_key):
+    """
+    Create abris config with a schema url
 
-    return Column(abris_avro.functions.to_confluent_avro(_to_java_column(col), conf_map))
+    :param config_map (dict[str, str]): configuration map to pass to deserializer, ex: {'schema.registry.url': 'http://localhost:8081'}
+    :param topic (str): kafka topic
+    :param is_key (bool): boolean
+    :return: za.co.absa.abris.config.FromAvroConfig
+    """
+    jvm_gateway = SparkContext._active_spark_context._gateway.jvm
+    scala_map = jvm_gateway.PythonUtils.toScalaMap(config_map)
+
+    return jvm_gateway.za.co.absa.abris.config \
+        .AbrisConfig \
+        .fromConfluentAvro() \
+        .downloadReaderSchemaByLatestVersion() \
+        .andTopicNameStrategy(topic, is_key) \
+        .usingSchemaRegistry(scala_map)
+```
+
+Complete Example with loading from Kafka:
+
+```python
+df = spark.read.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("subscribe", "topic_name").load()
+
+abris_settings = abris_config({'schema.registry.url': 'http://localhost:8081'}, 'topic_name', False)
+df2 = df.withColumn("parsed", from_avro("value", abris_settings))
+df2.show()
 ```
