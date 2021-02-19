@@ -166,7 +166,8 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
     // reader schema. Thus e.g. new fields with a default value will also show up.
     val fromCAConfig = AbrisConfig
       .fromSimpleAvro
-      .provideSchema(recordEvolvedByteSchema, recordByteSchema)
+      .provideSchema(recordEvolvedByteSchema)
+      .withWriterSchema(recordByteSchema)
 
     val result = avroBytes
       .select(from_avro('avroBytes, fromCAConfig)

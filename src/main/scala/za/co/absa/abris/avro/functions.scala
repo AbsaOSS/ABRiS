@@ -33,10 +33,11 @@ object functions {
    * @return column containing data in avro format
    */
   def to_avro(column: Column, config: ToAvroConfig): Column = {
+    config.validate()
+
     new Column(CatalystDataToAvro(
       column.expr,
-      config.schemaString,
-      config.schemaId
+      config.abrisConfig
     ))
   }
 
@@ -61,9 +62,12 @@ object functions {
    * @return column with converted data
    */
   def from_avro(column: Column, config: FromAvroConfig): Column = {
+    config.validate()
+
     new Column(AvroDataToCatalyst(
       column.expr,
-      config
+      config.abrisConfig(),
+      config.schemaRegistryConf()
     ))
   }
 
