@@ -31,7 +31,7 @@ class ToAvroConfigSpec extends FlatSpec with Matchers {
 
     val map = config.abrisConfig()
     map(Key.Schema) shouldBe "foo"
-    map(Key.schemaId) shouldBe 42
+    map(Key.SchemaId) shouldBe 42
   }
 
   it should "support the legacy constructor and methods" in {
@@ -42,7 +42,7 @@ class ToAvroConfigSpec extends FlatSpec with Matchers {
 
     val map = config.abrisConfig()
     map(Key.Schema) shouldBe "foo"
-    map(Key.schemaId) shouldBe 2
+    map(Key.SchemaId) shouldBe 2
   }
 
   it should "throw when validation fails" in {
@@ -53,10 +53,5 @@ class ToAvroConfigSpec extends FlatSpec with Matchers {
     }
     thrown.getMessage.contains(Key.Schema) shouldBe true
   }
-
-
-
-
-
 
 }

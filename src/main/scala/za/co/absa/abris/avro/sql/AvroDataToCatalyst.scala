@@ -33,7 +33,7 @@ import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-case class AvroDataToCatalyst(
+private[abris] case class AvroDataToCatalyst(
   child: Expression,
   abrisConfig: Map[String,Any],
   schemaRegistryConf: Option[Map[String,String]]

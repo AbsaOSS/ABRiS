@@ -22,7 +22,7 @@ import za.co.absa.abris.config.ToAvroConfig.Key
 
 private[abris] class InternalToAvroConfig(map: Map[String, Any]) {
 
-  def schema: Schema = AvroSchemaUtils.parse(map(Key.Schema).asInstanceOf[String])
+  val schema: Schema = AvroSchemaUtils.parse(map(Key.Schema).asInstanceOf[String])
 
-  def schemaId: Option[Int] = map.get(Key.schemaId).map(_.asInstanceOf[Int])
+  val schemaId: Option[Int] = map.get(Key.SchemaId).map(_.asInstanceOf[Int])
 }

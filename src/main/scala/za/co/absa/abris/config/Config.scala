@@ -151,11 +151,11 @@ class ToAvroConfig private(abrisConfig: Map[String, Any]) {
 
   def this(schemaString: String, schemaId: Option[Int]) =
     this(
-      schemaId.map(ToAvroConfig.Key.schemaId -> _).toMap[String, Any] + (ToAvroConfig.Key.Schema -> schemaString)
+      schemaId.map(ToAvroConfig.Key.SchemaId -> _).toMap[String, Any] + (ToAvroConfig.Key.Schema -> schemaString)
     )
 
   private[abris] def schemaString(): String = abrisConfig(Key.Schema).asInstanceOf[String]
-  private[abris] def schemaId(): Option[Int] = abrisConfig.get(Key.schemaId).map(_.asInstanceOf[Int])
+  private[abris] def schemaId(): Option[Int] = abrisConfig.get(Key.SchemaId).map(_.asInstanceOf[Int])
 
   // ### normal methods ###
 
@@ -174,7 +174,7 @@ class ToAvroConfig private(abrisConfig: Map[String, Any]) {
     */
   def withSchemaId(schemaId: Int): ToAvroConfig =
     new ToAvroConfig(
-      abrisConfig + (Key.schemaId -> schemaId)
+      abrisConfig + (Key.SchemaId -> schemaId)
     )
 
   def validate(): Unit = {
@@ -187,9 +187,9 @@ class ToAvroConfig private(abrisConfig: Map[String, Any]) {
 object ToAvroConfig {
   def apply(): ToAvroConfig = new ToAvroConfig(Map.empty[String, Any])
 
-  object Key {
+  private[abris] object Key {
     val Schema = "schema"
-    val schemaId = "schemaId"
+    val SchemaId = "schemaId"
   }
 }
 
@@ -340,7 +340,7 @@ class FromAvroConfig private(
 object FromAvroConfig {
   def apply(): FromAvroConfig = new FromAvroConfig(Map.empty[String, Any], None)
 
-  object Key {
+  private[abris] object Key {
     val ReaderSchema = "readerSchema"
     val WriterSchema = "writerSchema"
   }

@@ -22,9 +22,9 @@ import za.co.absa.abris.config.FromAvroConfig.Key
 
 private[abris] class InternalFromAvroConfig(map: Map[String, Any]) {
 
-  def readerSchema: Schema = AvroSchemaUtils.parse(map(Key.ReaderSchema).asInstanceOf[String])
+  val readerSchema: Schema = AvroSchemaUtils.parse(map(Key.ReaderSchema).asInstanceOf[String])
 
-  def writerSchema: Option[Schema] = map
+  val writerSchema: Option[Schema] = map
     .get(Key.WriterSchema)
     .map(s => AvroSchemaUtils.parse(s.asInstanceOf[String]))
 }

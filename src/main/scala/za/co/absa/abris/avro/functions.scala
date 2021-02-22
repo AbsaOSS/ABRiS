@@ -37,7 +37,7 @@ object functions {
 
     new Column(CatalystDataToAvro(
       column.expr,
-      config.abrisConfig
+      config.abrisConfig()
     ))
   }
 

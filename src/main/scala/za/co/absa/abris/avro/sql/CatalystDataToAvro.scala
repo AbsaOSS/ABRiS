@@ -26,7 +26,7 @@ import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.config.InternalToAvroConfig
 
-case class CatalystDataToAvro(
+private[abris] case class CatalystDataToAvro(
   child: Expression,
   abrisConfig: Map[String,Any]
 ) extends UnaryExpression {
