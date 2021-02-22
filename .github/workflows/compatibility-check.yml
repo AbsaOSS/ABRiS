@@ -1,4 +1,4 @@
-name: Compatibility Check
+name: Binary Compatibility
 
 on:
   push:
@@ -27,5 +27,7 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.scala }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-
+      - name: Switch scala version
+        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }}
       - name: Check binary compatibility
         run: mvn clean test -DskipTests -Pcompatibility-check,scala-${{ matrix.scala }}
