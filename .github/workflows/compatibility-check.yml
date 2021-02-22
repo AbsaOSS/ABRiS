@@ -28,4 +28,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-
       - name: Run tests
-        run: mvn clean test -DskipTests -Pcompatibility-check,${{ matrix.scala }}
+        run: mvn clean test -DskipTests -Pcompatibility-check,scala-${{ matrix.scala }}
