@@ -27,5 +27,5 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.scala }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-
-      - name: Run tests
+      - name: Check binary compatibility
         run: mvn clean test -DskipTests -Pcompatibility-check,scala-${{ matrix.scala }}
