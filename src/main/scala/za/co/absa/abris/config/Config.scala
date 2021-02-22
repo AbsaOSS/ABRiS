@@ -137,6 +137,12 @@ class ToSchemaRegisteringConfigFragment(
   }
 }
 
+/**
+  * This class serves as self sufficient builder for Abris configuration while still being fully backward compatible
+  * with previous Fragment based config builders above.
+  *
+  * This builder allows us to add new properties in backward compatible manner.
+  */
 class ToAvroConfig private(abrisConfig: Map[String, Any]) {
 
   import ToAvroConfig.Key
@@ -265,7 +271,12 @@ class FromConfluentAvroConfigFragment {
     new FromSchemaDownloadingConfigFragment(Right(schema), true)
 }
 
-
+/**
+  * This class serves as self sufficient builder for Abris configuration while still being fully backward compatible
+  * with previous Fragment based config builders above.
+  *
+  * This builder allows us to add new properties in backward compatible manner.
+  */
 class FromAvroConfig private(
   abrisConfig: Map[String, Any],
   schemaRegistryConf: Option[Map[String,String]]
