@@ -18,4 +18,4 @@ jobs:
       with:
         java-version: 1.8
     - name: Run tests
-      run: mvn clean test -Plicense-check,spark-2.3,scala-2.11
+      run: mvn clean test -Plicense-check,compatibility-check,spark-2.3,scala-2.11
