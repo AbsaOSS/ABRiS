@@ -30,15 +30,16 @@ class SchemaLoaderSpec extends FlatSpec {
   behavior of "SchemaLoader"
 
   it should "retrieve schemas from file systems" in {
-    val expectedSchema = TestSchemas.COMPLEX_SCHEMA_SPEC
+    val expectedSchemaString = TestSchemas.COMPLEX_SCHEMA_SPEC
+    val expectedSchema = AvroSchemaUtils.parse(expectedSchemaString)
     val schemaFileName = "testSchemaName"
-    val destination = writeIntoFS(expectedSchema, schemaFileName)
-    val loadedSchema = AvroSchemaUtils.loadPlain(destination.getAbsolutePath)
+    val destination = writeIntoFS(expectedSchemaString, schemaFileName)
+    val loadedSchema = AvroSchemaUtils.load(destination.getAbsolutePath)
 
     FileUtils.deleteQuietly(new File(destination.getAbsolutePath))
     FileUtils.deleteDirectory(testDir)
 
-    assert(expectedSchema == loadedSchema)
+    assert(expectedSchema.equals(loadedSchema))
   }
 
   private def writeIntoFS(schema: String, name: String): File = {
