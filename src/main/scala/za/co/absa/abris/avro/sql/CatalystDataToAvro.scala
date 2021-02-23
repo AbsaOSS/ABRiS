@@ -24,19 +24,19 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.config.InternalToAvroConfig
 
-case class CatalystDataToAvro(
-   child: Expression,
-   schemaString: String,
-   schemaId: Option[Int])
-  extends UnaryExpression {
+private[abris] case class CatalystDataToAvro(
+  child: Expression,
+  abrisConfig: Map[String,Any]
+) extends UnaryExpression {
 
   override def dataType: DataType = BinaryType
 
-  @transient private lazy val avroSchema: Schema = AvroSchemaUtils.parse(schemaString)
+  @transient private lazy val config = new InternalToAvroConfig(abrisConfig)
 
   @transient private lazy val serializer: AvroSerializer =
-    new AvroSerializer(child.dataType, avroSchema, child.nullable)
+    new AvroSerializer(child.dataType, config.schema, child.nullable)
 
   override def nullSafeEval(input: Any): Any = {
     val avroData = serializer.serialize(input)
@@ -46,11 +46,11 @@ case class CatalystDataToAvro(
       case _ => wrapWithRecord(avroData)
     }
 
-    SparkAvroConversions.toByteArray(record, record.getSchema, schemaId)
+    SparkAvroConversions.toByteArray(record, record.getSchema, config.schemaId)
   }
 
   private def wrapWithRecord(avroData:Any) = {
-    val record = new GenericData.Record(wrapSchemaIfNeeded(avroSchema))
+    val record = new GenericData.Record(wrapSchemaIfNeeded(config.schema))
     record.put(0, avroData)
     record
   }

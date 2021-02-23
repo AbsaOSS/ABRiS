@@ -16,7 +16,6 @@
 
 package za.co.absa.abris.avro.sql
 
-import java.nio.ByteBuffer
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
@@ -26,42 +25,45 @@ import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManagerFactory}
-import za.co.absa.abris.config.FromAvroConfig
+import za.co.absa.abris.config.InternalFromAvroConfig
 
+import java.nio.ByteBuffer
 import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-case class AvroDataToCatalyst(
-   child: Expression,
-   config: FromAvroConfig)
-  extends UnaryExpression with ExpectsInputTypes {
+private[abris] case class AvroDataToCatalyst(
+  child: Expression,
+  abrisConfig: Map[String,Any],
+  schemaRegistryConf: Option[Map[String,String]]
+) extends UnaryExpression with ExpectsInputTypes {
 
   override def inputTypes: Seq[BinaryType.type] = Seq(BinaryType)
 
-  override lazy val dataType: DataType = SchemaConverters.toSqlType(avroSchema).dataType
+  override lazy val dataType: DataType = SchemaConverters.toSqlType(readerSchema).dataType
 
   override def nullable: Boolean = true
 
-  private val confluentCompliant = config.schemaRegistryConf.isDefined
+  private val confluentCompliant = schemaRegistryConf.isDefined
 
-  @transient private lazy val schemaManager = SchemaManagerFactory.create(config.schemaRegistryConf.get)
+  @transient private lazy val config = new InternalFromAvroConfig(abrisConfig)
 
-  // Avro schema to be used for reading
-  @transient private lazy val avroSchema = AvroSchemaUtils.parse(config.schemaString)
+  @transient private lazy val schemaManager = SchemaManagerFactory.create(schemaRegistryConf.get)
 
-  // Avro schema that was used for data serialization
-  @transient private lazy val writerSchema = config.writerSchema.map(s => AvroSchemaUtils.parse(s))
+  @transient private lazy val readerSchema = config.readerSchema
 
-  // Reused GenericDatumReaders per writer schema
-  @transient private lazy val vanillaReader: GenericDatumReader[Any] = new GenericDatumReader[Any](writerSchema.getOrElse(avroSchema), avroSchema)
-  @transient private lazy val confluentReaderCache: mutable.HashMap[Int, GenericDatumReader[Any]] = new mutable.HashMap[Int, GenericDatumReader[Any]]()
+  @transient private lazy val writerSchemaOption = config.writerSchema
+
+  @transient private lazy val vanillaReader: GenericDatumReader[Any] =
+    new GenericDatumReader[Any](writerSchemaOption.getOrElse(readerSchema), readerSchema)
+
+  @transient private lazy val confluentReaderCache: mutable.HashMap[Int, GenericDatumReader[Any]] =
+    new mutable.HashMap[Int, GenericDatumReader[Any]]()
 
   @transient private var decoder: BinaryDecoder = _
 
-  @transient private lazy val deserializer = new AvroDeserializer(avroSchema, dataType)
+  @transient private lazy val deserializer = new AvroDeserializer(readerSchema, dataType)
 
   // Reused result object (usually of type IndexedRecord)
   @transient private var result: Any = _
@@ -129,18 +131,18 @@ case class AvroDataToCatalyst(
     decoder = DecoderFactory.get().binaryDecoder(buffer.array(), start, length, decoder)
 
     val reader = confluentReaderCache.getOrElseUpdate(schemaId, {
-      val writerSchema = getWriterSchema(schemaId)
-      new GenericDatumReader[Any](writerSchema, avroSchema)
+      val writerSchema = downloadWriterSchema(schemaId)
+      new GenericDatumReader[Any](writerSchema, readerSchema)
     })
 
     result = reader.read(result, decoder)
     result
   }
 
-  private def getWriterSchema(id: Int): Schema = {
+  private def downloadWriterSchema(id: Int): Schema = {
     Try(schemaManager.getSchemaById(id)) match {
       case Success(schema)  => schema
-      case Failure(e)       => throw new RuntimeException("Not able to load writer schema", e)
+      case Failure(e)       => throw new RuntimeException("Not able to download writer schema", e)
     }
   }
 
