@@ -137,7 +137,61 @@ class ToSchemaRegisteringConfigFragment(
   }
 }
 
-class ToAvroConfig(val schemaString: String, val schemaId: Option[Int])
+/**
+  * This class serves as self sufficient builder for Abris configuration while still being fully backward compatible
+  * with previous Fragment based config builders above.
+  *
+  * This builder allows us to add new properties in backward compatible manner.
+  */
+class ToAvroConfig private(abrisConfig: Map[String, Any]) {
+
+  import ToAvroConfig.Key
+
+  // ### legacy methods ###
+
+  def this(schemaString: String, schemaId: Option[Int]) =
+    this(
+      schemaId.map(ToAvroConfig.Key.SchemaId -> _).toMap[String, Any] + (ToAvroConfig.Key.Schema -> schemaString)
+    )
+
+  private[abris] def schemaString(): String = abrisConfig(Key.Schema).asInstanceOf[String]
+  private[abris] def schemaId(): Option[Int] = abrisConfig.get(Key.SchemaId).map(_.asInstanceOf[Int])
+
+  // ### normal methods ###
+
+  private[abris] def abrisConfig(): Map[String, Any] = abrisConfig
+
+  /**
+    * @param schema Mandatory avro schema for converting to avro format
+    */
+  def withSchema(schema: String): ToAvroConfig =
+    new ToAvroConfig(
+      abrisConfig + (Key.Schema -> schema)
+    )
+
+  /**
+    * @param schemaId Schema id that will be prepended before the avro payload (making it confluent compliant)
+    */
+  def withSchemaId(schemaId: Int): ToAvroConfig =
+    new ToAvroConfig(
+      abrisConfig + (Key.SchemaId -> schemaId)
+    )
+
+  def validate(): Unit = {
+    if (!abrisConfig.contains(Key.Schema)) {
+      throw new IllegalArgumentException(s"Missing mandatory config property ${Key.Schema}")
+    }
+  }
+}
+
+object ToAvroConfig {
+  def apply(): ToAvroConfig = new ToAvroConfig(Map.empty[String, Any])
+
+  private[abris] object Key {
+    val Schema = "schema"
+    val SchemaId = "schemaId"
+  }
+}
 
 /*
  * ================================================  From Avro ================================================
@@ -153,8 +207,8 @@ class FromSimpleAvroConfigFragment{
   def downloadSchemaByVersion(schemaVersion: Int): FromStrategyConfigFragment =
     new FromStrategyConfigFragment(NumVersion(schemaVersion), false)
 
-  def provideSchema(schema: String, writerSchema: String = ""): FromAvroConfig =
-    new FromAvroConfig(schema, if (writerSchema.isEmpty) Some(schema) else Some(writerSchema), None)
+  def provideSchema(schema: String): FromAvroConfig =
+    new FromAvroConfig(schema, None)
 }
 
 class FromStrategyConfigFragment(version: SchemaVersion, confluent: Boolean) {
@@ -192,11 +246,11 @@ class FromSchemaDownloadingConfigFragment(
     case Left(coordinate) => {
       val schemaManager = SchemaManagerFactory.create(config)
       val schema = schemaManager.getSchema(coordinate)
-      new FromAvroConfig(schema.toString, None, if (confluent) Some(config) else None)
+      new FromAvroConfig(schema.toString, if (confluent) Some(config) else None)
     }
     case Right(schemaString) =>
       if (confluent) {
-        new FromAvroConfig(schemaString, None, Some(config))
+        new FromAvroConfig(schemaString, Some(config))
       } else {
         throw new UnsupportedOperationException("Unsupported config permutation")
       }
@@ -217,5 +271,77 @@ class FromConfluentAvroConfigFragment {
     new FromSchemaDownloadingConfigFragment(Right(schema), true)
 }
 
+/**
+  * This class serves as self sufficient builder for Abris configuration while still being fully backward compatible
+  * with previous Fragment based config builders above.
+  *
+  * This builder allows us to add new properties in backward compatible manner.
+  */
+class FromAvroConfig private(
+  abrisConfig: Map[String, Any],
+  schemaRegistryConf: Option[Map[String,String]]
+) {
 
-case class FromAvroConfig(schemaString: String, writerSchema: Option[String], schemaRegistryConf: Option[Map[String,String]])
+  import FromAvroConfig.Key
+
+  // ### legacy methods ###
+
+  def this(schemaString: String, schemaRegistryConf: Option[Map[String,String]]) =
+    this(Map(FromAvroConfig.Key.ReaderSchema -> schemaString), schemaRegistryConf)
+
+  private[abris] def schemaString(): String = abrisConfig(Key.ReaderSchema).asInstanceOf[String]
+  private[abris] def schemaRegistryConf(): Option[Map[String,String]] = schemaRegistryConf
+
+  // ### normal methods ###
+
+  private[abris] def abrisConfig(): Map[String, Any] = abrisConfig
+
+  /**
+    * @param srConfig Schema registry client config map
+    *   - providing this means the confluent compliant messages are expected
+    *   - the id from the message will be used to download an avro schema
+    *     using the client with this configuration.
+    *   - the downloaded schema will be used as a writer schema
+    */
+  def withSchemaRegistryConfig(srConfig: Map[String,String]): FromAvroConfig =
+    new FromAvroConfig(
+      abrisConfig,
+      Some(srConfig)
+    )
+
+  /**
+    * @param schema Reader schema used for converting from avro
+    */
+  def withReaderSchema(schema: String): FromAvroConfig =
+    new FromAvroConfig(
+      abrisConfig + (Key.ReaderSchema -> schema),
+      schemaRegistryConf
+    )
+
+  /**
+    * @param schema Writer schema used for converting from avro
+    */
+  def withWriterSchema(schema: String): FromAvroConfig =
+    new FromAvroConfig(
+      abrisConfig + (Key.WriterSchema -> schema),
+      schemaRegistryConf
+    )
+
+  def validate(): Unit = {
+    if(!abrisConfig.contains(Key.ReaderSchema)) {
+      throw new IllegalArgumentException(s"Missing mandatory config property ${Key.ReaderSchema}")
+    }
+    if(schemaRegistryConf.isDefined && abrisConfig.contains(Key.WriterSchema)) {
+      throw new IllegalArgumentException(s"Either schemaRegistryConf or ${Key.WriterSchema} should be set. Not both!")
+    }
+  }
+}
+
+object FromAvroConfig {
+  def apply(): FromAvroConfig = new FromAvroConfig(Map.empty[String, Any], None)
+
+  private[abris] object Key {
+    val ReaderSchema = "readerSchema"
+    val WriterSchema = "writerSchema"
+  }
+}
