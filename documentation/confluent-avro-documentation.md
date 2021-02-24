@@ -100,20 +100,18 @@ must be provided to the configuration.
 Given a dataframe, the Avro schema can be generated as shown below.
 
 ```scala
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils.toAvroSchema
-import org.apache.spark.sql.avro.SchemaConverters.toAvroType
+import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 
-// generate schema for dataframe with only one column
-def generateSchema1(dataFrame: DataFrame): Schema =
-  toAvroSchema(dataFrame, "input", "recordName", "namespace")
+// generate schema for all columns in a dataframe
+AvroSchemaUtils.toAvroSchema(dataFrame)
 
-// generate schema for dataframe with multiple columns
-def generateSchema2(dataFrame: DataFrame): Schema = {
-  val allColumns = struct(dataFrame.columns.map(c => dataFrame(c)): _*)
-  val expression = allColumns.expr
-  toAvroType(expression.dataType, expression.nullable)
-}
+// generate schema for one column in a dataframe
+AvroSchemaUtils.toAvroSchema(dataFrame, "input")
+
+// generate schema for multiple columns in a dataframe
+AvroSchemaUtils.toAvroSchema(dataFrame, Seq("input", "numbers"))
 ```
+All above methods also have a variant where you can specify `recordName` and `nameSpace` instead of using default ones.
 
 When the schema is generated, it can be registered, and the schema id obtained:
 
