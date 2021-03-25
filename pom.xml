@@ -53,7 +53,6 @@
         <spark-30.version>3.0.0</spark-30.version>
 
         <spark.version>${spark-24.version}</spark.version>
-        <spark.scope>provided</spark.scope>
 
         <!-- Cross build properties -->
 
@@ -142,19 +141,19 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
-            <scope>${spark.scope}</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
-            <scope>${spark.scope}</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
-            <scope>${spark.scope}</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -181,13 +180,13 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
-            <scope>${spark.scope}</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming-kafka-${kafka.spark.version}_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
-            <scope>${spark.scope}</scope>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Confluent's Kafka and Schema Registry -->
