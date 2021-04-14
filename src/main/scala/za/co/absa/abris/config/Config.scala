@@ -27,7 +27,7 @@ object AbrisConfig {
   def fromConfluentAvro: FromConfluentAvroConfigFragment = new FromConfluentAvroConfigFragment()
 
   val SCHEMA_REGISTRY_URL = "schema.registry.url"
-  val SCHEMA_REGISTRY_CLASS = "schema.registry.class"
+  val REGISTRY_CLIENT_CLASS = "abris.registryClient.class"
 }
 
 /*
