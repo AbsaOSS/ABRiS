@@ -29,6 +29,8 @@ class AvroSchemaUtilsSpec extends AnyFlatSpec with Matchers {
     .builder()
     .appName("unitTest")
     .master("local[2]")
+    .config("spark.driver.bindAddress", "localhost")
+    .config("spark.ui.enabled", "false")
     .getOrCreate()
 
   import spark.implicits._
