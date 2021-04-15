@@ -22,7 +22,7 @@ import io.confluent.common.config.ConfigException
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.spark.internal.Logging
-import za.co.absa.abris.avro.registry.AbrisMockSchemaRegistryClient
+import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, CustomRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
 
 import scala.collection.JavaConverters._
@@ -61,12 +61,16 @@ object SchemaManagerFactory extends Logging {
         new AbrisMockSchemaRegistryClient()
       } else if (configs.contains(AbrisConfig.REGISTRY_CLIENT_CLASS)) {
         val cl = Class.forName(configs(AbrisConfig.REGISTRY_CLIENT_CLASS))
-        logInfo(msg = s"Configuring new Schema Registry instance of type " +
-          s"'${cl.getCanonicalName}'")
-        val instance = cl.getDeclaredConstructor(Array(classOf[util.Map[String, String]]): _*)
+        if (classOf[CustomRegistryClient].isAssignableFrom(cl)) {
+          logInfo(msg = s"Configuring new Schema Registry instance of type " +
+            s"'${cl.getCanonicalName}'")
+          val instance = cl.getDeclaredConstructor(Array(classOf[util.Map[String, String]]): _*)
             .newInstance(configs.asJava)
 
-        instance.asInstanceOf[SchemaRegistryClient]
+          instance.asInstanceOf[CustomRegistryClient]
+        } else {
+          throw new IllegalArgumentException("Custom registry classes have to extend 'CustomRegistryClient'!")
+        }
       } else {
         logInfo(msg = s"Configuring new Schema Registry instance of type " +
           s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")

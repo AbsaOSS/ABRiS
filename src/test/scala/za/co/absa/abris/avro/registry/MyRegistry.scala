@@ -16,7 +16,7 @@
 
 package za.co.absa.abris.avro.registry
 
-import io.confluent.kafka.schemaregistry.client.{SchemaMetadata, SchemaRegistryClient}
+import io.confluent.kafka.schemaregistry.client.SchemaMetadata
 import org.apache.avro.Schema
 
 import java.util
@@ -24,7 +24,7 @@ import java.util
 /**
  * This is a dummy registry that does nothing.
  */
-class MyRegistry(configs: util.Map[String, String]) extends SchemaRegistryClient {
+class MyRegistry(configs: util.Map[String, String]) extends CustomRegistryClient(configs) {
 
   override def register(s: String, schema: Schema): Int = ???
 
