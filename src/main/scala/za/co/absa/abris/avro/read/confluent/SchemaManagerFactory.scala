@@ -59,8 +59,8 @@ object SchemaManagerFactory extends Logging {
           s"'${classOf[AbrisMockSchemaRegistryClient].getCanonicalName}'")
 
         new AbrisMockSchemaRegistryClient()
-      } else if (configs.contains(AbrisConfig.SCHEMA_REGISTRY_CLASS)) {
-        val cl = Class.forName(configs(AbrisConfig.SCHEMA_REGISTRY_CLASS))
+      } else if (configs.contains(AbrisConfig.REGISTRY_CLIENT_CLASS)) {
+        val cl = Class.forName(configs(AbrisConfig.REGISTRY_CLIENT_CLASS))
         logInfo(msg = s"Configuring new Schema Registry instance of type " +
           s"'${cl.getCanonicalName}'")
         val instance = cl.getDeclaredConstructor(Array(classOf[util.Map[String, String]]): _*)

@@ -31,7 +31,7 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
 
   private val schemaRegistryConfig3 = Map(
     AbrisConfig.SCHEMA_REGISTRY_URL -> "http://dummy_sr_2",
-    AbrisConfig.SCHEMA_REGISTRY_CLASS -> "za.co.absa.abris.avro.registry.MyRegistry"
+    AbrisConfig.REGISTRY_CLIENT_CLASS -> "za.co.absa.abris.avro.registry.MyRegistry"
   )
 
   override def beforeEach(): Unit = {
