@@ -85,6 +85,13 @@ private[abris] case class AvroDataToCatalyst(
 
   override def prettyName: String = "from_avro"
 
+  override protected def flatArguments: Iterator[Any] = {
+    super.flatArguments.filter {
+      case _: Option[Map[String,String]] => false // don't print schemaRegistryConf
+      case _ => true
+    }
+  }
+
   override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
     val expr = ctx.addReferenceObj("this", this)
     defineCodeGen(ctx, ev, input =>
