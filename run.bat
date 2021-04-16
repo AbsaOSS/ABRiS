@@ -1,0 +1,1 @@
+java -jar c:\Users\Edward\.m2\repository\com\github\mvallim\spring-schema-registry-embedded\1.0.0\spring-schema-registry-embedded-1.0.0.jar
