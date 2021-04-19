@@ -25,7 +25,7 @@ import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, SchemaSubject}
-import za.co.absa.abris.config.{AbrisConfig, FromAvroConfig}
+import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.abris.examples.data.generation.{ComplexRecordsGenerator, TestSchemas}
 
 class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
@@ -506,21 +506,6 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
-  }
-
-  it should "not print schema registry configs in the spark plan" in {
-    val sensitiveData = "username:password"
-    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
-
-    val fromAvroConfig = FromAvroConfig()
-      .withReaderSchema(schemaString)
-      .withSchemaRegistryConfig(Map(
-      AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl,
-      "basic.auth.user.info" -> sensitiveData
-    ))
-
-    val column = from_avro('avroBytes, fromAvroConfig)
-    column.expr.toString() should not include sensitiveData
   }
 
   private def getEncoder: Encoder[Row] = {
