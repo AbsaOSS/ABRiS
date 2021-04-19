@@ -16,8 +16,12 @@
 
 package za.co.absa.abris.avro.registry
 
+import io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider
+import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference
 import io.confluent.kafka.serializers.subject.{RecordNameStrategy, TopicNameStrategy, TopicRecordNameStrategy}
 import org.apache.avro.Schema
+
+import java.util
 
 /**
  * Represents Confluent Schema Registry Subject created using naming strategy
@@ -30,6 +34,8 @@ class SchemaSubject(val asString: String) {
 }
 
 object SchemaSubject{
+
+  private val schemaProvider = new AvroSchemaProvider()
   private val TOPIC_NAME_STRATEGY = new TopicNameStrategy()
   private val RECORD_NAME_STRATEGY = new RecordNameStrategy()
   private val TOPIC_RECORD_NAME_STRATEGY = new TopicRecordNameStrategy()
@@ -40,7 +46,8 @@ object SchemaSubject{
     isKey: Boolean = false
   ): SchemaSubject = {
     val dummySchema = createDummySchema("name", "namespace")
-    new SchemaSubject(TOPIC_NAME_STRATEGY.subjectName(topicName, isKey, dummySchema))
+    val parsedSchema = schemaProvider.parseSchema(dummySchema.toString, new util.ArrayList[SchemaReference]())
+    new SchemaSubject(TOPIC_NAME_STRATEGY.subjectName(topicName, isKey, parsedSchema.orElseThrow()))
   }
 
   def usingRecordNameStrategy(
@@ -48,13 +55,15 @@ object SchemaSubject{
     recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
-    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, dummySchema))
+    val parsedSchema = schemaProvider.parseSchema(dummySchema.toString, new util.ArrayList[SchemaReference]())
+    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, parsedSchema.orElseThrow()))
   }
 
   def usingRecordNameStrategy(
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, schema))
+    val parsedSchema = schemaProvider.parseSchema(schema.toString, new util.ArrayList[SchemaReference]())
+    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, parsedSchema.orElseThrow()))
   }
 
   def usingTopicRecordNameStrategy(
@@ -63,16 +72,26 @@ object SchemaSubject{
     recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
-    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, dummySchema))
+    val parsedSchema = schemaProvider.parseSchema(dummySchema.toString, new util.ArrayList[SchemaReference]())
+    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, parsedSchema.orElseThrow()))
   }
 
   def usingTopicRecordNameStrategy(
     topicName: String,
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, schema))
+    val parsedSchema = schemaProvider.parseSchema(schema.toString, new util.ArrayList[SchemaReference]())
+    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, parsedSchema.orElseThrow()))
   }
 
-  private def createDummySchema(name: String, namespace: String) =
-    Schema.createRecord(name, "", namespace, false)
+  /*
+  io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider	[ScalaTest-run-running-SchemaEvolutionSpec]	Could not parse Avro schema
+org.apache.avro.SchemaParseException: Record has no fields: {"type":"record","name":"record_name","namespace":"all-types.test","doc":""}
+   */
+  private def createDummySchema(name: String, namespace: String) = {
+    val rec = Schema.createRecord(name, "helpful documentation", namespace, false)
+    val field = new Schema.Field("bla", Schema.create(Schema.Type.INT), "bla", 0)
+    rec.setFields(java.util.Arrays.asList(field))
+    rec
+  }
 }

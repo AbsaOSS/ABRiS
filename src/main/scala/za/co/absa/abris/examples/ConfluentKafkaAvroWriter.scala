@@ -69,7 +69,7 @@ object ConfluentKafkaAvroWriter {
       .save()
   }
 
-  private def generateRandomDataFrame(spark: SparkSession): DataFrame = {
+  def generateRandomDataFrame(spark: SparkSession): DataFrame = {
     import spark.implicits._
 
     implicit val encoder: Encoder[Row] = getEncoder

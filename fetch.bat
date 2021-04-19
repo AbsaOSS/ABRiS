@@ -1,0 +1,1 @@
+mvn dependency:get -DgroupId=com.github.mvallim -DartifactId=spring-schema-registry-embedded -Dversion=1.0.0 -Dtransative=false
