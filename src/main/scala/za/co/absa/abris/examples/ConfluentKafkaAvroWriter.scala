@@ -17,7 +17,7 @@
 package za.co.absa.abris.examples
 
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.functions.{col, struct}
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -67,6 +67,25 @@ object ConfluentKafkaAvroWriter {
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("topic", kafkaTopicName)
       .save()
+
+    val readConfig = AbrisConfig
+      .fromConfluentAvro
+      .downloadReaderSchemaByLatestVersion
+      .andTopicNameStrategy(kafkaTopicName)
+      .usingSchemaRegistry("http://localhost:8081")
+
+    import za.co.absa.abris.avro.functions.from_avro
+    val deserialized = dataFrame.select(from_avro(col("value"), readConfig) as 'data)
+
+    deserialized.printSchema()
+
+    deserialized
+      .writeStream
+      .format("console")
+      .option("truncate", "false")
+      .start()
+      .awaitTermination(5000)
+
   }
 
   private def generateRandomDataFrame(spark: SparkSession): DataFrame = {

@@ -225,6 +225,65 @@
         </resources>
 
         <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.6.1</version>
+                <executions>
+                    <execution>
+                        <id>install-schemaReg</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>artifact</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactId>spring-schema-registry-embedded</artifactId>
+                    <groupId>com.github.mvallim</groupId>
+                    <version>1.0.0</version>
+                    <unpack>false</unpack>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.bazaarvoice.maven.plugins</groupId>
+                <artifactId>process-exec-maven-plugin</artifactId>
+                <version>0.4</version>
+                <executions>
+                    <execution>
+                        <id>cleanup-test</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>stop-all</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>start-jar</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                        <configuration>
+                            <name>schemaReg</name>
+                            <arguments>
+                                <argument>java</argument>
+                                <argument>-jar</argument>
+                                <argument>-Xms64m</argument>
+                                <argument>-Xmx128m</argument>
+                                <argument>spring-schema-registry-embedded-1.0.0.jar</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>stop-test</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>stop-all</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- the Maven Scala plugin will compile Scala source files -->
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
