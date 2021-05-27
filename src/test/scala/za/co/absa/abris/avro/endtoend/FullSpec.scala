@@ -2,7 +2,7 @@ package za.co.absa.abris.avro.endtoend
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.MemoryStream
-import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.functions.{col, struct}
 import org.scalatest.FlatSpec
 import za.co.absa.abris.avro.functions.to_avro
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -43,6 +43,24 @@ class FullSpec extends FlatSpec {
       .option("topic", kafkaTopicName)
       .save()
 
+
+    val readConfig = AbrisConfig
+      .fromConfluentAvro
+      .downloadReaderSchemaByLatestVersion
+      .andTopicNameStrategy(kafkaTopicName)
+      .usingSchemaRegistry("http://localhost:8081")
+
+    import za.co.absa.abris.avro.functions.from_avro
+    val deserialized = dataFrame.select(from_avro(col("value"), readConfig) as 'data)
+
+    deserialized.printSchema()
+
+    deserialized
+      .writeStream
+      .format("console")
+      .option("truncate", "false")
+      .start()
+      .awaitTermination(5000)
 
 
   }

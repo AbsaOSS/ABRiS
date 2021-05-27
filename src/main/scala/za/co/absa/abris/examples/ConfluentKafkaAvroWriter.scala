@@ -68,24 +68,6 @@ object ConfluentKafkaAvroWriter {
       .option("topic", kafkaTopicName)
       .save()
 
-    val readConfig = AbrisConfig
-      .fromConfluentAvro
-      .downloadReaderSchemaByLatestVersion
-      .andTopicNameStrategy(kafkaTopicName)
-      .usingSchemaRegistry("http://localhost:8081")
-
-    import za.co.absa.abris.avro.functions.from_avro
-    val deserialized = dataFrame.select(from_avro(col("value"), readConfig) as 'data)
-
-    deserialized.printSchema()
-
-    deserialized
-      .writeStream
-      .format("console")
-      .option("truncate", "false")
-      .start()
-      .awaitTermination(5000)
-
   }
 
   private def generateRandomDataFrame(spark: SparkSession): DataFrame = {
