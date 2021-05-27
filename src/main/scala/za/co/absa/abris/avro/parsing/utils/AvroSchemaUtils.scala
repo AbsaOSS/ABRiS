@@ -21,8 +21,9 @@ import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.avro.SchemaConverters.toAvroType
+import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.types.DataType
 
 import scala.collection.JavaConverters._
 
@@ -57,44 +58,48 @@ object AvroSchemaUtils {
   }
 
   def toAvroSchema(
-    dataFrame: DataFrame,
-    columnName: String,
-    recordName: String = "topLevelRecord",
-    nameSpace: String = ""
-  ): Schema = {
-    val fieldIndex = dataFrame.schema.fieldIndex(columnName)
-    val field = dataFrame.schema.fields(fieldIndex)
+                    dataFrame: DataFrame
+                  ): Schema = toAvroSchema(dataFrame, "topLevelRecord", "")
 
-    toAvroType(field.dataType, field.nullable, recordName, nameSpace)
-  }
+
+  def toAvroSchema(
+                    dataFrame: DataFrame,
+                    columnNames: Seq[String]
+                  ): Schema = toAvroSchema(dataFrame, columnNames, "topLevelRecord", "", DefaultAvroSchemaConverter())
+
+  def toAvroSchema(
+                    dataFrame: DataFrame,
+                    recordName: String,
+                    nameSpace: String
+                  ): Schema =
+    toAvroSchema(dataFrame, dataFrame.columns, recordName, nameSpace, DefaultAvroSchemaConverter())
+
 
   def toAvroSchema(
     dataFrame: DataFrame,
-    columnNames: Seq[String]
-  ): Schema = toAvroSchema(dataFrame, columnNames, "topLevelRecord", "")
+    columnName: String,
+    recordName: String = "topLevelRecord",
+    nameSpace: String = "",
+    schemaConverter: AvroSchemaConverter = DefaultAvroSchemaConverter()
+  ): Schema = {
+    val fieldIndex = dataFrame.schema.fieldIndex(columnName)
+    val field = dataFrame.schema.fields(fieldIndex)
+    schemaConverter.toAvroType(field.dataType, field.nullable, recordName, nameSpace)
+  }
 
   def toAvroSchema(
     dataFrame: DataFrame,
     columnNames: Seq[String],
     recordName: String,
-    nameSpace: String
+    nameSpace: String,
+    schemaConverter: AvroSchemaConverter
   ): Schema = {
     val allColumns = struct(columnNames.map(dataFrame.col): _*)
     val expression = allColumns.expr
-
-    toAvroType(expression.dataType, expression.nullable, recordName, nameSpace)
+    schemaConverter.toAvroType(expression.dataType, expression.nullable, recordName, nameSpace)
   }
 
-  def toAvroSchema(
-    dataFrame: DataFrame
-  ): Schema = toAvroSchema(dataFrame, "topLevelRecord", "")
 
-  def toAvroSchema(
-    dataFrame: DataFrame,
-    recordName: String,
-    nameSpace: String
-  ): Schema =
-    toAvroSchema(dataFrame, dataFrame.columns, recordName, nameSpace)
 
   def wrapSchema(schema: Schema, name: String, namespace: String): Schema = {
     SchemaBuilder.record(name)
@@ -103,4 +108,22 @@ object AvroSchemaUtils {
       .endRecord()
   }
 
+}
+
+case class DefaultAvroSchemaConverter() extends AvroSchemaConverter {
+  def toAvroType( catalystType: DataType,
+                  nullable: Boolean = false,
+                  recordName: String = "topLevelRecord",
+                  nameSpace: String = "")
+  : Schema= {
+    SchemaConverters.toAvroType(catalystType, nullable, recordName, nameSpace)
+  }
+}
+
+trait AvroSchemaConverter {
+  def toAvroType( catalystType: DataType,
+                  nullable: Boolean = false,
+                  recordName: String = "topLevelRecord",
+                  nameSpace: String = "")
+  : Schema
 }
