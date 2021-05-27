@@ -68,7 +68,8 @@ class AvroSchemaUtilsSpec extends AnyFlatSpec with Matchers {
     schema.getFields.get(1).schema().getType shouldBe Type.INT
 
 
-    val schema2 = AvroSchemaUtils.toAvroSchema(dataFrame, Seq("bool","number"), "foo", "bar")
+    val schema2 = AvroSchemaUtils.toAvroSchema(dataFrame, Seq("bool","number"), "foo", "bar",
+      DefaultAvroSchemaConverter())
     schema2.getType shouldBe Type.RECORD
     schema2.getFullName shouldBe "bar.foo"
   }
@@ -104,6 +105,13 @@ class AvroSchemaUtilsSpec extends AnyFlatSpec with Matchers {
     schema2.getFields.size() shouldBe 2
     schema2.getFields.get(0).schema().getType shouldBe Type.BOOLEAN
     schema2.getFields.get(1).schema().getType shouldBe Type.INT
+  }
+
+  it should "make schema based on customization" in {
+    val schema2 = AvroSchemaUtils.toAvroSchema(dataFrame, Seq("bool","number"), "foo", "bar",
+      ExampleSchemaConverter())
+    schema2.getType shouldBe Type.RECORD
+    schema2.getFullName shouldBe "bar.Foo"
   }
 
 }
