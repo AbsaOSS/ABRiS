@@ -27,6 +27,7 @@ import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.{ConfluentMockRegistryClient, SchemaSubject}
+import za.co.absa.abris.avro.utils.AvroSchemaEncoder
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.abris.examples.data.generation.{ComplexRecordsGenerator, TestSchemas}
 
@@ -42,7 +43,8 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
 
   import spark.implicits._
 
-  implicit val encoder: Encoder[Row] = getEncoder
+  private val avroSchemaEncoder = new AvroSchemaEncoder
+  implicit val encoder: Encoder[Row] = avroSchemaEncoder.getEncoder
 
   private val dummyUrl = "dummyUrl"
   private val schemaRegistryConfig = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl)
@@ -506,11 +508,4 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
 
     shouldEqualByData(dataFrame, result)
   }
-
-  private def getEncoder: Encoder[Row] = {
-    val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
-    val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    RowEncoder.apply(sparkSchema)
-  }
-
 }

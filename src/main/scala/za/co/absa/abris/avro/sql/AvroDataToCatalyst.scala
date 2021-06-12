@@ -20,11 +20,12 @@ import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
 import org.apache.kafka.common.errors.SerializationException
-import org.apache.spark.SparkException
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.avro.{AbrisAvroDeserializer, SchemaConverters}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
+import za.co.absa.abris.avro.errors.DeserializationExceptionHandler
 import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManagerFactory}
 import za.co.absa.abris.config.InternalFromAvroConfig
 
@@ -35,10 +36,10 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 private[abris] case class AvroDataToCatalyst(
-  child: Expression,
-  abrisConfig: Map[String,Any],
-  schemaRegistryConf: Option[Map[String,String]]
-) extends UnaryExpression with ExpectsInputTypes {
+                                              child: Expression,
+                                              abrisConfig: Map[String, Any],
+                                              schemaRegistryConf: Option[Map[String, String]]
+                                            ) extends UnaryExpression with ExpectsInputTypes with Logging {
 
   @transient private lazy val schemaConverter = loadSchemaConverter(config.schemaConverter)
 
@@ -57,6 +58,8 @@ private[abris] case class AvroDataToCatalyst(
   @transient private lazy val readerSchema = config.readerSchema
 
   @transient private lazy val writerSchemaOption = config.writerSchema
+
+  @transient private lazy val deserializationHandler: DeserializationExceptionHandler = config.deserializationHandler
 
   @transient private lazy val vanillaReader: GenericDatumReader[Any] =
     new GenericDatumReader[Any](writerSchemaOption.getOrElse(readerSchema), readerSchema)
@@ -82,7 +85,7 @@ private[abris] case class AvroDataToCatalyst(
       // There could be multiple possible exceptions here, e.g. java.io.IOException,
       // AvroRuntimeException, ArrayIndexOutOfBoundsException, etc.
       // To make it simple, catch all the exceptions here.
-      case NonFatal(e) =>  throw new SparkException("Malformed records are detected in record parsing.", e)
+      case NonFatal(e) => deserializationHandler.handle(e, deserializer, readerSchema)
     }
   }
 
