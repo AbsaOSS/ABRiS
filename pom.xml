@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>za.co.absa</groupId>
     <artifactId>abris_2.12</artifactId>
-    <version>4.2.1-SNAPSHOT</version>
+    <version>4.2.0-elsevier-1.0.0</version>
     <name>abris</name>
     <description>Provides seamless integration between Avro and Spark Structured APIs.</description>
     <url>https://github.com/AbsaOSS/ABRiS</url>
@@ -75,11 +75,11 @@
         <!--Platforms-->
         <spark.version>2.4.4</spark.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <confluent.version>5.3.4</confluent.version>
+        <confluent.version>6.1.1</confluent.version>
 
         <!--Libs-->
         <spark.avro.version>2.4.6</spark.avro.version>
-        <avro.version>1.8.2</avro.version>
+        <avro.version>1.10.2</avro.version>
 
         <scm.url><!-- defined outside the pom --></scm.url>
         <scm.connection><!-- defined outside the pom --></scm.connection>

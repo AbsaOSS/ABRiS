@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.avro.registry
 
+import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import io.confluent.kafka.serializers.subject.{RecordNameStrategy, TopicNameStrategy, TopicRecordNameStrategy}
 import org.apache.avro.Schema
 
@@ -40,7 +41,7 @@ object SchemaSubject{
     isKey: Boolean = false
   ): SchemaSubject = {
     val dummySchema = createDummySchema("name", "namespace")
-    new SchemaSubject(TOPIC_NAME_STRATEGY.subjectName(topicName, isKey, dummySchema))
+    new SchemaSubject(TOPIC_NAME_STRATEGY.subjectName(topicName, isKey, new AvroSchema(dummySchema)))
   }
 
   def usingRecordNameStrategy(
@@ -48,13 +49,13 @@ object SchemaSubject{
     recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
-    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, dummySchema))
+    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, new AvroSchema(dummySchema)))
   }
 
   def usingRecordNameStrategy(
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, schema))
+    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, new AvroSchema(schema)))
   }
 
   def usingTopicRecordNameStrategy(
@@ -63,14 +64,14 @@ object SchemaSubject{
     recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
-    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, dummySchema))
+    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, new AvroSchema(dummySchema)))
   }
 
   def usingTopicRecordNameStrategy(
     topicName: String,
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, schema))
+    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, new AvroSchema(schema)))
   }
 
   private def createDummySchema(name: String, namespace: String) =
