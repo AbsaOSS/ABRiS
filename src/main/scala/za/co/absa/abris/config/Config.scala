@@ -145,7 +145,8 @@ class ToSchemaRegisteringConfigFragment(
   *
   * This builder allows us to add new properties in backward compatible manner.
   */
-class ToAvroConfig private(abrisConfig: Map[String, Any]) {
+@SerialVersionUID(1L)
+class ToAvroConfig private(abrisConfig: Map[String, Any]) extends Serializable {
 
   import ToAvroConfig.Key
 
@@ -280,10 +281,11 @@ class FromConfluentAvroConfigFragment {
   *
   * This builder allows us to add new properties in backward compatible manner.
   */
+@SerialVersionUID(1L)
 class FromAvroConfig private(
   abrisConfig: Map[String, Any],
   schemaRegistryConf: Option[Map[String,String]]
-) {
+) extends Serializable {
 
   import FromAvroConfig.Key
 
