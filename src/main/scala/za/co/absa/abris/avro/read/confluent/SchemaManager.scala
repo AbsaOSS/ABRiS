@@ -64,11 +64,13 @@ class SchemaManager(schemaRegistryClient: SchemaRegistryClient) extends Logging 
       case LatestVersion() => schemaRegistryClient.getLatestSchemaMetadata(subject.asString)
     }
 
-  def register(subject: SchemaSubject, schemaString: String): Int = register(subject, AvroSchemaUtils.parse(schemaString))
+  def register(subject: SchemaSubject, schemaString: String): Int =
+    register(subject, AvroSchemaUtils.parse(schemaString))
 
   /**
-   * Register a new schema for a subject if the schema is compatible with the latest available version.
+   * Register new schema for a subject.
    *
+   * @throws InvalidParameterException when the new schema is not compatible with already exiting one.
    * @return registered schema id
    */
   def register(subject: SchemaSubject, schema: Schema): Int = {
@@ -76,8 +78,8 @@ class SchemaManager(schemaRegistryClient: SchemaRegistryClient) extends Logging 
       logInfo(s"AvroSchemaUtils.registerIfCompatibleSchema: Registering schema for subject: $subject")
       schemaRegistryClient.register(subject.asString, schema)
     } else {
-      throw new InvalidParameterException(s"Schema could not be registered for subject '${subject}'. " +
-        "Make sure that the Schema Registry is available, the parameters are correct and the schemas are compatible")
+      throw new InvalidParameterException(s"Schema registration failed. Schema for subject:'$subject' " +
+        s"already exists and it is not compatible with schema you are trying to register.")
     }
   }
 
@@ -123,8 +125,4 @@ class SchemaManager(schemaRegistryClient: SchemaRegistryClient) extends Logging 
     val maybeSchemaId = findEquivalentSchema(schema, subject)
     maybeSchemaId.getOrElse(register(subject, schema))
   }
-}
-
-class SchemaManagerException(msg: String, throwable: Throwable) extends RuntimeException(msg, throwable) {
-  def this(msg: String) = this(msg, null)
 }
