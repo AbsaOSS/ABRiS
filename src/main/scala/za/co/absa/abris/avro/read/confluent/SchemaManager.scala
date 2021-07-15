@@ -126,3 +126,8 @@ class SchemaManager(schemaRegistryClient: SchemaRegistryClient) extends Logging 
     maybeSchemaId.getOrElse(register(subject, schema))
   }
 }
+
+@deprecated("This Exception is not used and might be removed in next major release.")
+class SchemaManagerException(msg: String, throwable: Throwable) extends RuntimeException(msg, throwable) {
+  def this(msg: String) = this(msg, null)
+}
