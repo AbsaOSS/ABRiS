@@ -49,8 +49,10 @@
 
         <!-- Spark -->
         <spark-23.version>2.3.4</spark-23.version>
-        <spark-24.version>2.4.6</spark-24.version>
-        <spark-30.version>3.0.0</spark-30.version>
+        <spark-24.version>2.4.8</spark-24.version>
+        <spark-30.version>3.0.3</spark-30.version>
+        <spark-31.version>3.1.2</spark-31.version>
+
 
         <spark.version>${spark-24.version}</spark.version>
 
@@ -69,7 +71,7 @@
         <!--Tests-->
         <scalatestplus.mockito.version>3.1.0.0</scalatestplus.mockito.version>
         <scalatest.version>3.1.0</scalatest.version>
-        <scalatest.maven.version>2.0.0</scalatest.maven.version>
+        <scalatest.maven.plugin.version>2.0.2</scalatest.maven.plugin.version>
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
         <!--Platforms-->
@@ -266,7 +268,7 @@
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>${scalatest.maven.version}</version>
+                <version>${scalatest.maven.plugin.version}</version>
                 <configuration>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
@@ -341,6 +343,12 @@
             <id>spark-3.0</id>
             <properties>
                 <spark.version>${spark-30.version}</spark.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-3.1</id>
+            <properties>
+                <spark.version>${spark-31.version}</spark.version>
             </properties>
         </profile>
 
