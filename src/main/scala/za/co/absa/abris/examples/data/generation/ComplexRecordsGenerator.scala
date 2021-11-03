@@ -16,14 +16,12 @@
 
 package za.co.absa.abris.examples.data.generation
 
-import java.lang._
-import java.nio.ByteBuffer
-
-import org.apache.avro.generic.GenericRecord
 import org.apache.spark.sql.Row
+import za.co.absa.commons.annotation.DeveloperApi
 
-import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
-import scala.collection.{Map, Seq, immutable, mutable}
+import java.nio.ByteBuffer
+import scala.collection.JavaConverters.{asScalaBufferConverter, seqAsJavaListConverter}
+import scala.collection.{Map, Seq}
 import scala.util.Random
 
 /**
@@ -31,24 +29,12 @@ import scala.util.Random
  * Not part of the library core.
  */
 // scalastyle:off magic.number
+@DeveloperApi
 object ComplexRecordsGenerator {
 
-  case class Bean(bytes: Array[scala.Byte], string: String, int: Int, long: Long, double: Double,
-                  float: Float, boolean: Boolean, array: mutable.ListBuffer[Any], fixed: Array[scala.Byte],
-                  map: Map[String, java.util.ArrayList[Long]])
-
-  private val plainSchema = TestSchemas.NATIVE_COMPLETE_SCHEMA
   private val random = new Random()
 
-  def usedAvroSchema: String = plainSchema
-
-  def generateRecords(howMany: Int): List[GenericRecord] = {
-    val result = new Array[GenericRecord](howMany)
-    for (i <- 0 until howMany) {
-      result(i) = AvroDataUtils.mapToGenericRecord(getDataMap(), plainSchema)
-    }
-    result.toList
-  }
+  val usedAvroSchema: String = TestSchemas.NATIVE_COMPLETE_SCHEMA
 
   def generateUnparsedRows(howMany: Int): List[Row] = {
     val result = new Array[Row](howMany)
@@ -58,24 +44,6 @@ object ComplexRecordsGenerator {
     result.toList
   }
 
-  private def getDataMap(): immutable.Map[String, Object] = {
-    val map = Map[String, java.util.ArrayList[Long]](
-      "entry1" -> randomListOfLongs(20),
-      "entry2" -> randomListOfLongs(30))
-
-    immutable.Map[String, Object](
-      "bytes" -> ByteBuffer.wrap(randomString(20).getBytes),
-      "string" -> randomString(30),
-      "int" -> new Integer(random.nextInt()),
-      "long" -> new Long(random.nextLong()),
-      "double" -> new Double(random.nextDouble()),
-      "float" -> new Float(random.nextFloat()),
-      "boolean" -> new Boolean(random.nextBoolean()),
-      "array" -> randomListOfStrings(10, 15),
-      "map" -> map.asJava,
-      "fixed" -> new FixedString(randomString(40)))
-  }
-
   private def getDataSeq(): Seq[Object] = {
     val map = Map[String, Seq[Long]](
       "entry1" -> randomSeqOfLongs(20),
@@ -83,11 +51,11 @@ object ComplexRecordsGenerator {
     Seq(
       ByteBuffer.wrap(randomString(20).getBytes).array(),
       randomString(30),
-      new Integer(random.nextInt()),
-      new Long(random.nextLong()),
-      new Double(random.nextDouble()),
-      new Float(random.nextFloat()),
-      new Boolean(random.nextBoolean()),
+      new java.lang.Integer(random.nextInt()),
+      new java.lang.Long(random.nextLong()),
+      new java.lang.Double(random.nextDouble()),
+      new java.lang.Float(random.nextFloat()),
+      new java.lang.Boolean(random.nextBoolean()),
       randomSeqOfStrings(10, 15),
       map,
       new FixedString(randomString(40)).bytes())

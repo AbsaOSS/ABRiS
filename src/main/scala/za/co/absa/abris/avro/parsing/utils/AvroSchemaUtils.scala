@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.avro.SchemaConverters.toAvroType
+import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.functions.struct
 
 import scala.collection.JavaConverters._
@@ -65,7 +65,7 @@ object AvroSchemaUtils {
     val fieldIndex = dataFrame.schema.fieldIndex(columnName)
     val field = dataFrame.schema.fields(fieldIndex)
 
-    toAvroType(field.dataType, field.nullable, recordName, nameSpace)
+    SchemaConverters.toAvroType(field.dataType, field.nullable, recordName, nameSpace)
   }
 
   def toAvroSchema(
@@ -82,7 +82,7 @@ object AvroSchemaUtils {
     val allColumns = struct(columnNames.map(dataFrame.col): _*)
     val expression = allColumns.expr
 
-    toAvroType(expression.dataType, expression.nullable, recordName, nameSpace)
+    SchemaConverters.toAvroType(expression.dataType, expression.nullable, recordName, nameSpace)
   }
 
   def toAvroSchema(

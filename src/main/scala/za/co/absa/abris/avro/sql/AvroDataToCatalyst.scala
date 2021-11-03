@@ -21,7 +21,7 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
 import org.apache.kafka.common.errors.SerializationException
 import org.apache.spark.SparkException
-import org.apache.spark.sql.avro.SchemaConverters
+import org.apache.spark.sql.avro.{AvroDeserializer, SchemaConverters}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
