@@ -16,10 +16,13 @@
 
 package za.co.absa.abris.avro.registry
 
+import io.confluent.kafka.schemaregistry.ParsedSchema
 import io.confluent.kafka.schemaregistry.client.SchemaMetadata
+import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference
 import org.apache.avro.Schema
 
 import java.util
+import java.util.Optional
 
 /**
  * This is a dummy registry that does nothing.
@@ -73,4 +76,22 @@ class MyRegistry(configs: util.Map[String, String]) extends CustomRegistryClient
   override def deleteSchemaVersion(map: util.Map[String, String], s: String, s1: String): Integer = ???
 
   override def reset(): Unit = ???
+
+  override def parseSchema(s: String, s1: String, list: util.List[SchemaReference]): Optional[ParsedSchema] = ???
+
+  override def register(s: String, parsedSchema: ParsedSchema): Int = ???
+
+  override def register(s: String, parsedSchema: ParsedSchema, i: Int, i1: Int): Int = ???
+
+  override def getSchemaById(i: Int): ParsedSchema = ???
+
+  override def getSchemaBySubjectAndId(s: String, i: Int): ParsedSchema = ???
+
+  override def getAllSubjectsById(i: Int): util.Collection[String] = ???
+
+  override def getVersion(s: String, parsedSchema: ParsedSchema): Int = ???
+
+  override def testCompatibility(s: String, parsedSchema: ParsedSchema): Boolean = ???
+
+  override def getId(s: String, parsedSchema: ParsedSchema): Int = ???
 }

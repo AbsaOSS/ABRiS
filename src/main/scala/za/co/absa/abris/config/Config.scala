@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.config
 
+import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry._
@@ -113,12 +114,12 @@ class ToConfluentAvroRegistrationStrategyConfigFragment(schema: String, confluen
 
   def usingRecordNameStrategy(
   ): ToSchemaRegisteringConfigFragment =
-    toSRCFragment(SchemaSubject.usingRecordNameStrategy(AvroSchemaUtils.parse(schema)))
+    toSRCFragment(SchemaSubject.usingRecordNameStrategy(new AvroSchema(schema)))
 
   def usingTopicRecordNameStrategy(
     topicName: String
   ): ToSchemaRegisteringConfigFragment =
-    toSRCFragment(SchemaSubject.usingTopicRecordNameStrategy(topicName, AvroSchemaUtils.parse(schema)))
+    toSRCFragment(SchemaSubject.usingTopicRecordNameStrategy(topicName, new AvroSchema(schema)))
 
   private def toSRCFragment(subject: SchemaSubject) =
     new ToSchemaRegisteringConfigFragment(subject, schema, confluent)

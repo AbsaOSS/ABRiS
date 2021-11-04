@@ -16,12 +16,13 @@
 
 package za.co.absa.abris.avro.registry
 
+import io.confluent.kafka.schemaregistry.avro.AvroSchema
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 
 class SchemaSubjectSpec extends FlatSpec with BeforeAndAfter {
 
-  private val schema = AvroSchemaUtils.parse(
+  private val schema = new AvroSchema(
     """{
       |"type": "record",
       |"name": "Blah",
