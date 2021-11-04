@@ -159,4 +159,7 @@ private[abris] case class AvroDataToCatalyst(
     result = vanillaReader.read(result, decoder)
     result
   }
+
+  override protected def withNewChildInternal(newChild: Expression): AvroDataToCatalyst =
+    copy(child = newChild)
 }

@@ -108,7 +108,7 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
           // For backward compatibility, if the Avro type is Long and it is not logical type,
           // the value is processed as timestamp type with millisecond precision.
           updater.setLong(ordinal, value.asInstanceOf[Long] * 1000)
-        case other => throw new IncompatibleSchemaException(
+        case other => throw new scala.Exception(
           s"Cannot convert Avro logical type ${other} to Catalyst Timestamp type.")
       }
 
@@ -276,7 +276,7 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
                     }
 
                   case _ =>
-                    throw new IncompatibleSchemaException(
+                    throw new scala.Exception(
                       s"Cannot convert Avro to catalyst because schema at path " +
                         s"${path.mkString(".")} is not compatible " +
                         s"(avroType = $avroType, sqlType = $catalystType).\n" +
@@ -290,7 +290,7 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
         }
 
       case _ =>
-        throw new IncompatibleSchemaException(
+        throw new scala.Exception(
           s"Cannot convert Avro to catalyst because schema at path ${path.mkString(".")} " +
             s"is not compatible (avroType = $avroType, sqlType = $catalystType).\n" +
             s"Source Avro schema: $rootAvroType.\n" +
@@ -334,7 +334,7 @@ class AvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
         }
         fieldWriters += fieldWriter
       } else if (!sqlField.nullable) {
-        throw new IncompatibleSchemaException(
+        throw new scala.Exception(
           s"""
              |Cannot find non-nullable field ${path.mkString(".")}.${sqlField.name} in Avro schema.
              |Source Avro schema: $rootAvroType.

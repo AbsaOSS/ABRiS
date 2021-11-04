@@ -52,9 +52,9 @@
         <spark-24.version>2.4.8</spark-24.version>
         <spark-30.version>3.0.3</spark-30.version>
         <spark-31.version>3.1.2</spark-31.version>
+        <spark-32.version>3.2.0</spark-32.version>
 
-
-        <spark.version>${spark-24.version}</spark.version>
+        <spark.version>${spark-32.version}</spark.version>
 
         <!-- Cross build properties -->
 
@@ -75,7 +75,7 @@
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
         <!--Platforms-->
-        <spark.version>2.4.4</spark.version>
+        <spark.version>3.2.0</spark.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <confluent.version>6.2.1</confluent.version>
 
@@ -173,6 +173,11 @@
                     <!-- use the jackson libraries specified by Spark sql -->
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- use the jackson libraries specified by Spark sql -->
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -349,6 +354,12 @@
             <id>spark-3.1</id>
             <properties>
                 <spark.version>${spark-31.version}</spark.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-3.2</id>
+            <properties>
+                <spark.version>${spark-32.version}</spark.version>
             </properties>
         </profile>
 
