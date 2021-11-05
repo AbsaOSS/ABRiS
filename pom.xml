@@ -69,6 +69,7 @@
 
         <!--Platforms-->
         <spark.version>${spark-24.version}</spark.version>
+        <spark.avro.version>${spark.version}</spark.avro.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <confluent.version>5.3.4</confluent.version>
 
@@ -159,7 +160,7 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-avro_${scala.compat.version}</artifactId>
-            <version>${spark.version}</version>
+            <version>${spark.avro.version}</version>
         </dependency>
 
         <!-- Avro -->
@@ -334,6 +335,9 @@
             <id>spark-2.3</id>
             <properties>
                 <spark.version>${spark-23.version}</spark.version>
+                <spark.avro.version>${spark-24.version}</spark.avro.version>
+                <avro.version>1.8.2</avro.version>
+                <confluent.version>5.3.4</confluent.version>
             </properties>
         </profile>
         <profile>

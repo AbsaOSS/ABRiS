@@ -17,7 +17,7 @@
 package za.co.absa.abris.avro.read.confluent
 
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentRegistryClient, TestRegistryClient}
+import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentMockRegistryClient, ConfluentRegistryClient, TestRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
 
 import scala.reflect.runtime.{universe => ru}
@@ -77,5 +77,17 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
     assert(!res1.eq(res3))
     assert(res1.isInstanceOf[ConfluentRegistryClient])
     assert(res3.isInstanceOf[TestRegistryClient])
+  }
+
+  it should "create mock client when url starts with mock://" in {
+    val config = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> "mock://dummy_sr_2")
+
+    val schemaManagerRef1 = SchemaManagerFactory.create(config)
+
+    val m = ru.runtimeMirror(schemaManagerRef1.getClass.getClassLoader)
+    val fieldTerm = ru.typeOf[SchemaManager].decl(ru.TermName("schemaRegistryClient")).asTerm
+
+    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[AbrisRegistryClient]
+    assert(res1.isInstanceOf[ConfluentMockRegistryClient])
   }
 }

@@ -18,11 +18,12 @@
 package za.co.absa.abris.avro.read.confluent
 
 import org.apache.spark.internal.Logging
-import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentRegistryClient}
+import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentMockRegistryClient, ConfluentRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.commons.annotation.DeveloperApi
 
 import scala.collection.concurrent
+import scala.util.Try
 import scala.util.control.NonFatal
 
 /**
@@ -53,16 +54,21 @@ object SchemaManagerFactory extends Logging {
         try {
           val clazz = Class.forName(configs(AbrisConfig.REGISTRY_CLIENT_CLASS))
           logInfo(msg = s"Configuring new Schema Registry client of type '${clazz.getCanonicalName}'")
-          clazz
-            .getDeclaredConstructor(classOf[Map[String, String]])
-            .newInstance(configs)
+          Try(clazz.getConstructor(classOf[Map[String, String]]).newInstance(configs))
+            .recover { case _: NoSuchMethodException =>
+              clazz.getConstructor().newInstance()
+            }
+            .get
             .asInstanceOf[AbrisRegistryClient]
         } catch {
           case e if NonFatal(e) =>
             throw new IllegalArgumentException("Custom registry client must implement AbrisRegistryClient " +
-              "and have constructor accepting Map[String, String]", e)
+              "and have parameterless or Map[String, String] accepting constructor", e)
         }
-      } else {
+    } else if (configs(AbrisConfig.SCHEMA_REGISTRY_URL).startsWith("mock://")) {
+        logInfo(msg = s"Configuring new Schema Registry client of type ConfluentMockRegistryClient")
+        new ConfluentMockRegistryClient()
+    } else {
         logInfo(msg = s"Configuring new Schema Registry client of type ConfluentRegistryClient")
         new ConfluentRegistryClient(configs)
       }
