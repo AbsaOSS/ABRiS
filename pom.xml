@@ -48,19 +48,13 @@
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
         <!-- Spark -->
-        <spark-23.version>2.3.4</spark-23.version>
-        <spark-24.version>2.4.8</spark-24.version>
-        <spark-30.version>3.0.3</spark-30.version>
-        <spark-31.version>3.1.2</spark-31.version>
-
-
+        <spark-32.version>3.2.0</spark-32.version>
 
         <!-- Cross build properties -->
 
         <default.scala.compat.version>2.12</default.scala.compat.version>
         <default.scala.version>${scala_2.12.version}</default.scala.version>
 
-        <scala_2.11.version>2.11.12</scala_2.11.version>
         <scala_2.12.version>2.12.10</scala_2.12.version>
 
         <!-- Controlled by `scala-cross-build` plugin -->
@@ -68,13 +62,13 @@
         <scala.compat.version>2.12</scala.compat.version>
 
         <!--Platforms-->
-        <spark.version>${spark-24.version}</spark.version>
+        <spark.version>${spark-32.version}</spark.version>
         <spark.avro.version>${spark.version}</spark.avro.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <confluent.version>5.3.4</confluent.version>
+        <confluent.version>6.2.1</confluent.version>
 
         <!--Libs-->
-        <avro.version>1.8.2</avro.version>
+        <avro.version>1.10.2</avro.version>
 
         <!--Tests-->
         <scalatestplus.mockito.version>3.1.0.0</scalatestplus.mockito.version>
@@ -110,16 +104,16 @@
 
     <developers>
         <developer>
-            <id>felipemmelo</id>
-            <name>Felipe Melo</name>
-            <timezone>Europe/Prague</timezone>
-            <url>https://github.com/felipemmelo</url>
-        </developer>
-        <developer>
             <id>cerveada</id>
             <name>Adam Cervenka</name>
             <timezone>Europe/Prague</timezone>
             <url>https://github.com/cerveada</url>
+        </developer>
+        <developer>
+            <id>kevinwallimann</id>
+            <name>Kevin Wallimann</name>
+            <timezone>Europe/Prague</timezone>
+            <url>https://github.com/kevinwallimann</url>
         </developer>
     </developers>
 
@@ -306,13 +300,6 @@
 
         <!-- Cross-building profiles -->
         <profile>
-            <id>scala-2.11</id>
-            <properties>
-                <scala.compat.version>2.11</scala.compat.version>
-                <scala.version>${scala_2.11.version}</scala.version>
-            </properties>
-        </profile>
-        <profile>
             <id>scala-2.12</id>
             <properties>
                 <scala.compat.version>2.12</scala.compat.version>
@@ -322,36 +309,11 @@
 
         <!-- Spark profiles -->
         <profile>
-            <id>spark-2.3</id>
+            <id>spark-3.2</id>
             <properties>
-                <spark.version>${spark-23.version}</spark.version>
-                <spark.avro.version>${spark-24.version}</spark.avro.version>
-                <avro.version>1.8.2</avro.version>
-                <confluent.version>5.3.4</confluent.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>spark-2.4</id>
-            <properties>
-                <spark.version>${spark-24.version}</spark.version>
-                <avro.version>1.8.2</avro.version>
-                <confluent.version>5.3.4</confluent.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>spark-3.0</id>
-            <properties>
-                <spark.version>${spark-30.version}</spark.version>
-                <avro.version>1.8.2</avro.version>
-                <confluent.version>5.3.4</confluent.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>spark-3.1</id>
-            <properties>
-                <spark.version>${spark-31.version}</spark.version>
-                <avro.version>1.8.2</avro.version>
-                <confluent.version>5.3.4</confluent.version>
+                <spark.version>${spark-32.version}</spark.version>
+                <avro.version>1.10.2</avro.version>
+                <confluent.version>6.2.1</confluent.version>
             </properties>
         </profile>
 
