@@ -18,7 +18,7 @@ package za.co.absa.abris.avro.sql
 
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.io.{BinaryEncoder, EncoderFactory}
-import org.apache.spark.sql.avro.AvroSerializer
+import org.apache.spark.sql.avro.AbrisAvroSerializer
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
@@ -37,8 +37,8 @@ private[abris] case class CatalystDataToAvro(
 
   @transient private lazy val config = new InternalToAvroConfig(abrisConfig)
 
-  @transient private lazy val serializer: AvroSerializer =
-    new AvroSerializer(child.dataType, config.schema, child.nullable)
+  @transient private lazy val serializer: AbrisAvroSerializer =
+    new AbrisAvroSerializer(child.dataType, config.schema, child.nullable)
 
   @transient private lazy val writer =
     new GenericDatumWriter[Any](config.schema)

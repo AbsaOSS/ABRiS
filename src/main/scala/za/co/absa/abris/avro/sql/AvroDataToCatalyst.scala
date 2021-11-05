@@ -21,7 +21,7 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
 import org.apache.kafka.common.errors.SerializationException
 import org.apache.spark.SparkException
-import org.apache.spark.sql.avro.{AvroDeserializer, SchemaConverters}
+import org.apache.spark.sql.avro.{AbrisAvroDeserializer, SchemaConverters}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
@@ -63,7 +63,7 @@ private[abris] case class AvroDataToCatalyst(
 
   @transient private var decoder: BinaryDecoder = _
 
-  @transient private lazy val deserializer = new AvroDeserializer(readerSchema, dataType)
+  @transient private lazy val deserializer = new AbrisAvroDeserializer(readerSchema, dataType)
 
   // Reused result object (usually of type IndexedRecord)
   @transient private var result: Any = _
