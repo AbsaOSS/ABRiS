@@ -37,7 +37,9 @@ import scala.util.{Failure, Success, Try}
  * (e.g. calling 'configureSchemaRegistry' with different parameters) would operated
  * on the same Schema Registry client, thus, leading to inconsistent behavior.
  */
-class SchemaManager(schemaRegistryClient: SchemaRegistryClient) extends Logging {
+class SchemaManager(schemaRegistryClient: AbrisRegistryClient) extends Logging {
+
+  def this(schemaRegistryClient: SchemaRegistryClient) = this(new ConfluentRegistryClient(schemaRegistryClient))
 
   def getSchema(coordinate: SchemaCoordinate): Schema = coordinate match {
       case IdCoordinate(id) => getSchemaById(id)

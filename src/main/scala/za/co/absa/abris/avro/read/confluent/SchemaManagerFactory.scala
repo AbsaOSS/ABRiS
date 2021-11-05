@@ -17,87 +17,55 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import java.util
-import io.confluent.common.config.ConfigException
-import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.spark.internal.Logging
-import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, CustomRegistryClient}
+import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
+import za.co.absa.commons.annotation.DeveloperApi
 
-import scala.collection.JavaConverters._
 import scala.collection.concurrent
+import scala.util.control.NonFatal
 
 /**
  * This thread-safe factory creates [[SchemaManager]] and also manages the instances of SchemaRegistryClient
  * used by allowing caching of the references in order to avoid creating instances in every call that can be
  * used to cache schemas.
- * This factory also allows us to mock the client for testing purposes.
+ * This factory also allows us to use custom registry client via abris.registryClient.class property.
  */
 object SchemaManagerFactory extends Logging {
 
-  private val clientInstances: concurrent.Map[Map[String,String], SchemaRegistryClient] = concurrent.TrieMap()
+  private val clientInstances: concurrent.Map[Map[String,String], AbrisRegistryClient] = concurrent.TrieMap()
 
-  def addSRClientInstance(configs: Map[String, String], client: SchemaRegistryClient): Unit = {
+  @DeveloperApi
+  def addSRClientInstance(configs: Map[String, String], client: AbrisRegistryClient): Unit = {
     clientInstances.put(configs, client)
   }
 
+  @DeveloperApi
   def resetSRClientInstance(): Unit = {
    clientInstances.clear()
   }
 
   def create(configs: Map[String,String]): SchemaManager = new SchemaManager(getOrCreateRegistryClient(configs))
 
-  private def getOrCreateRegistryClient(configs: Map[String,String]): SchemaRegistryClient = {
+  private def getOrCreateRegistryClient(configs: Map[String,String]): AbrisRegistryClient = {
     clientInstances.getOrElseUpdate(configs, {
-      val settings = new KafkaAvroDeserializerConfig(configs.asJava)
-      val urls = settings.getSchemaRegistryUrls
-      val maxSchemaObject = settings.getMaxSchemasPerSubject
-
-      if (hasValidMockURL(urls)) {
-        logInfo(msg = s"Configuring new Schema Registry instance of type " +
-          s"'${classOf[AbrisMockSchemaRegistryClient].getCanonicalName}'")
-
-        new AbrisMockSchemaRegistryClient()
-      } else if (configs.contains(AbrisConfig.REGISTRY_CLIENT_CLASS)) {
-        val cl = Class.forName(configs(AbrisConfig.REGISTRY_CLIENT_CLASS))
-        if (classOf[CustomRegistryClient].isAssignableFrom(cl)) {
-          logInfo(msg = s"Configuring new Schema Registry instance of type " +
-            s"'${cl.getCanonicalName}'")
-          val instance = cl.getDeclaredConstructor(Array(classOf[util.Map[String, String]]): _*)
-            .newInstance(configs.asJava)
-
-          instance.asInstanceOf[CustomRegistryClient]
-        } else {
-          throw new IllegalArgumentException("Custom registry classes have to extend 'CustomRegistryClient'!")
+      if (configs.contains(AbrisConfig.REGISTRY_CLIENT_CLASS)) {
+        try {
+          val clazz = Class.forName(configs(AbrisConfig.REGISTRY_CLIENT_CLASS))
+          logInfo(msg = s"Configuring new Schema Registry client of type '${clazz.getCanonicalName}'")
+          clazz
+            .getDeclaredConstructor(classOf[Map[String, String]])
+            .newInstance(configs)
+            .asInstanceOf[AbrisRegistryClient]
+        } catch {
+          case e if NonFatal(e) =>
+            throw new IllegalArgumentException("Custom registry client must implement AbrisRegistryClient " +
+              "and have constructor accepting Map[String, String]", e)
         }
       } else {
-        logInfo(msg = s"Configuring new Schema Registry instance of type " +
-          s"'${classOf[CachedSchemaRegistryClient].getCanonicalName}'")
-
-        new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+        logInfo(msg = s"Configuring new Schema Registry client of type ConfluentRegistryClient")
+        new ConfluentRegistryClient(configs)
       }
     })
-  }
-
-  /**
-   * Checks whether the urls contain a mock registry.
-   * This is doing the same check as the confluent serializer does in order to
-   * check if the user wants to use a mocked registry e.g. for testing.
-   * @return true/false or an exception if the configuration is wrong
-   */
-  private def hasValidMockURL(urls: util.List[String]): Boolean = {
-    val mockURLs = urls.asScala
-      .filter(_.startsWith("mock://"))
-
-    if (mockURLs.isEmpty) {
-      false
-    } else if (mockURLs.size > 1) {
-      throw new ConfigException("Only one mock scope is permitted for 'schema.registry.url'. Got: " + urls)
-    } else if (urls.size > mockURLs.size) {
-      throw new ConfigException("Cannot mix mock and real urls for 'schema.registry.url'. Got: " + urls)
-    } else {
-      true
-    }
   }
 }

@@ -24,7 +24,7 @@ import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
-import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, SchemaSubject}
+import za.co.absa.abris.avro.registry.{ConfluentMockRegistryClient, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.abris.examples.data.generation.{ComplexRecordsGenerator, TestSchemas}
 
@@ -52,7 +52,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   }
 
   override def beforeEach() {
-    val mockedSchemaRegistryClient = new AbrisMockSchemaRegistryClient()
+    val mockedSchemaRegistryClient = new ConfluentMockRegistryClient()
     SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
   }
 
@@ -123,7 +123,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   "name": "wrapper",
   "fields": [
     {
-      "name": "wrapped",
+      "name": "col1",
       "type":
         {
           "type": "record",
@@ -163,7 +163,7 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     { "name": "string", "type": ["string", "null"] },
     { "name": "boolean", "type": ["boolean","null"] },
     {
-      "name": "wrapped",
+      "name": "col3",
       "type":
         {
           "type": "record",
@@ -207,10 +207,10 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
   val stringSchema = """
   {
     "type": "record",
-    "name": "key",
+    "name": "topLevelRecord",
     "fields": [
       {
-        "name": "some_field",
+        "name": "string",
         "type": ["string", "null"]
       }
     ]

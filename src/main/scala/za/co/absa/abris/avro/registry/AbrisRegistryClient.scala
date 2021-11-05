@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 ABSA Group Limited
+ * Copyright 2018 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,21 @@
 
 package za.co.absa.abris.avro.registry
 
-import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
+import io.confluent.kafka.schemaregistry.client.SchemaMetadata
+import org.apache.avro.Schema
 
-/**
- * This custom registry client can be used as a super class for custom registry clients that differ from the standard
- * Confluent [[io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient]].
- * These must implement a constructor that takes a map as input that is the one configured in the AbrisConfig.
- * The class is constructed in the Spark driver and the Spark executor.
- */
-abstract class CustomRegistryClient(config: java.util.Map[String, String]) extends SchemaRegistryClient {
+trait AbrisRegistryClient {
+
+  def getAllVersions(subject: String): java.util.List[Integer]
+
+  def testCompatibility(subject: String, schema: Schema): Boolean
+
+  def register(subject: String, schema: Schema): Int
+
+  def getLatestSchemaMetadata(subject: String): SchemaMetadata
+
+  def getSchemaMetadata(subject: String, version: Int): SchemaMetadata
+
+  def getById(schemaId: Int): Schema
 
 }
