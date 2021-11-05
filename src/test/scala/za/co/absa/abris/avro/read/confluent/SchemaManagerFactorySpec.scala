@@ -16,9 +16,8 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
 import org.scalatest.{BeforeAndAfterEach, FlatSpec}
-import za.co.absa.abris.avro.registry.MyRegistry
+import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentRegistryClient, TestRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
 
 import scala.reflect.runtime.{universe => ru}
@@ -31,7 +30,7 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
 
   private val schemaRegistryConfig3 = Map(
     AbrisConfig.SCHEMA_REGISTRY_URL -> "http://dummy_sr_2",
-    AbrisConfig.REGISTRY_CLIENT_CLASS -> "za.co.absa.abris.avro.registry.MyRegistry"
+    AbrisConfig.REGISTRY_CLIENT_CLASS -> "za.co.absa.abris.avro.registry.TestRegistryClient"
   )
 
   override def beforeEach(): Unit = {
@@ -49,8 +48,8 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
     val m = ru.runtimeMirror(schemaManagerRef1.getClass.getClassLoader)
     val fieldTerm = ru.typeOf[SchemaManager].decl(ru.TermName("schemaRegistryClient")).asTerm
 
-    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
-    val res2 = m.reflect(schemaManagerRef2).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
+    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[AbrisRegistryClient]
+    val res2 = m.reflect(schemaManagerRef2).reflectField(fieldTerm).get.asInstanceOf[AbrisRegistryClient]
     assert(res1.eq(res2))
   }
 
@@ -61,8 +60,8 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
     val m = ru.runtimeMirror(schemaManagerRef1.getClass.getClassLoader)
     val fieldTerm = ru.typeOf[SchemaManager].decl(ru.TermName("schemaRegistryClient")).asTerm
 
-    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
-    val res2 = m.reflect(schemaManagerRef2).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
+    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[AbrisRegistryClient]
+    val res2 = m.reflect(schemaManagerRef2).reflectField(fieldTerm).get.asInstanceOf[AbrisRegistryClient]
     assert(!res1.eq(res2))
   }
 
@@ -73,10 +72,10 @@ class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
     val m = ru.runtimeMirror(schemaManagerRef1.getClass.getClassLoader)
     val fieldTerm = ru.typeOf[SchemaManager].decl(ru.TermName("schemaRegistryClient")).asTerm
 
-    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
-    val res3 = m.reflect(schemaManagerRef3).reflectField(fieldTerm).get.asInstanceOf[SchemaRegistryClient]
+    val res1 = m.reflect(schemaManagerRef1).reflectField(fieldTerm).get.asInstanceOf[AbrisRegistryClient]
+    val res3 = m.reflect(schemaManagerRef3).reflectField(fieldTerm).get.asInstanceOf[AbrisRegistryClient]
     assert(!res1.eq(res3))
-    assert(res1.isInstanceOf[CachedSchemaRegistryClient])
-    assert(res3.isInstanceOf[MyRegistry])
+    assert(res1.isInstanceOf[ConfluentRegistryClient])
+    assert(res3.isInstanceOf[TestRegistryClient])
   }
 }

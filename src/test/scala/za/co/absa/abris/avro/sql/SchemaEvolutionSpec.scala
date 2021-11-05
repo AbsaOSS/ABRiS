@@ -22,7 +22,7 @@ import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
-import za.co.absa.abris.avro.registry.{AbrisMockSchemaRegistryClient, SchemaSubject}
+import za.co.absa.abris.avro.registry.{ConfluentMockRegistryClient, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
 
 class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
@@ -41,7 +41,7 @@ class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
   private val schemaRegistryConfig = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl)
 
   override def beforeEach() {
-    val mockedSchemaRegistryClient = new AbrisMockSchemaRegistryClient()
+    val mockedSchemaRegistryClient = new ConfluentMockRegistryClient()
     SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
   }
 
