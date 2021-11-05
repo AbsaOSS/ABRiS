@@ -17,17 +17,16 @@
 package za.co.absa.abris.avro.registry
 
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException
-import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, SchemaMetadata}
+import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, SchemaMetadata, SchemaRegistryClient}
 import org.apache.avro.Schema
 
 import java.io.IOException
 import java.util
 
 
-class ConfluentMockRegistryClient extends AbrisRegistryClient {
+class ConfluentMockRegistryClient(client: SchemaRegistryClient) extends AbrisRegistryClient {
 
-  private val client = new MockSchemaRegistryClient()
-
+  def this() = this(new MockSchemaRegistryClient())
 
   override def getAllVersions(subject: String): util.List[Integer] =
     client.getAllVersions(subject)
@@ -44,10 +43,10 @@ class ConfluentMockRegistryClient extends AbrisRegistryClient {
   @throws[IOException]
   @throws[RestClientException]
   override def getLatestSchemaMetadata(subject: String): SchemaMetadata = {
-    try (client.getLatestSchemaMetadata(subject))
+    try client.getLatestSchemaMetadata(subject)
     catch {
-      case e: IOException if e.getMessage == "No schema registered under subject!"
-      => throw new RestClientException("No schema registered under subject!", 404, 40401)
+      case e: IOException if e.getMessage == "No schema registered under subject!" =>
+        throw new RestClientException("No schema registered under subject!", 404, 40401)
     }
   }
 

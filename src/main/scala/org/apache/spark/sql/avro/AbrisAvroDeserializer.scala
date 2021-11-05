@@ -32,10 +32,10 @@ class AbrisAvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
     val clazz = classOf[AvroDeserializer]
     Try {
       clazz.getConstructor(classOf[Schema], classOf[DataType])
-        .newInstance(rootAvroType, rootCatalystType)
+        .newInstance(rootAvroType, rootCatalystType) // Spark 2.4 -
     }.recover { case _: NoSuchMethodException =>
       clazz.getConstructor(classOf[Schema], classOf[DataType], classOf[String])
-        .newInstance(rootAvroType, rootCatalystType, "LEGACY")
+        .newInstance(rootAvroType, rootCatalystType, "LEGACY") // Spark 3.0 +
     }
       .get
       .asInstanceOf[AvroDeserializer]
@@ -49,8 +49,8 @@ class AbrisAvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
 
   def deserialize(data: Any): Any = {
     deserializeMethod(data) match {
-      case Some(x) => x
-      case x => x
+      case Some(x) => x // Spark 3.1 +
+      case x => x // Spark 3.0 -
     }
   }
 
