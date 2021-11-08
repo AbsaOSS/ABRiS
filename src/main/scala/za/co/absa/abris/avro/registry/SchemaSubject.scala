@@ -73,7 +73,7 @@ object SchemaSubject{
     if (schema.getType == Type.RECORD) {
       schema.getFullName
     } else {
-      throw new IllegalArgumentException("Schema must be of type RECORD")
+      throw new IllegalArgumentException(s"Schema must be of type RECORD not ${schema.getType}")
     }
 
   private def createDummySchema(name: String, namespace: String) =
