@@ -16,9 +16,8 @@
 
 package za.co.absa.abris.avro.registry
 
-import io.confluent.kafka.schemaregistry.avro.AvroSchema
-import io.confluent.kafka.serializers.subject.{RecordNameStrategy, TopicNameStrategy, TopicRecordNameStrategy}
 import org.apache.avro.Schema
+import org.apache.avro.Schema.Type
 
 /**
  * Represents Confluent Schema Registry Subject created using naming strategy
@@ -31,17 +30,13 @@ class SchemaSubject(val asString: String) {
 }
 
 object SchemaSubject{
-  private val TOPIC_NAME_STRATEGY = new TopicNameStrategy()
-  private val RECORD_NAME_STRATEGY = new RecordNameStrategy()
-  private val TOPIC_RECORD_NAME_STRATEGY = new TopicRecordNameStrategy()
-
 
   def usingTopicNameStrategy(
     topicName: String,
     isKey: Boolean = false
   ): SchemaSubject = {
-    val dummySchema = createDummySchema("name", "namespace")
-    new SchemaSubject(TOPIC_NAME_STRATEGY.subjectName(topicName, isKey, new AvroSchema(dummySchema)))
+    val suffix = if (isKey) "-key" else "-value"
+    new SchemaSubject(topicName + suffix)
   }
 
   def usingRecordNameStrategy(
@@ -49,13 +44,13 @@ object SchemaSubject{
     recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
-    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, new AvroSchema(dummySchema)))
+    new SchemaSubject(getRecordName(dummySchema))
   }
 
   def usingRecordNameStrategy(
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(RECORD_NAME_STRATEGY.subjectName("", false, new AvroSchema(schema)))
+    new SchemaSubject(getRecordName(schema))
   }
 
   def usingTopicRecordNameStrategy(
@@ -64,15 +59,22 @@ object SchemaSubject{
     recordNamespace: String
   ): SchemaSubject = {
     val dummySchema = createDummySchema(recordName, recordNamespace)
-    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, new AvroSchema(dummySchema)))
+    new SchemaSubject(topicName + "-" + getRecordName(dummySchema))
   }
 
   def usingTopicRecordNameStrategy(
     topicName: String,
     schema: Schema
   ): SchemaSubject = {
-    new SchemaSubject(TOPIC_RECORD_NAME_STRATEGY.subjectName(topicName, false, new AvroSchema(schema)))
+    new SchemaSubject(topicName + "-" + getRecordName(schema))
   }
+
+  private def getRecordName(schema: Schema): String =
+    if (schema.getType == Type.RECORD) {
+      schema.getFullName
+    } else {
+      throw new IllegalArgumentException(s"Schema must be of type RECORD not ${schema.getType}")
+    }
 
   private def createDummySchema(name: String, namespace: String) =
     Schema.createRecord(name, "", namespace, false)

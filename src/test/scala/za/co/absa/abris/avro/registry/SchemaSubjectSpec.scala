@@ -29,7 +29,7 @@ class SchemaSubjectSpec extends FlatSpec with BeforeAndAfter {
       |"fields": [{ "name": "name", "type": "string" }]
       |}""".stripMargin)
 
-  behavior of "RegistryConfig"
+  behavior of "SchemaSubject"
 
   it should "retrieve the correct subject name for TopicName strategy" in {
 
@@ -38,7 +38,7 @@ class SchemaSubjectSpec extends FlatSpec with BeforeAndAfter {
     )
 
     assertResult("foo_topic-key")(
-      SchemaSubject.usingTopicNameStrategy("foo_topic", true).asString
+      SchemaSubject.usingTopicNameStrategy("foo_topic", isKey = true).asString
     )
   }
 
