@@ -16,15 +16,17 @@
 
 package za.co.absa.abris.avro.sql
 
-import org.apache.avro.Schema
-import org.apache.avro.generic.{GenericData, IndexedRecord}
+import org.apache.avro.generic.GenericDatumWriter
+import org.apache.avro.io.{BinaryEncoder, EncoderFactory}
 import org.apache.spark.sql.avro.AvroSerializer
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
-import za.co.absa.abris.avro.format.SparkAvroConversions
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
+import za.co.absa.abris.avro.read.confluent.ConfluentConstants
 import za.co.absa.abris.config.InternalToAvroConfig
+
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
 
 private[abris] case class CatalystDataToAvro(
   child: Expression,
@@ -38,29 +40,30 @@ private[abris] case class CatalystDataToAvro(
   @transient private lazy val serializer: AvroSerializer =
     new AvroSerializer(child.dataType, config.schema, child.nullable)
 
+  @transient private lazy val writer =
+    new GenericDatumWriter[Any](config.schema)
+
+  @transient private var encoder: BinaryEncoder = _
+
+  @transient private lazy val out = new ByteArrayOutputStream
+
   override def nullSafeEval(input: Any): Any = {
+    out.reset()
+
+    config.schemaId.foreach { id =>
+      attachSchemaId(id, out)
+    }
+
+    encoder = EncoderFactory.get().directBinaryEncoder(out, encoder)
     val avroData = serializer.serialize(input)
-
-    val record : IndexedRecord = avroData match {
-      case ad: IndexedRecord => ad
-      case _ => wrapWithRecord(avroData)
-    }
-
-    SparkAvroConversions.toByteArray(record, record.getSchema, config.schemaId)
+    writer.write(avroData, encoder)
+    encoder.flush()
+    out.toByteArray
   }
 
-  private def wrapWithRecord(avroData:Any) = {
-    val record = new GenericData.Record(wrapSchemaIfNeeded(config.schema))
-    record.put(0, avroData)
-    record
-  }
-
-  private def wrapSchemaIfNeeded(schema: Schema) = {
-    if (schema.getType == Schema.Type.RECORD) {
-      schema
-    } else {
-      AvroSchemaUtils.wrapSchema(schema, "notUsedName", "notUsedNamespace")
-    }
+  private def attachSchemaId(id: Int, outStream: ByteArrayOutputStream) = {
+    outStream.write(ConfluentConstants.MAGIC_BYTE)
+    outStream.write(ByteBuffer.allocate(ConfluentConstants.SCHEMA_ID_SIZE_BYTES).putInt(id).array())
   }
 
   override def prettyName: String = "to_avro"
