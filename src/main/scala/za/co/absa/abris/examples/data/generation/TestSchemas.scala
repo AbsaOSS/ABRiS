@@ -16,11 +16,14 @@
 
 package za.co.absa.abris.examples.data.generation
 
+import za.co.absa.commons.annotation.DeveloperApi
+
 /**
  * Provides several Avro schemas.
  *
  * Used for tests and examples.
  */
+@DeveloperApi
 object TestSchemas {
 
   case class ErrorMessage(errType: String, errCode: String, errMsg: String, errCol: String, rawValues: Seq[String],

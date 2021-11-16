@@ -18,7 +18,9 @@ package za.co.absa.abris.examples.data.generation
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericFixed
+import za.co.absa.commons.annotation.DeveloperApi
 
+@DeveloperApi
 object FixedString {
   def getClassName(): String = new FixedString("").getClass.getName
 }
@@ -26,6 +28,7 @@ object FixedString {
 /**
  * Utility class for writing Avro fixed fields.
  */
+@DeveloperApi
 class FixedString(value: String) extends GenericFixed {
   override def getSchema(): Schema = null
   override def bytes(): Array[Byte] = value.getBytes

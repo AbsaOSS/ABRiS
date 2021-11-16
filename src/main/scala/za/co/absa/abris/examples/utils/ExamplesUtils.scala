@@ -18,14 +18,15 @@ package za.co.absa.abris.examples.utils
 
 import java.io.FileInputStream
 import java.util.Properties
-
 import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
 import org.apache.spark.sql.{DataFrameWriter, Row, SparkSession}
 import org.slf4j.LoggerFactory
+import za.co.absa.commons.annotation.DeveloperApi
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
+@DeveloperApi
 object ExamplesUtils {
 
   private val OPTION_PREFIX = "option."
