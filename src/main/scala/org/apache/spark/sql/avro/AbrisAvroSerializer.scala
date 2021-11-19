@@ -19,10 +19,12 @@ package org.apache.spark.sql.avro
 
 import org.apache.avro.Schema
 import org.apache.spark.sql.types.DataType
+import za.co.absa.commons.annotation.DeveloperApi
 
 /**
  * Simple wrapper to access spark package private class
  */
+@DeveloperApi
 class AbrisAvroSerializer(rootCatalystType: DataType, rootAvroType: Schema, nullable: Boolean) {
 
   private val serializer: AvroSerializer = new AvroSerializer(rootCatalystType, rootAvroType, nullable)
