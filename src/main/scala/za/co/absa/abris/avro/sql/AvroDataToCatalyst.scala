@@ -86,8 +86,13 @@ private[abris] case class AvroDataToCatalyst(
   override def prettyName: String = "from_avro"
 
   override protected def flatArguments: Iterator[Any] = {
+    def isMap(x: Any) = x match {
+      case _: Map[_, _] => true
+      case _ => false
+    }
+
     super.flatArguments.filter {
-      case _: Option[Map[String,String]] => false // don't print schemaRegistryConf
+      case Some(x) if isMap(x) => false // don't print schemaRegistryConf
       case _ => true
     }
   }
