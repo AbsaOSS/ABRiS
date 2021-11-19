@@ -19,6 +19,7 @@ package org.apache.spark.sql.avro
 
 import org.apache.avro.Schema
 import org.apache.spark.sql.types.DataType
+import za.co.absa.commons.annotation.DeveloperApi
 
 import scala.util.Try
 
@@ -26,6 +27,7 @@ import scala.util.Try
  * Compatibility layer handling different versions of AvroDeserializer
  * the package also allows to access package private class
  */
+@DeveloperApi
 class AbrisAvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
 
   private val deserializer = {
