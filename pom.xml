@@ -538,27 +538,6 @@
                         <groupId>org.spurint.maven.plugins</groupId>
                         <artifactId>mima-maven-plugin</artifactId>
                         <version>0.8.0</version>
-                        <configuration>
-                            <filters>
-                                <!-- TODO: Remove these filters in v5.0.0 -->
-                                <filter>
-                                    <name>Problem</name>
-                                    <value>za.co.absa.abris.avro.sql.AvroDataToCatalyst.*</value>
-                                </filter>
-                                <filter>
-                                    <name>Problem</name>
-                                    <value>za.co.absa.abris.avro.sql.CatalystDataToAvro.*</value>
-                                </filter>
-                                <filter>
-                                    <name>Problem</name>
-                                    <value>za.co.absa.abris.avro.sql.AvroDataToCatalyst$</value>
-                                </filter>
-                                <filter>
-                                    <name>Problem</name>
-                                    <value>za.co.absa.abris.avro.sql.CatalystDataToAvro$</value>
-                                </filter>
-                            </filters>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>check-abi</id>
