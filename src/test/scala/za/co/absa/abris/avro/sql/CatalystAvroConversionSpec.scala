@@ -305,9 +305,6 @@ class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAf
     val result = avroBytes
       .select(from_avro('avroBytes, fromAvroConfig) as 'bytes)
 
-    dataFrame.select('bytes).printSchema()
-    result.printSchema()
-
     shouldEqualByData(dataFrame.select('bytes), result)
   }
 
