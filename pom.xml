@@ -196,16 +196,6 @@
             <artifactId>kafka-schema-registry-client</artifactId>
             <version>${confluent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>common-config</artifactId>
-            <version>${confluent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>common-utils</artifactId>
-            <version>${confluent.version}</version>
-        </dependency>
 
         <!-- Other -->
         <dependency>
