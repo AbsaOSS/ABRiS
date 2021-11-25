@@ -39,11 +39,10 @@ For example why is this beneficial: Spark Avro 3.0 accepts nullable columns even
 This means the Spark schema doesn't need to be changed (to non-nullable columns) for avro conversion to succeed.
 
 ## Confluent Schema Registry Version
-Abris by default uses Confluent client version 5.3.4, but any newer version should work. 
-If you want to use newer version please override the dependency in your project. That is `kafka-avro-serializer` and `kafka-schema-registry-client`.
+Abris by default uses Confluent client version 5.3.4. Although Abris is able to work with newer versions as well
+the Avro 1.8 used by Spark is not compatible with them.
 
-There still may be some dependency issues between Spark, Avro and Confluent versions. 
-We don't have a capacity to test all permutations of mentioned projects so if you believe that you found an issue caused by Abris let us know.
+Spark 3.2 uses Avro 1.10 which should work well with newer Confluent. Abris for Spark 3.2 is in development.
 
 ## Usage
 
