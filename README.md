@@ -4,11 +4,11 @@
 
 - Pain free Spark/Avro integration.
 
+- Seamlessly integrate with Confluent platform, including Schema Registry with all available [naming strategies](https://docs.confluent.io/current/schema-registry/serializer-formatter.html#how-the-naming-strategies-work) and schema evolution.
+
 - Seamlessly convert your Avro records from anywhere (e.g. Kafka, Parquet, HDFS, etc) into Spark Rows. 
 
 - Convert your Dataframes into Avro records without even specifying a schema.
-
-- Seamlessly integrate with Confluent platform, including Schema Registry with all available [naming strategies](https://docs.confluent.io/current/schema-registry/serializer-formatter.html#how-the-naming-strategies-work) and schema evolution.
 
 - Go back-and-forth Spark Avro (since Spark 2.4).
 
@@ -21,17 +21,33 @@
 | 2.12   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12) |
 
 ## Supported Spark versions
-On spark 3.0.x and 2.4.x Abris should work without any further requirements.
+On spark 2.4.x, 3.0.x and 3.1.x Abris should work without any further requirements.
 
-On Spark 2.3.x you must declare dependency on ```org.apache.avro:avro:1.8.0``` or higher. (Spark 2.3.x uses Avro 1.7.x so you must overwrite this because ABRiS needs Avro 1.8.0+.)
+On Spark 2.3.x you must declare dependency on ```org.apache.avro:avro:1.8.0``` or higher. 
+(Spark 2.3.x uses Avro 1.7.x so you must overwrite this because ABRiS needs Avro 1.8.0+.)
 
 ## Older Versions
-This is documentation for Abris **version 4**. Documentation for **version 3** is located in 
+This is documentation for Abris **version 5**. Documentation for older versions is located in corresponding branches:
+[branch-4](https://github.com/AbsaOSS/ABRiS/tree/branch-4),
 [branch-3.2](https://github.com/AbsaOSS/ABRiS/tree/branch-3.2).
+
+## Spark Avro Version
+Abris by default uses Spark Avro version 2.4, but it is recommended to use the version matching the used Spark Core version.
+To do this override the dependency on `org.apache.spark:spark-avro`.
+
+For example why is this beneficial: Spark Avro 3.0 accepts nullable columns even for non-nullable avro schema.
+This means the Spark schema doesn't need to be changed (to non-nullable columns) for avro conversion to succeed.
+
+## Confluent Schema Registry Version
+Abris by default uses Confluent client version 5.3.4. Although Abris is able to work with newer versions as well
+the Avro 1.8 used by Spark is not compatible with them.
+
+Spark 3.2 uses Avro 1.10 which should work well with newer Confluent. Abris for Spark 3.2 is in development.
 
 ## Usage
 
-ABRiS API is in it's most basic form almost identical to Spark built-in support for Avro, but it provides additional functionality. Mainly it's support of schema registry and also seamless integration with confluent Avro data format.
+ABRiS API is in it's most basic form almost identical to Spark built-in support for Avro, but it provides additional functionality. 
+Mainly it's support of schema registry and also seamless integration with confluent Avro data format.
 
 The API consists of two Spark SQL expressions (`to_avro` and `from_avro`) and fluent configurator (`AbrisConfig`)
 
@@ -64,7 +80,9 @@ Full runnable examples can be found in the ```za.co.absa.abris.examples``` packa
 `provided` scope, or change the scope directly.
 
 ### Confluent Avro format    
-The format of Avro binary data is defined in [Avro specification](http://avro.apache.org/docs/current/spec.html). Confluent format extends it and prepends the schema id before the actual record. The Confluent expressions in this library expect this format and add the id after the Avro data are generated or remove it before they are parsed.
+The format of Avro binary data is defined in [Avro specification](http://avro.apache.org/docs/current/spec.html). 
+Confluent format extends it and prepends the schema id before the actual record. 
+The Confluent expressions in this library expect this format and add the id after the Avro data are generated or remove it before they are parsed.
 
 You can find more about Confluent and Schema Registry in [Confluent documentation](https://docs.confluent.io/current/schema-registry/index.html).
 
@@ -74,8 +92,8 @@ You can find more about Confluent and Schema Registry in [Confluent documentatio
 Only Schema registry client setting that is mandatory is the url, 
 but if you need to provide more the configurer allows you to provide a whole map.
 
-For example you may want to provide `basic.auth.user.info` and `basic.auth.credentials.source` required for user authentication.
-You can do this this way:
+For example, you may want to provide `basic.auth.user.info` and `basic.auth.credentials.source` required for user authentication.
+You can do it this way:
 
 ```scala
 val registryConfig = Map(
@@ -148,13 +166,6 @@ because all rows in dataframe must have the same schema.
 
 So if you have multiple incompatible types of avro data in a dataframe you must first sort them out to several dataframes.
 One for each schema. Then you can use Abris and convert the avro data.
-
-## Avro Fixed type
-**Fixed** is an alternative way of encoding binary data in Avro. 
-Unlike *bytes* type the fixed type doesn't store the length of the data in the payload, but in Avro schema itself.
-
-The corresponding data type in Spark is **BinaryType**, but the inferred schema will always use bytes type for this kind of data. 
-If you want to use the fixed type you must provide the appropriate Avro schema.
 
 ---
 
