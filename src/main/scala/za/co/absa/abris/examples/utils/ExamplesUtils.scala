@@ -23,7 +23,6 @@ import org.apache.spark.sql.{DataFrameWriter, Row, SparkSession}
 import org.slf4j.LoggerFactory
 import za.co.absa.commons.annotation.DeveloperApi
 
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 @DeveloperApi
@@ -56,7 +55,7 @@ object ExamplesUtils {
   def loadProperties(args: Array[String]): Properties = {
     logger.debug("Loading properties from: " + args(0))
     val properties = ExamplesUtils.loadProperties(args(0))
-    for (key <- properties.keysIterator) {
+    for (key <- properties.asScala.keysIterator) {
       logger.debug(s"\t$key = ${properties.getProperty(key)}")
     }
     properties
