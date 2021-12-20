@@ -20,9 +20,8 @@ import org.apache.spark.sql.Row
 import za.co.absa.commons.annotation.DeveloperApi
 
 import java.nio.ByteBuffer
-import scala.collection.JavaConverters.{asScalaBufferConverter, seqAsJavaListConverter}
-import scala.collection.{Map, Seq}
 import scala.util.Random
+import scala.collection.JavaConverters._
 
 /**
  * This class provides methods to generate example/test data.
@@ -44,7 +43,7 @@ object ComplexRecordsGenerator {
     result.toList
   }
 
-  private def getDataSeq(): Seq[Object] = {
+  private def getDataSeq(): Seq[Any] = {
     val map = Map[String, Seq[Long]](
       "entry1" -> randomSeqOfLongs(20),
       "entry2" -> randomSeqOfLongs(30))
@@ -70,7 +69,7 @@ object ComplexRecordsGenerator {
   }
 
   private def randomSeqOfLongs(listSize: Int) = {
-    randomListOfLongs(listSize).asScala
+    randomListOfLongs(listSize).asScala.toSeq
   }
 
   private def randomListOfStrings(listSize: Int, stringLength: Int) = {
@@ -86,7 +85,7 @@ object ComplexRecordsGenerator {
   }
 
   private def randomString(length: Int): String = {
-    val randomStream: Stream[Char] = Random.alphanumeric
+    val randomStream = Random.alphanumeric
     randomStream.take(length).mkString
   }
 }
