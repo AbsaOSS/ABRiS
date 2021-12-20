@@ -56,6 +56,7 @@
         <default.scala.version>${scala_2.12.version}</default.scala.version>
 
         <scala_2.12.version>2.12.10</scala_2.12.version>
+        <scala_2.13.version>2.13.7</scala_2.13.version>
 
         <!-- Controlled by `scala-cross-build` plugin -->
         <scala.version>2.12.10</scala.version>
@@ -195,7 +196,7 @@
         <dependency>
             <groupId>za.co.absa.commons</groupId>
             <artifactId>commons_${scala.compat.version}</artifactId>
-            <version>0.1.0</version>
+            <version>1.0.0</version>
         </dependency>
 
     </dependencies>
@@ -304,6 +305,14 @@
             <properties>
                 <scala.compat.version>2.12</scala.compat.version>
                 <scala.version>${scala_2.12.version}</scala.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>scala-2.13</id>
+            <properties>
+                <scala.compat.version>2.13</scala.compat.version>
+                <scala.version>${scala_2.13.version}</scala.version>
             </properties>
         </profile>
 

@@ -24,7 +24,6 @@ import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
 import scala.collection.JavaConverters._
-import scala.collection._
 
 class SparkAvroConversionsSpec extends FlatSpec with Matchers {
 
