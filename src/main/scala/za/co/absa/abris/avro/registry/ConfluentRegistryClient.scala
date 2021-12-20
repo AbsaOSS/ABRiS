@@ -15,34 +15,14 @@
  */
 
 package za.co.absa.abris.avro.registry
-import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaMetadata, SchemaRegistryClient}
+import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
-import org.apache.avro.Schema
 
-import java.util
 import scala.collection.JavaConverters._
 
-class ConfluentRegistryClient(client: SchemaRegistryClient) extends AbrisRegistryClient {
+class ConfluentRegistryClient(client: SchemaRegistryClient) extends AbstractAbrisRegistryClient(client) {
 
   def this(configs: Map[String,String]) = this(ConfluentRegistryClient.createClient(configs))
-
-  override def getAllVersions(subject: String): util.List[Integer] =
-    client.getAllVersions(subject)
-
-  override def testCompatibility(subject: String, schema: Schema): Boolean =
-    client.testCompatibility(subject, schema)
-
-  override def register(subject: String, schema: Schema): Int =
-    client.register(subject, schema)
-
-  override def getLatestSchemaMetadata(subject: String): SchemaMetadata =
-    client.getLatestSchemaMetadata(subject)
-
-  override def getSchemaMetadata(subject: String, version: Int): SchemaMetadata =
-    client.getSchemaMetadata(subject, version)
-
-  override def getById(schemaId: Int): Schema =
-    client.getById(schemaId)
 }
 
 object ConfluentRegistryClient {
