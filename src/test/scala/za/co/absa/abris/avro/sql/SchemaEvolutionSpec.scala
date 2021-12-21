@@ -18,14 +18,16 @@ package za.co.absa.abris.avro.sql
 
 import org.apache.spark.sql.functions.{lit, struct}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.{ConfluentMockRegistryClient, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
 
-class SchemaEvolutionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
+class SchemaEvolutionSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach
 {
   private val spark = SparkSession
     .builder()
