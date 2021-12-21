@@ -34,7 +34,7 @@ class FromAvroConfigSpec extends AnyFlatSpec with Matchers {
     map(Key.WriterSchema) shouldBe "foo"
     map(Key.ReaderSchema) shouldBe "bar"
 
-    config.schemaRegistryConf.get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe "url"
+    config.schemaRegistryConf().get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe "url"
   }
 
   it should "support the legacy constructor and methods" in {
