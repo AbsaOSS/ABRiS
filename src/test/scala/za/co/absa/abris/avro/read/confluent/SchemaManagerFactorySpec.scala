@@ -16,13 +16,14 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import org.scalatest.{BeforeAndAfterEach, FlatSpec}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentMockRegistryClient, ConfluentRegistryClient, TestRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
 
 import scala.reflect.runtime.{universe => ru}
 
-class SchemaManagerFactorySpec extends FlatSpec with BeforeAndAfterEach {
+class SchemaManagerFactorySpec extends AnyFlatSpec with BeforeAndAfterEach {
 
   private val schemaRegistryConfig1 = Map(AbrisConfig.SCHEMA_REGISTRY_URL -> "http://dummy")
 

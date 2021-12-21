@@ -19,7 +19,9 @@ package za.co.absa.abris.avro.sql
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.struct
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -28,7 +30,7 @@ import za.co.absa.abris.avro.registry.{ConfluentMockRegistryClient, SchemaSubjec
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.abris.examples.data.generation.{ComplexRecordsGenerator, TestSchemas}
 
-class CatalystAvroConversionSpec extends FlatSpec with Matchers with BeforeAndAfterEach
+class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach
 {
   private val spark = SparkSession
     .builder()

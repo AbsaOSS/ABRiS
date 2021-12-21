@@ -16,11 +16,11 @@
 
 package za.co.absa.abris.config
 
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.config.ToAvroConfig.Key
 
-class ToAvroConfigSpec extends FlatSpec with Matchers {
+class ToAvroConfigSpec extends AnyFlatSpec with Matchers {
 
   behavior of "ToAvroConfig"
 

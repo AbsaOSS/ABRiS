@@ -24,6 +24,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.avro.SchemaConverters
 import org.apache.spark.sql.functions.struct
 
+import java.nio.charset.Charset
 import scala.collection.JavaConverters._
 
 /**
@@ -53,7 +54,7 @@ object AvroSchemaUtils {
     }
     val hdfs = FileSystem.get(new Configuration())
     val stream = hdfs.open(new Path(path))
-    try IOUtils.readLines(stream).asScala.mkString("\n") finally stream.close()
+    try IOUtils.readLines(stream, Charset.defaultCharset).asScala.mkString("\n") finally stream.close()
   }
 
   def toAvroSchema(
