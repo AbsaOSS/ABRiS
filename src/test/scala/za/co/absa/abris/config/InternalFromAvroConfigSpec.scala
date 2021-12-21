@@ -17,10 +17,10 @@
 package za.co.absa.abris.config
 
 import org.apache.avro.SchemaBuilder
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class InternalFromAvroConfigSpec extends FlatSpec with Matchers {
+class InternalFromAvroConfigSpec extends AnyFlatSpec with Matchers {
 
   import InternalFromAvroConfigSpec._
 

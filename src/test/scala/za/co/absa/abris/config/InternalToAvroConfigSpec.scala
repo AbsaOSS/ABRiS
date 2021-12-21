@@ -17,10 +17,10 @@
 package za.co.absa.abris.config
 
 import org.apache.avro.SchemaBuilder
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class InternalToAvroConfigSpec extends FlatSpec with Matchers {
+class InternalToAvroConfigSpec extends AnyFlatSpec with Matchers {
 
   import InternalToAvroConfigSpec._
 
@@ -61,4 +61,3 @@ object InternalToAvroConfigSpec {
     .name("bytes_name").`type`().stringType().noDefault()
     .endRecord()
 }
-
