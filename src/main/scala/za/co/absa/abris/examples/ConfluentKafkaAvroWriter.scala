@@ -17,7 +17,7 @@
 package za.co.absa.abris.examples
 
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.functions.{col, struct}
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
@@ -49,7 +49,7 @@ object ConfluentKafkaAvroWriter {
     val schemaString = ComplexRecordsGenerator.usedAvroSchema
 
     // to serialize all columns in dataFrame we need to put them in a spark struct
-    val allColumns = struct(dataFrame.columns.head, dataFrame.columns.tail: _*)
+    val allColumns = struct(dataFrame.columns.map(col).toIndexedSeq: _*)
 
     val abrisConfig = AbrisConfig
       .toConfluentAvro
@@ -59,7 +59,7 @@ object ConfluentKafkaAvroWriter {
 
     import za.co.absa.abris.avro.functions.to_avro
 
-    val avroFrame = dataFrame.select(to_avro(allColumns, abrisConfig) as 'value)
+    val avroFrame = dataFrame.select(to_avro(allColumns, abrisConfig) as "value")
 
     avroFrame
       .write
