@@ -95,7 +95,7 @@ object AvroSchemaUtils {
     recordName: String,
     nameSpace: String
   ): Schema =
-    toAvroSchema(dataFrame, dataFrame.columns, recordName, nameSpace)
+    toAvroSchema(dataFrame, dataFrame.columns.toIndexedSeq, recordName, nameSpace)
 
   def wrapSchema(schema: Schema, name: String, namespace: String): Schema = {
     SchemaBuilder.record(name)
