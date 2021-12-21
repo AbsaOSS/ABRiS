@@ -56,7 +56,7 @@ object ConfluentKafkaAvroReader {
       .usingSchemaRegistry("http://localhost:8081")
 
     import za.co.absa.abris.avro.functions.from_avro
-    val deserialized = dataFrame.select(from_avro(col("value"), abrisConfig) as 'data)
+    val deserialized = dataFrame.select(from_avro(col("value"), abrisConfig) as "data")
 
     deserialized.printSchema()
 
