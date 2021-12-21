@@ -16,14 +16,15 @@
 
 package za.co.absa.abris.avro.schemas
 
-import java.io.File
-
 import org.apache.commons.io.FileUtils
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
-class SchemaLoaderSpec extends FlatSpec {
+import java.io.File
+import java.nio.charset.Charset
+
+class SchemaLoaderSpec extends AnyFlatSpec {
 
   private val testDir = new File("testDirSchemaLoader")
 
@@ -44,7 +45,7 @@ class SchemaLoaderSpec extends FlatSpec {
 
   private def writeIntoFS(schema: String, name: String): File = {
     val destination = new File(testDir, name)
-    FileUtils.write(destination, schema)
+    FileUtils.write(destination, schema, Charset.defaultCharset)
     destination
   }
 }
