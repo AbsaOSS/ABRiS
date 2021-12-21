@@ -17,7 +17,7 @@
 package za.co.absa.abris.avro
 
 import org.apache.spark.sql.DataFrame
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 package object sql {
 

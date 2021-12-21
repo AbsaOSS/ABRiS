@@ -16,12 +16,13 @@
 
 package za.co.absa.abris.avro.read.confluent
 
-import org.scalatest.{BeforeAndAfter, FlatSpec}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.registry.{ConfluentMockRegistryClient, LatestVersion, NumVersion, SchemaSubject}
 import za.co.absa.abris.config.AbrisConfig
 
-class schemaManagerSpec extends FlatSpec with BeforeAndAfter {
+class schemaManagerSpec extends AnyFlatSpec with BeforeAndAfter {
 
   private val schema = AvroSchemaUtils.parse(
     "{\"type\": \"record\", \"name\": \"Blah\", \"fields\": [{ \"name\": \"name\", \"type\": \"string\" }]}")

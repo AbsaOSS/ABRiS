@@ -19,14 +19,15 @@ package za.co.absa.abris.avro.format
 import org.apache.avro.Schema.Type
 import org.apache.avro.SchemaBuilder
 import org.apache.spark.sql.types._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
 import scala.collection.JavaConverters._
 import scala.collection._
 
-class SparkAvroConversionsSpec extends FlatSpec with Matchers {
+class SparkAvroConversionsSpec extends AnyFlatSpec with Matchers {
 
   // scalastyle:off magic.number
 

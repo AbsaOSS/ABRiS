@@ -16,10 +16,11 @@
 
 package za.co.absa.abris.avro.registry
 
-import org.scalatest.{BeforeAndAfter, FlatSpec}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 
-class SchemaSubjectSpec extends FlatSpec with BeforeAndAfter {
+class SchemaSubjectSpec extends AnyFlatSpec with BeforeAndAfter {
 
   private val schema = AvroSchemaUtils.parse(
     """{
