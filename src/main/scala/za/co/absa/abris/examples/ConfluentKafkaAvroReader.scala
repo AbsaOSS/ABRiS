@@ -18,9 +18,12 @@ package za.co.absa.abris.examples
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.streaming.Trigger
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.SchemaSubject
 import za.co.absa.abris.config.AbrisConfig
+
+import scala.concurrent.duration.DurationInt
 
 object ConfluentKafkaAvroReader {
 
@@ -63,6 +66,7 @@ object ConfluentKafkaAvroReader {
     deserialized
       .writeStream
       .format("console")
+      .trigger(Trigger.ProcessingTime(5.seconds))
       .option("truncate", "false")
       .start()
       .awaitTermination()
