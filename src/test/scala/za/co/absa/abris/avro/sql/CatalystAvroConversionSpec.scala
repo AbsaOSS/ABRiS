@@ -17,7 +17,7 @@
 package za.co.absa.abris.avro.sql
 
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.functions.{col, struct}
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
@@ -53,7 +53,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
     spark.sparkContext.parallelize(rows, 2).toDF()
   }
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     val mockedSchemaRegistryClient = new ConfluentMockRegistryClient()
     SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
   }
@@ -63,15 +63,15 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
   it should "convert one type with bare schema to avro an back" in {
 
     val allDate: DataFrame = getTestingDataFrame
-    val dataFrame: DataFrame = allDate.select('bytes)
+    val dataFrame: DataFrame = allDate.select(col("bytes"))
 
     val avroBytes = dataFrame
-      .select(to_avro('bytes, bareByteSchema) as 'avroBytes)
+      .select(to_avro(col("bytes"), bareByteSchema) as "avroBytes")
 
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('avroBytes, bareByteSchema) as 'bytes)
+      .select(from_avro(col("avroBytes"), bareByteSchema) as "bytes")
 
     shouldEqualByData(dataFrame, result)
   }
@@ -81,15 +81,15 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
   it should "convert string type with bare schema to avro an back" in {
 
     val allDate: DataFrame = getTestingDataFrame
-    val dataFrame: DataFrame = allDate.select('string)
+    val dataFrame: DataFrame = allDate.select(col("string"))
 
     val avroBytes = dataFrame
-      .select(to_avro('string, stringTypeSchema) as 'avroBytes)
+      .select(to_avro(col("string"), stringTypeSchema) as "avroBytes")
 
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('avroBytes, stringTypeSchema) as 'string)
+      .select(from_avro(col("avroBytes"), stringTypeSchema) as "string")
 
     shouldEqualByData(dataFrame, result)
   }
@@ -106,15 +106,15 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
   it should "convert one type inside a record to avro an back" in {
 
     val allData: DataFrame = getTestingDataFrame
-    val dataFrame: DataFrame = allData.select(struct(allData("bytes")) as 'bytes)
+    val dataFrame: DataFrame = allData.select(struct(allData("bytes")) as "bytes")
 
     val avroBytes = dataFrame
-      .select(to_avro('bytes, recordByteSchema) as 'avroBytes)
+      .select(to_avro(col("bytes"), recordByteSchema) as "avroBytes")
 
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('avroBytes, recordByteSchema) as 'bytes)
+      .select(from_avro(col("avroBytes"), recordByteSchema) as "bytes")
 
     shouldEqualByData(dataFrame, result)
   }
@@ -144,15 +144,15 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
   it should "convert one type inside a record inside another record to avro an back" in {
 
     val allDate: DataFrame = getTestingDataFrame
-    val dataFrame: DataFrame = allDate.select(struct(struct(allDate("bytes"))) as 'bytes)
+    val dataFrame: DataFrame = allDate.select(struct(struct(allDate("bytes"))) as "bytes")
 
     val avroBytes = dataFrame
-      .select(to_avro('bytes, recordRecordByteSchema) as 'avroBytes)
+      .select(to_avro(col("bytes"), recordRecordByteSchema) as "avroBytes")
 
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('avroBytes, recordRecordByteSchema) as 'bytes)
+      .select(from_avro(col("avroBytes"), recordRecordByteSchema) as "bytes")
 
     shouldEqualByData(dataFrame, result)
   }
@@ -193,15 +193,15 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
           allData("long")
         )
       )
-      as 'bytes)
+      as "bytes")
 
     val avroBytes = dataFrame
-      .select(to_avro('bytes, complexRecordRecordSchema) as 'avroBytes)
+      .select(to_avro(col("bytes"), complexRecordRecordSchema) as "avroBytes")
 
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('avroBytes, complexRecordRecordSchema) as 'bytes)
+      .select(from_avro(col("avroBytes"), complexRecordRecordSchema) as "bytes")
 
     shouldEqualByData(dataFrame, result)
   }
@@ -222,15 +222,15 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
   it should "convert nullable type to avro and back" in {
 
     val allData: DataFrame = getTestingDataFrame
-    val dataFrame: DataFrame = allData.select(struct(allData("string")) as 'input)
+    val dataFrame: DataFrame = allData.select(struct(allData("string")) as "input")
 
     val avroBytes = dataFrame
-      .select(to_avro('input, stringSchema) as 'bytes)
+      .select(to_avro(col("input"), stringSchema) as "bytes")
 
     avroBytes.collect() // force evaluation
 
     val result = avroBytes
-      .select(from_avro('bytes, stringSchema) as 'input)
+      .select(from_avro(col("bytes"), stringSchema) as "input")
 
     shouldEqualByData(dataFrame, result)
   }
@@ -242,9 +242,9 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
 
     val schemaString = ComplexRecordsGenerator.usedAvroSchema
     val result = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
-      .select(to_avro('input, schemaString) as 'bytes)
-      .select(from_avro('bytes, schemaString) as 'result)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
+      .select(to_avro(col("input"), schemaString) as "bytes")
+      .select(from_avro(col("bytes"), schemaString) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -259,13 +259,13 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
     val schemaString = TestSchemas.NATIVE_COMPLETE_SCHEMA_WITHOUT_FIXED
 
     val input = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
 
     val inputSchema = AvroSchemaUtils.toAvroSchema(input, "input").toString
 
     val result = input
-      .select(to_avro('input, inputSchema) as 'bytes)
-      .select(from_avro('bytes, schemaString) as 'result)
+      .select(to_avro(col("input"), inputSchema) as "bytes")
+      .select(from_avro(col("bytes"), schemaString) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -277,10 +277,10 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
     val inputSchema = AvroSchemaUtils.toAvroSchema(allData, "int").toString
 
     val result = allData
-      .select(to_avro('int, inputSchema) as 'avroInt)
-      .select(from_avro('avroInt, inputSchema) as 'int)
+      .select(to_avro(col("int"), inputSchema) as "avroInt")
+      .select(from_avro(col("avroInt"), inputSchema) as "int")
 
-    shouldEqualByData(allData.select('int), result)
+    shouldEqualByData(allData.select(col("int")), result)
   }
 
   it should "convert one type to avro an back using schema registry and schema generation" in {
@@ -294,7 +294,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val avroBytes = dataFrame
-      .select(to_avro('bytes, toAvroConfig) as 'avroBytes)
+      .select(to_avro(col("bytes"), toAvroConfig) as "avroBytes")
 
     avroBytes.collect() // force evaluation
 
@@ -305,9 +305,9 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
-      .select(from_avro('avroBytes, fromAvroConfig) as 'bytes)
+      .select(from_avro(col("avroBytes"), fromAvroConfig) as "bytes")
 
-    shouldEqualByData(dataFrame.select('bytes), result)
+    shouldEqualByData(dataFrame.select(col("bytes")), result)
   }
 
   it should "convert all types of data to avro an back using schema registry" in {
@@ -322,8 +322,8 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val avroBytes = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
-      .select(to_avro('input, toAvroConfig) as 'bytes)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
+      .select(to_avro(col("input"), toAvroConfig) as "bytes")
 
     avroBytes.collect() // force evaluation
 
@@ -334,7 +334,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
-      .select(from_avro('bytes, fromAvroConfig) as 'result)
+      .select(from_avro(col("bytes"), fromAvroConfig) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -344,7 +344,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
 
     val dataFrame: DataFrame = getTestingDataFrame
     val inputFrame = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
 
     val inputSchema = AvroSchemaUtils.toAvroSchema(
       inputFrame,
@@ -360,7 +360,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val avroBytes = inputFrame
-      .select(to_avro('input, toAvroConfig) as 'bytes)
+      .select(to_avro(col("input"), toAvroConfig) as "bytes")
 
     avroBytes.collect() // force evaluation
 
@@ -371,7 +371,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
-      .select(from_avro('bytes, fromAvroConfig) as 'result)
+      .select(from_avro(col("bytes"), fromAvroConfig) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -381,7 +381,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
 
     val dataFrame: DataFrame = getTestingDataFrame
     val inputFrame = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
 
     val inputSchema = AvroSchemaUtils.toAvroSchema(
       inputFrame,
@@ -397,7 +397,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val avroBytes = inputFrame
-      .select(to_avro('input, toConfig) as 'bytes)
+      .select(to_avro(col("input"), toConfig) as "bytes")
 
     avroBytes.collect() // force evaluation
 
@@ -409,7 +409,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
 
 
     val result = avroBytes
-      .select(from_avro('bytes, fromConfig) as 'result)
+      .select(from_avro(col("bytes"), fromConfig) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -427,8 +427,8 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val avroBytes = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
-      .select(to_avro('input, toConfig) as 'bytes)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
+      .select(to_avro(col("input"), toConfig) as "bytes")
 
     avroBytes.collect() // force evaluation
 
@@ -438,7 +438,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
-      .select(from_avro('bytes, fromConfig) as 'result)
+      .select(from_avro(col("bytes"), fromConfig) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -459,8 +459,8 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val avroBytes = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
-      .select(to_avro('input, toConfig) as 'bytes)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
+      .select(to_avro(col("input"), toConfig) as "bytes")
 
     avroBytes.collect() // force evaluation
 
@@ -471,7 +471,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
-      .select(from_avro('bytes, fromConfig) as 'result)
+      .select(from_avro(col("bytes"), fromConfig) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)
@@ -489,8 +489,8 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val avroBytes = dataFrame
-      .select(struct(dataFrame.columns.head, dataFrame.columns.tail: _*) as 'input)
-      .select(to_avro('input, toConfig) as 'bytes)
+      .select(struct(dataFrame.columns.map(col).toIndexedSeq: _*) as "input")
+      .select(to_avro(col("input"), toConfig) as "bytes")
 
     avroBytes.collect() // force evaluation
 
@@ -501,7 +501,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
-      .select(from_avro('bytes, fromConfig) as 'result)
+      .select(from_avro(col("bytes"), fromConfig) as "result")
       .select("result.*")
 
     shouldEqualByData(dataFrame, result)

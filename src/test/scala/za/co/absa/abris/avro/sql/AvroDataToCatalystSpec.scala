@@ -17,6 +17,7 @@
 package za.co.absa.abris.avro.sql
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.col
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
@@ -48,7 +49,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
         "basic.auth.user.info" -> sensitiveData
       ))
 
-    val column = from_avro('avroBytes, fromAvroConfig)
+    val column = from_avro(col("avroBytes"), fromAvroConfig)
     column.expr.toString() should not include sensitiveData
   }
 
