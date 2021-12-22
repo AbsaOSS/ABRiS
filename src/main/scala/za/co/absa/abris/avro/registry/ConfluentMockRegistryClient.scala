@@ -18,24 +18,13 @@ package za.co.absa.abris.avro.registry
 
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException
 import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, SchemaMetadata, SchemaRegistryClient}
-import org.apache.avro.Schema
 
 import java.io.IOException
-import java.util
 
 
-class ConfluentMockRegistryClient(client: SchemaRegistryClient) extends AbrisRegistryClient {
+class ConfluentMockRegistryClient(client: SchemaRegistryClient) extends AbstractConfluentRegistryClient(client) {
 
   def this() = this(new MockSchemaRegistryClient())
-
-  override def getAllVersions(subject: String): util.List[Integer] =
-    client.getAllVersions(subject)
-
-  override def testCompatibility(subject: String, schema: Schema): Boolean =
-    client.testCompatibility(subject, schema)
-
-  override def register(subject: String, schema: Schema): Int =
-    client.register(subject, schema)
 
   /**
    * MockSchemaRegistryClient is throwing different Exception than the mocked client, this is a workaround
@@ -49,10 +38,4 @@ class ConfluentMockRegistryClient(client: SchemaRegistryClient) extends AbrisReg
         throw new RestClientException("No schema registered under subject!", 404, 40401)
     }
   }
-
-  override def getSchemaMetadata(subject: String, version: Int): SchemaMetadata =
-    client.getSchemaMetadata(subject, version)
-
-  override def getById(schemaId: Int): Schema =
-    client.getById(schemaId)
 }
