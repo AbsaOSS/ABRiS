@@ -23,7 +23,7 @@ import org.apache.avro.Schema
 import java.util
 
 
-abstract class AbstractAbrisRegistryClient(client: SchemaRegistryClient) extends AbrisRegistryClient {
+abstract class AbstractConfluentRegistryClient(client: SchemaRegistryClient) extends AbrisRegistryClient {
 
   override def getAllVersions(subject: String): util.List[Integer] =
     client.getAllVersions(subject)

@@ -22,7 +22,7 @@ import io.confluent.kafka.schemaregistry.client.{MockSchemaRegistryClient, Schem
 import java.io.IOException
 
 
-class ConfluentMockRegistryClient(client: SchemaRegistryClient) extends AbstractAbrisRegistryClient(client) {
+class ConfluentMockRegistryClient(client: SchemaRegistryClient) extends AbstractConfluentRegistryClient(client) {
 
   def this() = this(new MockSchemaRegistryClient())
 

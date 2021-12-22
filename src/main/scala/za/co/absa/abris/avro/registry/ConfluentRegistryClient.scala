@@ -20,7 +20,7 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 
 import scala.collection.JavaConverters._
 
-class ConfluentRegistryClient(client: SchemaRegistryClient) extends AbstractAbrisRegistryClient(client) {
+class ConfluentRegistryClient(client: SchemaRegistryClient) extends AbstractConfluentRegistryClient(client) {
 
   def this(configs: Map[String,String]) = this(ConfluentRegistryClient.createClient(configs))
 }
