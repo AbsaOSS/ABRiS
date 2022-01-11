@@ -19,30 +19,28 @@
 |:------:|:-------:|
 | 2.11   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.11) |
 | 2.12   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12) |
+| 2.13   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.13) |
 
-## Supported Spark versions
-On spark 2.4.x, 3.0.x and 3.1.x Abris should work without any further requirements.
+## Supported versions
 
-On Spark 2.3.x you must declare dependency on ```org.apache.avro:avro:1.8.0``` or higher. 
-(Spark 2.3.x uses Avro 1.7.x so you must overwrite this because ABRiS needs Avro 1.8.0+.)
+| Abris   | Spark         | Scala       |
+|:-----:  |:-----:        |:-----:      |
+| 6.0.x   | 3.2.x         | 2.12 / 2.13 |
+| 5.0.x   | 3.0.x / 3.1.x | 2.12        |
+| 5.0.x   | 2.4.x         | 2.11 / 2.12 |
+
+From version 6.0.0, ABRiS only supports Spark 3.2.x.
+
+ABRiS 5.0.x is still supported for older versions of Spark (see [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5))
 
 ## Older Versions
-This is documentation for Abris **version 5**. Documentation for older versions is located in corresponding branches:
+This is documentation for Abris **version 6**. Documentation for older versions is located in corresponding branches:
+[branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5),
 [branch-4](https://github.com/AbsaOSS/ABRiS/tree/branch-4),
 [branch-3.2](https://github.com/AbsaOSS/ABRiS/tree/branch-3.2).
 
-## Spark Avro Version
-Abris by default uses Spark Avro version 2.4, but it is recommended to use the version matching the used Spark Core version.
-To do this override the dependency on `org.apache.spark:spark-avro`.
-
-For example why is this beneficial: Spark Avro 3.0 accepts nullable columns even for non-nullable avro schema.
-This means the Spark schema doesn't need to be changed (to non-nullable columns) for avro conversion to succeed.
-
 ## Confluent Schema Registry Version
-Abris by default uses Confluent client version 5.3.4. Although Abris is able to work with newer versions as well
-the Avro 1.8 used by Spark is not compatible with them.
-
-Spark 3.2 uses Avro 1.10 which should work well with newer Confluent. Abris for Spark 3.2 is in development.
+Abris by default uses Confluent client version 6.2.0.
 
 ## Usage
 
