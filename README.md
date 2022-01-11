@@ -21,10 +21,17 @@
 | 2.12   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.12) |
 | 2.13   | [![Maven Central](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/za.co.absa/abris_2.13) |
 
-## Supported Spark versions
+## Supported versions
+
+| Abris   | Spark         | Scala       |
+|:-----:  |:-----:        |:-----:      |
+| 6.0.x   | 3.2.x         | 2.12 / 2.13 |
+| 5.0.x   | 3.0.x / 3.1.x | 2.12        |
+| 5.0.x   | 2.4.x         | 2.11 / 2.12 |
+
 From version 6.0.0, ABRiS only supports Spark 3.2.x.
 
-For older versions of Spark, please use version 5.0.0 (see [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5))
+ABRiS 5.0.x is still supported for older versions of Spark (see [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5))
 
 ## Older Versions
 This is documentation for Abris **version 6**. Documentation for older versions is located in corresponding branches:
