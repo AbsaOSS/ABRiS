@@ -17,6 +17,7 @@
 package za.co.absa.abris.config
 
 import org.apache.avro.Schema
+import za.co.absa.abris.avro.errors.{DeserializationExceptionHandler, NullExceptionHandler}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.config.FromAvroConfig.Key
 
@@ -31,4 +32,6 @@ private[abris] class InternalFromAvroConfig(map: Map[String, Any]) {
   val schemaConverter: Option[String] = map
     .get(Key.SchemaConverter)
     .map(_.asInstanceOf[String])
+
+  val deserializationHandler: DeserializationExceptionHandler = new NullExceptionHandler
 }
