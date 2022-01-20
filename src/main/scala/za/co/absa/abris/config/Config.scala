@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.config
 
+import za.co.absa.abris.avro.errors.DeserializationExceptionHandler
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry._
@@ -258,6 +259,7 @@ class FromSchemaDownloadingConfigFragment(
   }
 }
 
+
 class FromConfluentAvroConfigFragment {
   def downloadReaderSchemaById(schemaId: Int): FromSchemaDownloadingConfigFragment =
     new FromSchemaDownloadingConfigFragment(Left(new IdCoordinate(schemaId)), true)
@@ -328,6 +330,15 @@ class FromAvroConfig private(
       schemaRegistryConf
     )
 
+  /**
+   * @param exceptionHandler exception handler used for converting from avro
+   */
+  def withExceptionHandler(exceptionHandler: DeserializationExceptionHandler): FromAvroConfig =
+    new FromAvroConfig(
+      abrisConfig + (Key.ExceptionHandler -> exceptionHandler),
+      schemaRegistryConf
+    )
+
   def validate(): Unit = {
     if(!abrisConfig.contains(Key.ReaderSchema)) {
       throw new IllegalArgumentException(s"Missing mandatory config property ${Key.ReaderSchema}")
@@ -344,5 +355,6 @@ object FromAvroConfig {
   private[abris] object Key {
     val ReaderSchema = "readerSchema"
     val WriterSchema = "writerSchema"
+    val ExceptionHandler = "exceptionHandler"
   }
 }
