@@ -16,6 +16,8 @@
 
 package za.co.absa.abris.config
 
+import org.apache.avro.Schema
+import org.apache.spark.sql.types.DataType
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry._
@@ -330,6 +332,12 @@ class FromAvroConfig private(
       schemaRegistryConf
     )
 
+  def withSchemaConverter(schemaConverter: Schema => DataType): FromAvroConfig =
+    new FromAvroConfig(
+      abrisConfig + (Key.SchemaConverter -> schemaConverter),
+      schemaRegistryConf
+    )
+
   def validate(): Unit = {
     if(!abrisConfig.contains(Key.ReaderSchema)) {
       throw new IllegalArgumentException(s"Missing mandatory config property ${Key.ReaderSchema}")
@@ -346,5 +354,6 @@ object FromAvroConfig {
   private[abris] object Key {
     val ReaderSchema = "readerSchema"
     val WriterSchema = "writerSchema"
+    val SchemaConverter = "schemaConverter"
   }
 }

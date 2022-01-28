@@ -17,6 +17,7 @@
 package za.co.absa.abris.config
 
 import org.apache.avro.Schema
+import org.apache.spark.sql.types.DataType
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.config.FromAvroConfig.Key
 
@@ -27,4 +28,8 @@ private[abris] class InternalFromAvroConfig(map: Map[String, Any]) {
   val writerSchema: Option[Schema] = map
     .get(Key.WriterSchema)
     .map(s => AvroSchemaUtils.parse(s.asInstanceOf[String]))
+
+  val schemaConverter: Option[Schema => DataType] = map
+    .get(Key.SchemaConverter)
+    .map(_.asInstanceOf[Schema => DataType])
 }
