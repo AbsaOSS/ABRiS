@@ -17,14 +17,17 @@
 
 package za.co.absa.abris.avro.errors
 
+import org.apache.avro.Schema
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.types.DataType
+import za.co.absa.abris.avro.format.ScalaAvroRecord
+import za.co.absa.abris.avro.sql.AvroDeserializer
 
+class EmptyExceptionHandler extends DeserializationExceptionHandler with Logging with Serializable {
 
-class NullExceptionHandler extends DeserializationExceptionHandler with Logging with Serializable {
-
-  def handle(exception: Throwable): Any = {
-    logInfo("NullExceptionHandler", exception)
-    InternalRow.fromSeq(Seq("error"))
+  def handle(exception: Throwable, deserializer: AvroDeserializer, readerSchema: Schema, dataType: DataType): Any = {
+    logWarning("NullExceptionHandler", exception)
+    deserializer.deserialize(new ScalaAvroRecord(readerSchema))
+    logWarning("successfully handle exception")
   }
 }
