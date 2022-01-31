@@ -16,8 +16,6 @@
 
 package za.co.absa.abris.config
 
-import org.apache.avro.Schema
-import org.apache.spark.sql.types.LongType
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.config.FromAvroConfig.Key
@@ -27,7 +25,7 @@ class FromAvroConfigSpec extends AnyFlatSpec with Matchers {
   behavior of "FromAvroConfig"
 
   it should "provide all set configurations" in {
-    val dummySchemaConverter = (_: Schema) => LongType
+    val dummySchemaConverter = "dummy"
     val config = FromAvroConfig()
       .withWriterSchema("foo")
       .withReaderSchema("bar")

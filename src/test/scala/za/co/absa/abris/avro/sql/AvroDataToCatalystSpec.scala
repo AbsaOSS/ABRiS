@@ -16,27 +16,16 @@
 
 package za.co.absa.abris.avro.sql
 
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
-import org.scalatest.flatspec.AnyFlatSpec
+import org.apache.spark.sql.types.{IntegerType, LongType, StructField, StructType}
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.config.{AbrisConfig, FromAvroConfig}
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
 class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
-  private val spark = SparkSession
-    .builder()
-    .appName("unitTest")
-    .master("local[2]")
-    .config("spark.driver.bindAddress", "localhost")
-    .config("spark.ui.enabled", "false")
-    .getOrCreate()
-
-  import spark.implicits._
-
-
   it should "not print schema registry configs in the spark plan" in {
     val sensitiveData = "username:password"
     val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
@@ -53,4 +42,51 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
     column.expr.toString() should not include sensitiveData
   }
 
+  it should "use the default schema converter by default" in {
+    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
+    val dummyUrl = "dummyUrl"
+    val expectedDataType = StructType(Seq(
+      StructField("int", IntegerType, nullable = false),
+      StructField("long", LongType, nullable = false)
+    ))
+
+    val fromAvroConfig = FromAvroConfig()
+      .withReaderSchema(schemaString)
+      .withSchemaRegistryConfig(Map(
+        AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl
+      ))
+
+    val column = from_avro(col("avroBytes"), fromAvroConfig)
+    column.expr.dataType shouldBe expectedDataType
+  }
+
+  it should "use a custom schema converter" in {
+    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
+    val dummyUrl = "dummyUrl"
+
+    val fromAvroConfig = FromAvroConfig()
+      .withReaderSchema(schemaString)
+      .withSchemaRegistryConfig(Map(
+        AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl
+      ))
+      .withSchemaConverter(DummySchemaConverter.name)
+
+    val column = from_avro(col("avroBytes"), fromAvroConfig)
+    column.expr.dataType shouldBe DummySchemaConverter.dataType
+  }
+
+  it should "throw an error if the specified custom schema converter does not exist" in {
+    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
+    val dummyUrl = "dummyUrl"
+
+    val fromAvroConfig = FromAvroConfig()
+      .withReaderSchema(schemaString)
+      .withSchemaRegistryConfig(Map(
+        AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl
+      ))
+      .withSchemaConverter("nonexistent")
+
+    val ex = intercept[ClassNotFoundException](from_avro(col("avroBytes"), fromAvroConfig))
+    ex.getMessage should include ("nonexistent")
+  }
 }

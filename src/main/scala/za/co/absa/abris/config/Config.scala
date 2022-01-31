@@ -332,7 +332,7 @@ class FromAvroConfig private(
       schemaRegistryConf
     )
 
-  def withSchemaConverter(schemaConverter: Schema => DataType): FromAvroConfig =
+  def withSchemaConverter(schemaConverter: String): FromAvroConfig =
     new FromAvroConfig(
       abrisConfig + (Key.SchemaConverter -> schemaConverter),
       schemaRegistryConf
