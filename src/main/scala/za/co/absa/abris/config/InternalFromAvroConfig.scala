@@ -17,7 +17,7 @@
 package za.co.absa.abris.config
 
 import org.apache.avro.Schema
-import za.co.absa.abris.avro.errors.{DefaultExceptionHandler, DeserializationExceptionHandler, NullExceptionHandler}
+import za.co.absa.abris.avro.errors.{DefaultExceptionHandler, DeserializationExceptionHandler}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.config.FromAvroConfig.Key
 

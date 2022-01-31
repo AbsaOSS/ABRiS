@@ -15,10 +15,15 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.avro.errors;
+package za.co.absa.abris.avro.errors
+
+import org.apache.avro.Schema
+import org.apache.spark.sql.types.DataType
+import za.co.absa.abris.avro.sql.AvroDeserializer
+
 
 trait DeserializationExceptionHandler {
 
-  def handle(exception: Throwable) : Any
+  def handle(exception: Throwable, deserializer: AvroDeserializer, readerSchema: Schema, dataType: DataType) : Any
 
 }

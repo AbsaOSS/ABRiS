@@ -86,7 +86,7 @@ private[abris] case class AvroDataToCatalyst(
       // AvroRuntimeException, ArrayIndexOutOfBoundsException, etc.
       // To make it simple, catch all the exceptions here.
 //      case NonFatal(e) =>  throw new SparkException("Malformed records are detected in record parsing.", e)
-      case NonFatal(e) => deserializationHandler.handle(e)
+      case NonFatal(e) => deserializationHandler.handle(e, deserializer, readerSchema, dataType)
     }
   }
 
