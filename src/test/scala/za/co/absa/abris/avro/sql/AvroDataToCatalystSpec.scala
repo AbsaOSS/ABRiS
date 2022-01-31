@@ -60,7 +60,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
     column.expr.dataType shouldBe expectedDataType
   }
 
-  it should "use a custom schema converter" in {
+  it should "use a custom schema converter identified by the short name" in {
     val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
     val dummyUrl = "dummyUrl"
 
@@ -70,6 +70,21 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
         AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl
       ))
       .withSchemaConverter(DummySchemaConverter.name)
+
+    val column = from_avro(col("avroBytes"), fromAvroConfig)
+    column.expr.dataType shouldBe DummySchemaConverter.dataType
+  }
+
+  it should "use a custom schema converter identified by the fully qualified name" in {
+    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
+    val dummyUrl = "dummyUrl"
+
+    val fromAvroConfig = FromAvroConfig()
+      .withReaderSchema(schemaString)
+      .withSchemaRegistryConfig(Map(
+        AbrisConfig.SCHEMA_REGISTRY_URL -> dummyUrl
+      ))
+      .withSchemaConverter("za.co.absa.abris.avro.sql.DummySchemaConverter")
 
     val column = from_avro(col("avroBytes"), fromAvroConfig)
     column.expr.dataType shouldBe DummySchemaConverter.dataType

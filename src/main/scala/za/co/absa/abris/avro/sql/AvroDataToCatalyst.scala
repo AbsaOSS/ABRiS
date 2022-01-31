@@ -175,7 +175,7 @@ private[abris] case class AvroDataToCatalyst(
     import scala.collection.JavaConverters._
     nameOpt match {
       case Some(name) => ServiceLoader.load(classOf[SchemaConverter]).asScala
-        .find(c => c.shortName == name || c.getClass.getSimpleName == name || c.getClass.getName == name)
+        .find(c => c.shortName == name || c.getClass.getName == name)
         .getOrElse(throw new ClassNotFoundException(s"Could not find schema converter $name"))
       case None => new DefaultSchemaConverter()
     }
