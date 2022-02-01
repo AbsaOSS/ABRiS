@@ -155,6 +155,40 @@ val sqlSchema = new StructType(new StructField ....
 val avroSchema = SparkAvroConversions.toAvroSchema(sqlSchema, avro_schema_name, avro_schema_namespace)
 ```
 
+#### Custom data conversions
+If you would like to use custom logic to convert from Avro to Spark, you can implement the `SchemaConverter` trait.
+The custom class is loaded in ABRiS using the service provider interface (SPI), so you need to register your class in your
+`META-INF/services` resource directory. You can then configure the custom class with its short name or the fully qualified name.
+
+**Example**
+
+Custom schema converter implementation
+```scala
+package za.co.absa.abris.avro.sql
+import org.apache.avro.Schema
+import org.apache.spark.sql.types.DataType
+
+class CustomSchemaConverter extends SchemaConverter {
+  override val shortName: String = "custom"
+  override def toSqlType(avroSchema: Schema): DataType = ???
+}
+```
+
+Provider configuration file `META-INF/services/za.co.absa.abris.avro.sql.SchemaConverter`:
+```
+za.co.absa.abris.avro.sql.CustomSchemaConverter
+```
+
+Abris configuration
+```scala
+val abrisConfig = AbrisConfig
+  .fromConfluentAvro
+  .downloadReaderSchemaByLatestVersion
+  .andTopicNameStrategy("topic123")
+  .usingSchemaRegistry(registryConfig)
+  .withSchemaConverter("custom")
+```
+
 ## Multiple schemas in one topic
 The naming strategies RecordName and TopicRecordName allow for a one topic to receive different payloads, 
 i.e. payloads containing different schemas that do not have to be compatible, 

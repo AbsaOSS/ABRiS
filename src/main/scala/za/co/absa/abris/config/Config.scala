@@ -330,6 +330,12 @@ class FromAvroConfig private(
       schemaRegistryConf
     )
 
+  def withSchemaConverter(schemaConverter: String): FromAvroConfig =
+    new FromAvroConfig(
+      abrisConfig + (Key.SchemaConverter -> schemaConverter),
+      schemaRegistryConf
+    )
+
   def validate(): Unit = {
     if(!abrisConfig.contains(Key.ReaderSchema)) {
       throw new IllegalArgumentException(s"Missing mandatory config property ${Key.ReaderSchema}")
@@ -346,5 +352,6 @@ object FromAvroConfig {
   private[abris] object Key {
     val ReaderSchema = "readerSchema"
     val WriterSchema = "writerSchema"
+    val SchemaConverter = "schemaConverter"
   }
 }
