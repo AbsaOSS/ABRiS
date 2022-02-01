@@ -25,14 +25,17 @@ class FromAvroConfigSpec extends AnyFlatSpec with Matchers {
   behavior of "FromAvroConfig"
 
   it should "provide all set configurations" in {
+    val dummySchemaConverter = "dummy"
     val config = FromAvroConfig()
       .withWriterSchema("foo")
       .withReaderSchema("bar")
+      .withSchemaConverter(dummySchemaConverter)
       .withSchemaRegistryConfig(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> "url"))
 
     val map = config.abrisConfig()
     map(Key.WriterSchema) shouldBe "foo"
     map(Key.ReaderSchema) shouldBe "bar"
+    map(Key.SchemaConverter) shouldBe dummySchemaConverter
 
     config.schemaRegistryConf().get(AbrisConfig.SCHEMA_REGISTRY_URL) shouldBe "url"
   }
