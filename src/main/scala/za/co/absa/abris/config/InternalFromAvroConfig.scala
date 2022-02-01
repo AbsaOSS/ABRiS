@@ -17,7 +17,6 @@
 package za.co.absa.abris.config
 
 import org.apache.avro.Schema
-import org.apache.spark.sql.types.DataType
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.config.FromAvroConfig.Key
 
