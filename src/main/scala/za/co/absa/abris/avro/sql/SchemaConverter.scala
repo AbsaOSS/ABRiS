@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 ABSA Group Limited
+ * Copyright 2022 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package za.co.absa.abris.config
+package za.co.absa.abris.avro.sql
 
 import org.apache.avro.Schema
-import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.config.FromAvroConfig.Key
+import org.apache.spark.sql.types.DataType
 
-private[abris] class InternalFromAvroConfig(map: Map[String, Any]) {
-
-  val readerSchema: Schema = AvroSchemaUtils.parse(map(Key.ReaderSchema).asInstanceOf[String])
-
-  val writerSchema: Option[Schema] = map
-    .get(Key.WriterSchema)
-    .map(s => AvroSchemaUtils.parse(s.asInstanceOf[String]))
-
-  val schemaConverter: Option[String] = map
-    .get(Key.SchemaConverter)
-    .map(_.asInstanceOf[String])
+trait SchemaConverter {
+  val shortName: String
+  def toSqlType(avroSchema: Schema): DataType
 }

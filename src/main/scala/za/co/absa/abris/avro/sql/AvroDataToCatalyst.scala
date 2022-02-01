@@ -29,6 +29,7 @@ import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManagerFa
 import za.co.absa.abris.config.InternalFromAvroConfig
 
 import java.nio.ByteBuffer
+import java.util.ServiceLoader
 import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -39,9 +40,11 @@ private[abris] case class AvroDataToCatalyst(
   schemaRegistryConf: Option[Map[String,String]]
 ) extends UnaryExpression with ExpectsInputTypes {
 
+  private val schemaConverter = loadSchemaConverter(config.schemaConverter)
+
   override def inputTypes: Seq[BinaryType.type] = Seq(BinaryType)
 
-  override lazy val dataType: DataType = SchemaConverters.toSqlType(readerSchema).dataType
+  override lazy val dataType: DataType = schemaConverter.toSqlType(readerSchema)
 
   override def nullable: Boolean = true
 
@@ -168,4 +171,13 @@ private[abris] case class AvroDataToCatalyst(
   override protected def withNewChildInternal(newChild: Expression): Expression =
     copy(child = newChild)
 
+  private def loadSchemaConverter(nameOpt: Option[String]) = {
+    import scala.collection.JavaConverters._
+    nameOpt match {
+      case Some(name) => ServiceLoader.load(classOf[SchemaConverter]).asScala
+        .find(c => c.shortName == name || c.getClass.getName == name)
+        .getOrElse(throw new ClassNotFoundException(s"Could not find schema converter $name"))
+      case None => new DefaultSchemaConverter()
+    }
+  }
 }
