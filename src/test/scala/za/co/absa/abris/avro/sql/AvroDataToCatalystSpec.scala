@@ -16,6 +16,8 @@
 
 package za.co.absa.abris.avro.sql
 
+import org.apache.spark.SparkConf
+import org.apache.spark.serializer.{JavaSerializer, KryoSerializer}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{IntegerType, LongType, StructField, StructType}
 import org.scalatest.BeforeAndAfterEach
@@ -101,7 +103,21 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       ))
       .withSchemaConverter("nonexistent")
 
-    val ex = intercept[ClassNotFoundException](from_avro(col("avroBytes"), fromAvroConfig))
+    val ex = intercept[ClassNotFoundException](from_avro(col("avroBytes"), fromAvroConfig).expr.dataType)
     ex.getMessage should include ("nonexistent")
+  }
+
+  it should "be serializable" in {
+    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
+    val config = FromAvroConfig().withReaderSchema(schemaString)
+    val avroDataToCatalyst = from_avro(col("col"), config).expr
+
+    val javaSerializer = new JavaSerializer(new SparkConf())
+    javaSerializer.newInstance().serialize(avroDataToCatalyst)
+
+    val kryoSerializer = new KryoSerializer(new SparkConf())
+    kryoSerializer.newInstance().serialize(avroDataToCatalyst)
+
+    // test successful if no exception is thrown
   }
 }
