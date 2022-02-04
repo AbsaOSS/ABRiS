@@ -103,7 +103,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       ))
       .withSchemaConverter("nonexistent")
 
-    val ex = intercept[ClassNotFoundException](from_avro(col("avroBytes"), fromAvroConfig))
+    val ex = intercept[ClassNotFoundException](from_avro(col("avroBytes"), fromAvroConfig).expr.dataType)
     ex.getMessage should include ("nonexistent")
   }
 
