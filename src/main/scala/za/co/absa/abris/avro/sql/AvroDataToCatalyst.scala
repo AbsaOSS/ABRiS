@@ -40,7 +40,7 @@ private[abris] case class AvroDataToCatalyst(
   schemaRegistryConf: Option[Map[String,String]]
 ) extends UnaryExpression with ExpectsInputTypes {
 
-  private val schemaConverter = loadSchemaConverter(config.schemaConverter)
+  @transient private lazy val schemaConverter = loadSchemaConverter(config.schemaConverter)
 
   override def inputTypes: Seq[BinaryType.type] = Seq(BinaryType)
 
