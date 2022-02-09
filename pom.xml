@@ -48,7 +48,7 @@
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
         <!-- Spark -->
-        <spark-32.version>3.2.0</spark-32.version>
+        <spark-32.version>3.2.1</spark-32.version>
 
         <!-- Cross build properties -->
 
