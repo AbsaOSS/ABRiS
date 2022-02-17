@@ -18,16 +18,16 @@
 package za.co.absa.abris.avro.errors
 
 import org.apache.avro.Schema
-import org.apache.avro.hadoop.io.AvroDeserializer
+import org.apache.avro.generic.GenericData.Record
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.avro.AbrisAvroDeserializer
-import org.apache.spark.sql.types.DataType
 
 class EmptyExceptionHandler extends DeserializationExceptionHandler with Logging with Serializable {
 
-  def handle(exception: Throwable, deserializer: AbrisAvroDeserializer, readerSchema: Schema, dataType: DataType): Any = {
-    logWarning("NullExceptionHandler", exception)
-    deserializer.deserialize(new ScalaAvroRecord(readerSchema))
-    logWarning("successfully handle exception")
+  def handle(exception: Throwable, deserializer: AbrisAvroDeserializer, readerSchema: Schema): Any = {
+    logWarning("EmptyExceptionHandler", exception)
+    val emptyRecord = new Record(readerSchema)
+    val emptyRow = deserializer.deserialize(emptyRecord)
+    emptyRow
   }
 }

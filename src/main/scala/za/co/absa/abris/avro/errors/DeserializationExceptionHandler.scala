@@ -18,12 +18,10 @@
 package za.co.absa.abris.avro.errors
 
 import org.apache.avro.Schema
-import org.apache.spark.sql.types.DataType
-import za.co.absa.abris.avro.sql.AvroDeserializer
-
+import org.apache.spark.sql.avro.AbrisAvroDeserializer
 
 trait DeserializationExceptionHandler {
 
-  def handle(exception: Throwable, deserializer: AvroDeserializer, readerSchema: Schema, dataType: DataType) : Any
+  def handle(exception: Throwable, deserializer: AbrisAvroDeserializer, readerSchema: Schema): Any
 
 }
