@@ -20,7 +20,7 @@ package za.co.absa.abris.avro.errors
 import org.apache.avro.Schema
 import org.apache.spark.sql.avro.AbrisAvroDeserializer
 
-trait DeserializationExceptionHandler {
+trait DeserializationExceptionHandler extends Serializable {
 
   def handle(exception: Throwable, deserializer: AbrisAvroDeserializer, readerSchema: Schema): Any
 
