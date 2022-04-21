@@ -18,15 +18,14 @@
 package za.co.absa.abris.avro.errors
 
 import org.apache.avro.Schema
-import org.apache.avro.generic.GenericData.Record
+import org.apache.avro.specific.SpecificRecordBase
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.avro.AbrisAvroDeserializer
 
-class EmptyExceptionHandler extends DeserializationExceptionHandler with Logging {
+class SpecificRecordExceptionHandler(defaultRecord: SpecificRecordBase) extends DeserializationExceptionHandler with Logging {
 
   def handle(exception: Throwable, deserializer: AbrisAvroDeserializer, readerSchema: Schema): Any = {
     logWarning("EmptyExceptionHandler", exception)
-    val emptyRecord = new Record(readerSchema)
-    deserializer.deserialize(emptyRecord)
+    deserializer.deserialize(defaultRecord)
   }
 }

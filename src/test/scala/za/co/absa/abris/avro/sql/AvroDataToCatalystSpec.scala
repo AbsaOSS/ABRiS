@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.avro.sql
 
+import all_types.test.{Fixed, NativeComplete}
 import org.apache.spark.SparkException
 import org.apache.spark.SparkConf
 import org.apache.spark.serializer.{JavaSerializer, KryoSerializer}
@@ -25,13 +26,20 @@ import org.apache.spark.sql.types.{IntegerType, LongType, StructField, StructTyp
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import za.co.absa.abris.avro.errors.{DefaultExceptionHandler, EmptyExceptionHandler}
+import za.co.absa.abris.avro.errors.{FailExceptionHandler, SpecificRecordExceptionHandler}
+import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.utils.AvroSchemaEncoder
 import za.co.absa.abris.config.{AbrisConfig, FromAvroConfig}
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
+import java.util.Collections
+import java.nio.ByteBuffer
+import java.util
+import scala.collection.JavaConverters._
+
 class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
+
   private val spark = SparkSession
     .builder()
     .appName("unitTest")
@@ -40,13 +48,10 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
     .config("spark.ui.enabled", "false")
     .getOrCreate()
 
-  private val avroSchemaEncoder = new AvroSchemaEncoder
-
   import spark.implicits._
 
-  implicit val encoder: Encoder[Row] = avroSchemaEncoder.getEncoder
-
-
+  private val avroSchemaEncoder = new AvroSchemaEncoder
+  implicit private val encoder: Encoder[Row] = avroSchemaEncoder.getEncoder
 
   it should "not print schema registry configs in the spark plan" in {
     val sensitiveData = "username:password"
@@ -141,42 +146,73 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
     // test successful if no exception is thrown
   }
 
-  it should "throw a spark exception" in {
+  it should "throw a Spark exception when unable to deserialize " in {
 
-    val rowData = "$£%^"
-    val data = Seq(Row(rowData.getBytes()))
-    val dataFrame: DataFrame = spark.sparkContext.parallelize(data, 2).toDF() as "bytes"
+    val providedData = Seq(Row("$£%^".getBytes()))
+    val providedDataFrame: DataFrame = spark.sparkContext.parallelize(providedData, 2).toDF() as "bytes"
 
-    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
     val dummyUrl = "dummyUrl"
-
     val fromConfig = AbrisConfig
       .fromConfluentAvro
-      .provideReaderSchema(schemaString)
+      .provideReaderSchema(TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA)
       .usingSchemaRegistry(dummyUrl)
-      .withExceptionHandler(new DefaultExceptionHandler)
+      .withExceptionHandler(new FailExceptionHandler)
 
-    the[SparkException] thrownBy dataFrame.select(from_avro(col("bytes"), fromConfig )).collect()
+    the[SparkException] thrownBy providedDataFrame.select(from_avro(col("bytes"), fromConfig )).collect()
   }
 
-  it should "receive empty dataframe row back" in {
+  it should "replace undeserializable record with default SpecificRecord" in {
+    // provided
+    val providedData = Seq(
+      Row("$£%^".getBytes())
+    )
+    val providedDataFrame: DataFrame = spark.sparkContext.parallelize(providedData, 2).toDF() as "bytes"
 
-    val rowData = "$£%^"
-    val data = Seq(Row(rowData.getBytes()))
-    val dataFrame: DataFrame = spark.sparkContext.parallelize(data, 2).toDF() as "bytes"
+    val providedDefaultRecord = NativeComplete.newBuilder()
+      .setBytes(ByteBuffer.wrap(Array[Byte](1,2,3)))
+      .setString("default-record")
+      .setInt$(1)
+      .setLong$(2L)
+      .setDouble$(3.0)
+      .setFloat$(4.0F)
+      .setBoolean$(true)
+      .setArray(Collections.singletonList("arrayItem1"))
+      .setMap(Collections.singletonMap[CharSequence, util.List[java.lang.Long]](
+        "key1",
+        Collections.singletonList[java.lang.Long](1L)))
+      .setFixed(new Fixed(Array.fill[Byte](40){1}))
+      .build()
 
-    val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
+    // expected
+    val expectedData = Seq(
+      Row(Array[Byte](1,2,3),
+          "default-record",
+          1,
+          2L,
+          3.0,
+          4F,
+          true,
+          Collections.singletonList("arrayItem1"),
+          Collections.singletonMap[CharSequence, util.List[java.lang.Long]](
+            "key1",
+            Collections.singletonList[java.lang.Long](1L)),
+          Array.fill[Byte](40){1}
+      )).asJava
+
+    val expectedDataFrame: DataFrame = spark.createDataFrame(expectedData, SparkAvroConversions.toSqlType(NativeComplete.SCHEMA$))
+
+    // actual
     val dummyUrl = "dummyUrl"
-    val deserializationExceptionHandler = new EmptyExceptionHandler
-
     val fromConfig = AbrisConfig
       .fromConfluentAvro
-      .provideReaderSchema(schemaString)
+      .provideReaderSchema(NativeComplete.SCHEMA$.toString())
       .usingSchemaRegistry(dummyUrl)
-      .withExceptionHandler(deserializationExceptionHandler)
+      .withExceptionHandler(new SpecificRecordExceptionHandler(providedDefaultRecord))
 
-    val expectedResult = Array(Row(Row(0, 0)))
+    val actualDataFrame = providedDataFrame
+      .select(from_avro(col("bytes"), fromConfig).as("actual"))
+      .select(col("actual.*"))
 
-    assert(dataFrame.select(from_avro(col("bytes"), fromConfig)).collect() sameElements expectedResult)
+    shouldEqualByData(expectedDataFrame, actualDataFrame)
   }
 }

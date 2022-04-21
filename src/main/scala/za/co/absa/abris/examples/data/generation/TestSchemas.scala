@@ -16,6 +16,7 @@
 
 package za.co.absa.abris.examples.data.generation
 
+import all_types.test.{NativeComplete, NativeSimpleOuter}
 import za.co.absa.commons.annotation.DeveloperApi
 
 /**
@@ -31,24 +32,7 @@ object TestSchemas {
 
   case class Mapping(mappingTableColumn: String, mappedDatasetColumn: String)
 
-  val NATIVE_SIMPLE_OUTER_SCHEMA = """{
-    "type":"record",
-    "name":"outer_nested",
-    "namespace":"all-types.test",
-    "fields":
-    [
-      {"name":"name",  "type":"string"},
-      {"name":"nested","type":
-        {
-          "type":"record","name":"nested","fields":
-          [
-            {"name":"int", "type":"int"},
-            {"name":"long","type":"long"}
-          ]
-        }
-      }
-    ]
-  }"""
+  val NATIVE_SIMPLE_OUTER_SCHEMA = NativeSimpleOuter.SCHEMA$.toString()
 
   val NATIVE_SIMPLE_NESTED_SCHEMA = """{
      "namespace": "all-types.test",
@@ -61,23 +45,7 @@ object TestSchemas {
           ]
   }"""
 
-  val NATIVE_COMPLETE_SCHEMA = """{
-     "namespace": "all-types.test",
-     "type": "record",
-     "name": "native_complete",
-     "fields":[
-         {"name": "bytes", "type": "bytes" },
-         { "name": "string",      "type": ["string", "null"], "default":"blue" },
-         { "name": "int",         "type": ["int",    "null"] },
-         { "name": "long",        "type": ["long",   "null"] },
-          { "name": "double",      "type": ["double", "null"] },
-          { "name": "float",       "type": ["float",  "null"] },
-          { "name": "boolean",     "type": ["boolean","null"] },
-          { "name": "array", "type": {"type": "array", "items": "string"} },
-          {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}},
-          {"name": "fixed",  "type": {"type": "fixed", "size": 40, "name": "fixed"}}
-     ]
-  }"""
+  val NATIVE_COMPLETE_SCHEMA = NativeComplete.SCHEMA$.toString()
 
   val NATIVE_COMPLETE_SCHEMA_WITHOUT_FIXED = """{
      "namespace": "all-types.test",

@@ -1,0 +1,28 @@
+{
+  "type": "record",
+  "name": "NativeSimpleOuter",
+  "namespace": "all_types.test",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "nested",
+      "type": {
+        "type": "record",
+        "name": "Nested",
+        "fields": [
+          {
+            "name": "int",
+            "type": "int"
+          },
+          {
+            "name": "long",
+            "type": "long"
+          }
+        ]
+      }
+    }
+  ]
+}

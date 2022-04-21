@@ -16,23 +16,26 @@
 
 package za.co.absa.abris.avro.errors
 
-import org.apache.avro.generic.GenericData.Record
+import org.apache.spark.SparkException
 import org.apache.spark.sql.avro.{AbrisAvroDeserializer, SchemaConverters}
 import org.apache.spark.sql.types.DataType
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
-class ExceptionHandlerSpec extends AnyFlatSpec {
 
-  it should "receive empty dataframe row back" in {
-    val deserializationExceptionHandler = new EmptyExceptionHandler
+class FailExceptionHandlerSpec extends AnyFlatSpec with Matchers {
+
+  it should "should throw spark exception on error" in {
+
+    val deserializationExceptionHandler = new FailExceptionHandler
     val schema = AvroSchemaUtils.parse(TestSchemas.COMPLEX_SCHEMA_SPEC)
     val dataType: DataType = SchemaConverters.toSqlType(schema).dataType
     val deserializer = new AbrisAvroDeserializer(schema, dataType)
-    val expectedEmptyRecord = deserializer.deserialize(new Record(schema))
 
-    assert(deserializationExceptionHandler.handle(
-      new Exception, new AbrisAvroDeserializer(schema, dataType), schema) == expectedEmptyRecord)
+    an[SparkException] should be thrownBy (deserializationExceptionHandler.handle(new Exception, deserializer, schema))
+    val exceptionThrown = the[SparkException] thrownBy (deserializationExceptionHandler.handle(new Exception, deserializer, schema))
+    exceptionThrown.getMessage should equal("Malformed records are detected in record parsing.")
   }
 }

@@ -332,7 +332,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
     val fromAvroConfig = AbrisConfig
       .fromSimpleAvro
       .downloadSchemaByLatestVersion
-      .andTopicRecordNameStrategy("fooTopic", "native_complete", "all-types.test")
+      .andTopicRecordNameStrategy("fooTopic", "NativeComplete", "all_types.test")
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
