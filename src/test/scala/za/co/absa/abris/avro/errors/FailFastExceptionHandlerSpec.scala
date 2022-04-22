@@ -25,11 +25,11 @@ import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
 
 
-class FailExceptionHandlerSpec extends AnyFlatSpec with Matchers {
+class FailFastExceptionHandlerSpec extends AnyFlatSpec with Matchers {
 
   it should "should throw spark exception on error" in {
 
-    val deserializationExceptionHandler = new FailExceptionHandler
+    val deserializationExceptionHandler = new FailFastExceptionHandler
     val schema = AvroSchemaUtils.parse(TestSchemas.COMPLEX_SCHEMA_SPEC)
     val dataType: DataType = SchemaConverters.toSqlType(schema).dataType
     val deserializer = new AbrisAvroDeserializer(schema, dataType)

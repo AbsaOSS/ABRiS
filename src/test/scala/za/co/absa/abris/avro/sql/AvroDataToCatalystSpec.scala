@@ -26,7 +26,7 @@ import org.apache.spark.sql.types.{IntegerType, LongType, StructField, StructTyp
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import za.co.absa.abris.avro.errors.{FailExceptionHandler, SpecificRecordExceptionHandler}
+import za.co.absa.abris.avro.errors.{FailFastExceptionHandler, SpecificRecordExceptionHandler}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.utils.AvroSchemaEncoder
@@ -156,7 +156,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       .fromConfluentAvro
       .provideReaderSchema(TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA)
       .usingSchemaRegistry(dummyUrl)
-      .withExceptionHandler(new FailExceptionHandler)
+      .withExceptionHandler(new FailFastExceptionHandler)
 
     the[SparkException] thrownBy providedDataFrame.select(from_avro(col("bytes"), fromConfig )).collect()
   }

@@ -17,7 +17,7 @@
 package za.co.absa.abris.config
 
 import org.apache.avro.Schema
-import za.co.absa.abris.avro.errors.{FailExceptionHandler, DeserializationExceptionHandler}
+import za.co.absa.abris.avro.errors.{FailFastExceptionHandler, DeserializationExceptionHandler}
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.config.FromAvroConfig.Key
 
@@ -36,5 +36,5 @@ private[abris] class InternalFromAvroConfig(map: Map[String, Any]) {
   val deserializationHandler: DeserializationExceptionHandler = map
     .get(Key.ExceptionHandler)
     .map(s => s.asInstanceOf[DeserializationExceptionHandler])
-    .getOrElse(new FailExceptionHandler)
+    .getOrElse(new FailFastExceptionHandler)
 }

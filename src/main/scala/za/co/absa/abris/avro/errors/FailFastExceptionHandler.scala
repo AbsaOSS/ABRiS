@@ -21,7 +21,7 @@ import org.apache.avro.Schema
 import org.apache.spark.SparkException
 import org.apache.spark.sql.avro.AbrisAvroDeserializer
 
-class FailExceptionHandler extends DeserializationExceptionHandler {
+class FailFastExceptionHandler extends DeserializationExceptionHandler {
 
   def handle(exception: Throwable, avroDeserializer: AbrisAvroDeserializer, readerSchema: Schema): Any = {
     throw new SparkException(s"Malformed records are detected in record parsing.", exception)
