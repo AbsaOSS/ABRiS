@@ -25,7 +25,7 @@ import org.apache.spark.sql.avro.AbrisAvroDeserializer
 class SpecificRecordExceptionHandler(defaultRecord: SpecificRecordBase) extends DeserializationExceptionHandler with Logging {
 
   def handle(exception: Throwable, deserializer: AbrisAvroDeserializer, readerSchema: Schema): Any = {
-    logWarning("EmptyExceptionHandler", exception)
+    logWarning("Malformed record detected. Replacing with default record.", exception)
     deserializer.deserialize(defaultRecord)
   }
 }
