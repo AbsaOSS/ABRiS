@@ -36,6 +36,6 @@ class FailFastExceptionHandlerSpec extends AnyFlatSpec with Matchers {
 
     an[SparkException] should be thrownBy (deserializationExceptionHandler.handle(new Exception, deserializer, schema))
     val exceptionThrown = the[SparkException] thrownBy (deserializationExceptionHandler.handle(new Exception, deserializer, schema))
-    exceptionThrown.getMessage should equal("Malformed records are detected in record parsing.")
+    exceptionThrown.getMessage should equal("Malformed record detected.")
   }
 }
