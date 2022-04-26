@@ -37,17 +37,17 @@ object TestSchemas {
     "namespace":"all-types.test",
     "fields":
     [
-	    {"name":"name",  "type":"string"},
-	    {"name":"nested","type":
-		    {
-			    "type":"record","name":"nested","fields":
-				  [
-					  {"name":"int", "type":"int"},
-					  {"name":"long","type":"long"}
-				  ]
-		    }
-	    }
-	  ]
+      {"name":"name",  "type":"string"},
+      {"name":"nested","type":
+        {
+          "type":"record","name":"nested","fields":
+          [
+            {"name":"int", "type":"int"},
+            {"name":"long","type":"long"}
+          ]
+        }
+      }
+    ]
   }"""
 
   val NATIVE_SIMPLE_NESTED_SCHEMA = """{
@@ -55,10 +55,10 @@ object TestSchemas {
      "type":"record",
       "name":"nested",
       "fields":
-				  [
-					  {"name":"int", "type":"int"},
-					  {"name":"long","type":"long"}
-					]
+          [
+            {"name":"int", "type":"int"},
+            {"name":"long","type":"long"}
+          ]
   }"""
 
   val NATIVE_COMPLETE_SCHEMA = """{
@@ -70,12 +70,12 @@ object TestSchemas {
          { "name": "string",      "type": ["string", "null"], "default":"blue" },
          { "name": "int",         "type": ["int",    "null"] },
          { "name": "long",        "type": ["long",   "null"] },
- 		     { "name": "double",      "type": ["double", "null"] },
- 		     { "name": "float",       "type": ["float",  "null"] },
- 		     { "name": "boolean",     "type": ["boolean","null"] },
- 		     { "name": "array", "type": {"type": "array", "items": "string"} },
- 		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}},
- 		     {"name": "fixed",  "type": {"type": "fixed", "size": 40, "name": "fixed"}}
+          { "name": "double",      "type": ["double", "null"] },
+          { "name": "float",       "type": ["float",  "null"] },
+          { "name": "boolean",     "type": ["boolean","null"] },
+          { "name": "array", "type": {"type": "array", "items": "string"} },
+          {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}},
+          {"name": "fixed",  "type": {"type": "fixed", "size": 40, "name": "fixed"}}
      ]
   }"""
 
@@ -88,11 +88,11 @@ object TestSchemas {
          { "name": "string",      "type": ["string", "null"] },
          { "name": "int",         "type": ["int",    "null"] },
          { "name": "long",        "type": ["long",   "null"] },
- 		     { "name": "double",      "type": ["double", "null"] },
- 		     { "name": "float",       "type": ["float",  "null"] },
- 		     { "name": "boolean",     "type": ["boolean","null"] },
- 		     { "name": "array", "type": {"type": "array", "items": "string"} },
- 		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
+          { "name": "double",      "type": ["double", "null"] },
+          { "name": "float",       "type": ["float",  "null"] },
+          { "name": "boolean",     "type": ["boolean","null"] },
+          { "name": "array", "type": {"type": "array", "items": "string"} },
+          {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
      ]
   }"""
 
@@ -104,9 +104,9 @@ object TestSchemas {
          { "name": "string",      "type": ["string", "null"] },
          { "name": "int",         "type": ["int",    "null"] },
          { "name": "long",        "type": ["long",   "null"] },
- 		     { "name": "double",      "type": ["double", "null"] },
- 		     { "name": "float",       "type": ["float",  "null"] },
- 		     { "name": "boolean",     "type": ["boolean","null"] }
+          { "name": "double",      "type": ["double", "null"] },
+          { "name": "float",       "type": ["float",  "null"] },
+          { "name": "boolean",     "type": ["boolean","null"] }
      ]
   }"""
 
@@ -115,7 +115,7 @@ object TestSchemas {
      "type": "record",
      "name": "array",
      "fields":[
- 		     { "name": "array", "type": {"type": "array", "items": "string"} }
+          { "name": "array", "type": {"type": "array", "items": "string"} }
      ]
   }"""
 
@@ -124,7 +124,7 @@ object TestSchemas {
      "type": "record",
      "name": "map",
      "fields":[
- 		     {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
+          {"name": "map", "type": { "type": "map", "values": {"type": "array", "items": "long"}}}
      ]
   }"""
 
@@ -133,7 +133,7 @@ object TestSchemas {
      "type": "record",
      "name": "bytes",
      "fields":[
- 		     {"name": "bytes", "type": "bytes" }
+          {"name": "bytes", "type": "bytes" }
      ]
   }"""
 
@@ -142,7 +142,7 @@ object TestSchemas {
      "type": "record",
      "name": "fixed_name",
      "fields":[
- 		     {"name": "fixed", "type": {"type": "fixed", "size": 13, "name": "fixed"}}
+          {"name": "fixed", "type": {"type": "fixed", "size": 13, "name": "fixed"}}
      ]
   }"""
 
@@ -151,7 +151,7 @@ object TestSchemas {
      "type": "record",
      "name": "decimal",
      "fields":[
- 		     {"name": "decimal", "type": {"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2}}
+          {"name": "decimal", "type": {"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2}}
      ]
   }"""
 
@@ -160,7 +160,7 @@ object TestSchemas {
      "type": "record",
      "name": "date",
      "fields":[
- 		     {"name": "date", "type": {"type": "int", "logicalType": "date"}}
+          {"name": "date", "type": {"type": "int", "logicalType": "date"}}
      ]
   }"""
 
@@ -169,7 +169,7 @@ object TestSchemas {
      "type": "record",
      "name": "millisecond",
      "fields":[
- 		     {"name": "millisecond", "type": {"type": "int", "logicalType": "time-millis"}}
+          {"name": "millisecond", "type": {"type": "int", "logicalType": "time-millis"}}
      ]
   }"""
 
@@ -178,7 +178,7 @@ object TestSchemas {
      "type": "record",
      "name": "microsecond",
      "fields":[
- 		     {"name": "microsecond", "type": {"type": "long", "logicalType": "time-micros"}}
+          {"name": "microsecond", "type": {"type": "long", "logicalType": "time-micros"}}
      ]
   }"""
 
@@ -187,7 +187,7 @@ object TestSchemas {
      "type": "record",
      "name": "timestamp_millis",
      "fields":[
- 		     {"name": "timestampMillis", "type": {"type": "long", "logicalType": "timestamp-millis"}}
+          {"name": "timestampMillis", "type": {"type": "long", "logicalType": "timestamp-millis"}}
      ]
   }"""
 
@@ -196,7 +196,7 @@ object TestSchemas {
      "type": "record",
      "name": "timestamp_micros",
      "fields":[
- 		     {"name": "timestampMicros", "type": {"type": "long", "logicalType": "timestamp-micros"}}
+          {"name": "timestampMicros", "type": {"type": "long", "logicalType": "timestamp-micros"}}
      ]
   }"""
 
@@ -205,60 +205,60 @@ object TestSchemas {
      "type": "record",
      "name": "duration_micros",
      "fields":[
- 		     {"name": "duration", "type": {"type": "fixed", "size": 12, "name": "name", "logicalType": "duration"}}
+          {"name": "duration", "type": {"type": "fixed", "size": 12, "name": "name", "logicalType": "duration"}}
      ]
   }"""
 
   val COMPLEX_SCHEMA_SPEC = """{
-	"type":"record",
-	"name":"complex",
-	"namespace":"all-types.test",
-	"fields":
-	[
-		{"name":"name","type":"string"},
-		{"name":"regions","type":
-							{"type":"map","values":
-								{"type":"array","items":
-											{"type":"record","name":"City","fields":
-													[
-															{"name":"name","type":"string"},
-															{"name":"neighborhoods","type":
-																	{"type":"array","items":
-																			{"type":"record","name":"Neighborhood","fields":
-																						[
-																						{"name":"name","type":"string"},
-																						{"name":"streets","type":
-																									{"type":"array","items":
-																											{"type":"record","name":"Street","fields":
-																															[
-																															{"name":"name","type":"string"},
-																															{"name":"zip","type":"string"}
-																															]
-																											}
-																									}
-																						}
-																						]
-																			}
-																	}
-															}
-													]
-											}
-								}
-							}
-		}
-	]
+  "type":"record",
+  "name":"complex",
+  "namespace":"all-types.test",
+  "fields":
+  [
+    {"name":"name","type":"string"},
+    {"name":"regions","type":
+              {"type":"map","values":
+                {"type":"array","items":
+                      {"type":"record","name":"City","fields":
+                          [
+                              {"name":"name","type":"string"},
+                              {"name":"neighborhoods","type":
+                                  {"type":"array","items":
+                                      {"type":"record","name":"Neighborhood","fields":
+                                            [
+                                            {"name":"name","type":"string"},
+                                            {"name":"streets","type":
+                                                  {"type":"array","items":
+                                                      {"type":"record","name":"Street","fields":
+                                                              [
+                                                              {"name":"name","type":"string"},
+                                                              {"name":"zip","type":"string"}
+                                                              ]
+                                                      }
+                                                  }
+                                            }
+                                            ]
+                                      }
+                                  }
+                              }
+                          ]
+                      }
+                }
+              }
+    }
+  ]
   }"""
 
   val COMPLEX_SCHEMA_STREET_SPEC = """
-	  {
-	    "namespace":"test_city",
-	    "type":"record",
-	    "name":"Street",
-	    "fields":
-  		[
-	  	  {"name":"name","type":"string"},
-		  	{"name":"zip","type":"string"}
-		  ]
+    {
+      "namespace":"test_city",
+      "type":"record",
+      "name":"Street",
+      "fields":
+      [
+        {"name":"name","type":"string"},
+        {"name":"zip","type":"string"}
+      ]
     }"""
 
   val COMPLEX_SCHEMA_NEIGHBORHOOD_SPEC = """
@@ -267,26 +267,26 @@ object TestSchemas {
     "type":"record",
     "name":"Neighborhood",
     "fields":
-		  [
-			  {"name":"name","type":"string"},
-				{"name":"streets",
-				  "type":
-			    {
-			      "type":"array",
-			      "items":
-				    {
-				      "type":"record",
-				      "name":"Street",
-				      "fields":
-						    [
-								  {"name":"name","type":"string"},
-									{"name":"zip","type":"string"}
-								]
-					  }
-				  }
-	      }
-			]
-	}"""
+      [
+        {"name":"name","type":"string"},
+        {"name":"streets",
+          "type":
+          {
+            "type":"array",
+            "items":
+            {
+              "type":"record",
+              "name":"Street",
+              "fields":
+                [
+                  {"name":"name","type":"string"},
+                  {"name":"zip","type":"string"}
+                ]
+            }
+          }
+        }
+      ]
+  }"""
 
   val COMPLEX_SCHEMA_CITY_SPEC = """
     {
@@ -294,39 +294,39 @@ object TestSchemas {
       "type":"record",
       "name":"City",
       "fields":
-			  [
-				  {"name":"name","type":"string"},
-					{"name":"neighborhoods","type":
-																	{
-																	  "type":"array",
-																	  "items":
-																		  {
-																		    "type":"record",
-																		    "name":"Neighborhood",
-																		    "fields":
-																				  [
-																						{"name":"name","type":"string"},
-																						{"name":"streets","type":
-																									{
-																									  "type":"array",
-																									  "items":
-																										  {
-																										    "type":"record",
-																										    "name":"Street",
-																										    "fields":
-																												  [
-																													  {"name":"name","type":"string"},
-																														{"name":"zip","type":"string"}
-																													]
-																											}
-																									}
-																						}
-																					]
-																			}
-																	}
-					}
-				]
-		}"""
+        [
+          {"name":"name","type":"string"},
+          {"name":"neighborhoods","type":
+                                  {
+                                    "type":"array",
+                                    "items":
+                                      {
+                                        "type":"record",
+                                        "name":"Neighborhood",
+                                        "fields":
+                                          [
+                                            {"name":"name","type":"string"},
+                                            {"name":"streets","type":
+                                                  {
+                                                    "type":"array",
+                                                    "items":
+                                                      {
+                                                        "type":"record",
+                                                        "name":"Street",
+                                                        "fields":
+                                                          [
+                                                            {"name":"name","type":"string"},
+                                                            {"name":"zip","type":"string"}
+                                                          ]
+                                                      }
+                                                  }
+                                            }
+                                          ]
+                                      }
+                                  }
+          }
+        ]
+    }"""
 
   val CASE_CLASSES_SCHEMA = """
   {
