@@ -36,10 +36,10 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 private[abris] case class AvroDataToCatalyst(
-                                              child: Expression,
-                                              abrisConfig: Map[String, Any],
-                                              schemaRegistryConf: Option[Map[String, String]]
-                                            ) extends UnaryExpression with ExpectsInputTypes with Logging {
+  child: Expression,
+  abrisConfig: Map[String, Any],
+  schemaRegistryConf: Option[Map[String, String]]
+) extends UnaryExpression with ExpectsInputTypes with Logging {
 
   @transient private lazy val schemaConverter = loadSchemaConverter(config.schemaConverter)
 
