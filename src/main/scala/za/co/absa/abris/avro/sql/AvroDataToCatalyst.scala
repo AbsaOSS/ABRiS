@@ -20,8 +20,7 @@ import org.apache.avro.Schema
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.io.{BinaryDecoder, DecoderFactory}
 import org.apache.kafka.common.errors.SerializationException
-import org.apache.spark.internal.Logging
-import org.apache.spark.sql.avro.{AbrisAvroDeserializer, SchemaConverters}
+import org.apache.spark.sql.avro.AbrisAvroDeserializer
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
@@ -39,7 +38,7 @@ private[abris] case class AvroDataToCatalyst(
   child: Expression,
   abrisConfig: Map[String, Any],
   schemaRegistryConf: Option[Map[String, String]]
-) extends UnaryExpression with ExpectsInputTypes with Logging {
+) extends UnaryExpression with ExpectsInputTypes {
 
   @transient private lazy val schemaConverter = loadSchemaConverter(config.schemaConverter)
 
