@@ -139,11 +139,11 @@ val schemaId = schemaManager.register(subject, schemaString)
 ### De-serialisation Error Handling
 There are 2 ways ABRiS handles de-serialisation errors:
 
-####FailFast (Default)
+#### FailFast (Default)
 Given no provided de-serialisation handler, a failure will result in a spark exception being thrown 
 and with the error being outputted. This is the default procedure.
 
-####SpecificRecordHandler
+#### SpecificRecordHandler
 The second option requires providing a default record that will be outputted in the event of a failure.
 This should be used as a flag to be deleted outside ABRiS that should mean the spark job will not stop. 
 Beware however, a null or empty record will also result in an error so a record with a different input should be chosen.
