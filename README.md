@@ -226,6 +226,16 @@ because all rows in dataframe must have the same schema.
 So if you have multiple incompatible types of avro data in a dataframe you must first sort them out to several dataframes.
 One for each schema. Then you can use Abris and convert the avro data.
 
+## How to measure code coverage
+```shell
+./mvn clean verify -Pcode-coverage,scala-2.12
+or
+./mvn clean verify -Pcode-coverage,scala-2.13
+```
+Code coverage reports will be generated on paths:
+```
+{local-path}\ABRiS\target\jacoco
+```
 
 ---
 
