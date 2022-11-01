@@ -73,8 +73,9 @@
 
         <!--Tests-->
         <scalatestplus.mockito.version>3.1.2.0</scalatestplus.mockito.version>
-        <scalatest.version>3.1.4</scalatest.version>
-        <scalatest.maven.plugin.version>2.0.2</scalatest.maven.plugin.version>
+        <scalatest.version>3.2.14</scalatest.version>
+        <scalatest.maven.plugin.version>2.2.0</scalatest.maven.plugin.version>
+        <jacoco.version>0.8.8</jacoco.version>
 
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
@@ -334,6 +335,13 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -546,6 +554,43 @@
                                 <goals>
                                     <goal>check-abi</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>code-coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.version}</version>
+                        <configuration>
+                            <!-- examples of class excluding -->
+                            <!-- excludes>
+                                <exclude>za/co/absa/enceladus/migrations/continuous/EntityVersionMap.class</exclude>
+                                <exclude>za/co/absa/enceladus/rest_api/exceptions/ValidationException.class</exclude>
+                            </excludes -->
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>jacoco-prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>jacoco-report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/jacoco</outputDirectory>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
