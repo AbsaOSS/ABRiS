@@ -19,8 +19,7 @@ package za.co.absa.abris.avro.errors
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.avro.{AbrisAvroDeserializer, SchemaConverters}
 import org.apache.spark.sql.catalyst.expressions.SpecificInternalRow
-import org.apache.spark.sql.types.{DataType, StructField, StructType}
-import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.sql.types.{DataType, StructType}
 import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.TestSchemas
