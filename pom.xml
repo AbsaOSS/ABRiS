@@ -581,7 +581,7 @@
                                     <goal>report</goal>
                                 </goals>
                                 <configuration>
-                                    <title>${project.name} - ${scala.version}</title>
+                                    <title>${project.name} - scala:${scala.version}</title>
                                     <doMethodFiltration>true</doMethodFiltration>
                                     <doScalaMethodFiltration>true</doScalaMethodFiltration>
                                 </configuration>
