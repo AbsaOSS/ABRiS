@@ -70,12 +70,12 @@
 
         <!--Libs-->
         <avro.version>1.10.2</avro.version>
+        <jacoco.version>0.8.9</jacoco.version>
 
         <!--Tests-->
         <scalatestplus.mockito.version>3.1.2.0</scalatestplus.mockito.version>
         <scalatest.version>3.2.14</scalatest.version>
         <scalatest.maven.plugin.version>2.2.0</scalatest.maven.plugin.version>
-        <jacoco.version>0.8.8</jacoco.version>
 
         <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
 
@@ -335,13 +335,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.version}</version>
-            </plugin>
-
         </plugins>
     </build>
 
@@ -566,7 +559,7 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.jacoco</groupId>
+                        <groupId>za.co.absa.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <version>${jacoco.version}</version>
                         <configuration>
@@ -589,7 +582,9 @@
                                     <goal>report</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/jacoco</outputDirectory>
+                                    <title>${project.name} - scala:${scala.version}</title>
+                                    <doMethodFiltration>true</doMethodFiltration>
+                                    <doScalaMethodFiltration>true</doScalaMethodFiltration>
                                 </configuration>
                             </execution>
                         </executions>
