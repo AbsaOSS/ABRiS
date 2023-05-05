@@ -70,7 +70,7 @@
 
         <!--Libs-->
         <avro.version>1.10.2</avro.version>
-        <jacoco.version>0.8.9</jacoco.version>
+        <jacoco.version>0.8.10</jacoco.version>
 
         <!--Tests-->
         <scalatestplus.mockito.version>3.1.2.0</scalatestplus.mockito.version>
