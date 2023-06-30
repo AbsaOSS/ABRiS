@@ -25,7 +25,7 @@ jobs:
       run: mvn clean verify -Plicense-check,spark-3.2,scala-2.12,code-coverage
     - name: Add coverage to PR
       id: jacoco
-      uses: madrapps/jacoco-report@v1.3
+      uses: madrapps/jacoco-report@v1.4
       with:
         paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,4 +43,3 @@ jobs:
       with:
         script: |
           core.setFailed('Changed files coverage is less than 80%!')
-
