@@ -162,6 +162,25 @@ val abrisConfig = AbrisConfig
 
 This is only for confluent-based configuration, not for standard avro.
 
+#### PermissiveRecordExceptionHandler
+The third option is to use the `PermissiveRecordExceptionHandler`. In case of a deserialization failure, this handler replaces the problematic record with a fully null record, instead of throwing an exception. This allows the data processing pipeline to continue without interruption.
+
+The main use case for this option is when you want to prioritize continuity of processing over individual record integrity. It's especially useful when dealing with large datasets where occasional malformed records could be tolerated.
+
+Here's how to use it:
+
+```scala
+val abrisConfig = AbrisConfig
+  .fromConfluentAvro
+  .downloadReaderSchemaByLatestVersion
+  .andTopicNameStrategy("topic123")
+  .usingSchemaRegistry(registryConfig)
+  .withSchemaConverter("custom")
+  .withExceptionHandler(new PermissiveRecordExceptionHandler())
+```
+
+With this configuration, in the event of a deserialization error, the `PermissiveRecordExceptionHandler` will log a warning, substitute the malformed record with a fully null one, and allow the data processing pipeline to continue.
+
 
 ### Data Conversions
 This library also provides convenient methods to convert between Avro and Spark schemas. 

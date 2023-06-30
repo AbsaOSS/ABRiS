@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   build:
 
@@ -18,4 +22,24 @@ jobs:
       with:
         java-version: 1.8
     - name: Run tests
-      run: mvn clean verify -Plicense-check,spark-3.2,scala-2.12
+      run: mvn clean verify -Plicense-check,spark-3.2,scala-2.12,code-coverage
+    - name: Add coverage to PR
+      id: jacoco
+      uses: madrapps/jacoco-report@v1.4
+      with:
+        paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        min-coverage-overall: 0.0
+        min-coverage-changed-files: 80.0
+        title: JaCoCo code coverage report - Scala 2.12 & Spark 3.2
+        update-comment: true
+    - name: Get the Coverage info
+      run: |
+        echo "Total coverage ${{ steps.jacoco.outputs.coverage-overall }}"
+        echo "Changed Files coverage ${{ steps.jacoco.outputs.coverage-changed-files }}"
+    - name: Fail PR if changed files coverage is less than 80%
+      if: ${{ steps.jacoco.outputs.coverage-changed-files < 80.0 }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.setFailed('Changed files coverage is less than 80%!')
