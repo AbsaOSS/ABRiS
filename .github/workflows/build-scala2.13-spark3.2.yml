@@ -3,7 +3,7 @@ name: Build Scala 2.13, Spark 3.2
 on:
   push:
     branches: [ master ]
-  pull_request:
+  pull_request_target:
     branches: [ master ]
 
 jobs:
