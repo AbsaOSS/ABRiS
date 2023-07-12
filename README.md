@@ -1,6 +1,6 @@
 
 
-# ABRiS - Avro Bridge for Spark
+# ABRiS - Avro Bridge for Spark --
 
 - Pain free Spark/Avro integration.
 
