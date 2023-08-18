@@ -15,7 +15,7 @@ jobs:
         spark: [ 3.2 ]
         scala: [ 2.12, 2.13 ]
 
-    name: (Spark ${{ matrix.spark }}, Scala ${{ matrix.scala }})
+    name: Spark ${{ matrix.spark }}, Scala ${{ matrix.scala }}
 
     steps:
       - uses: actions/checkout@v2
