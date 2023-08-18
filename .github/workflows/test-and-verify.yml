@@ -1,0 +1,27 @@
+name: Test and verify
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        spark: [ 3.2 ]
+        scala: [ 2.12, 2.13 ]
+
+    name: (Spark ${{ matrix.spark }}, Scala ${{ matrix.scala }})
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Run tests
+        run: mvn clean verify -Plicense-check,spark-${{ matrix.spark }},scala-${{ matrix.scala }}
