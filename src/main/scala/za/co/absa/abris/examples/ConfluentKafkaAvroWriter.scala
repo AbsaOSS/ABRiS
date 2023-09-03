@@ -67,6 +67,7 @@ object ConfluentKafkaAvroWriter {
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("topic", kafkaTopicName)
       .save()
+
   }
 
   private def generateRandomDataFrame(spark: SparkSession): DataFrame = {
