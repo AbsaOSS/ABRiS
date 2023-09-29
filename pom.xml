@@ -69,7 +69,7 @@
         <confluent.version>6.2.1</confluent.version>
 
         <!--Libs-->
-        <avro.version>1.10.2</avro.version>
+        <avro.version>1.11.3</avro.version>
         <jacoco.version>0.8.10</jacoco.version>
 
         <!--Tests-->
