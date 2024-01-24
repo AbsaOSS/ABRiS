@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        spark: [ 3.2 ]
+        spark: [ 3.2, 3.3, 3.4, 3.5 ]
         scala: [ 2.12, 2.13 ]
 
     name: Spark ${{ matrix.spark }}, Scala ${{ matrix.scala }}

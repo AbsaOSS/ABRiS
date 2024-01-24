@@ -48,7 +48,10 @@
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
         <!-- Spark -->
-        <spark-32.version>3.2.1</spark-32.version>
+        <spark-32.version>3.2.4</spark-32.version>
+        <spark-33.version>3.3.4</spark-33.version>
+        <spark-34.version>3.4.2</spark-34.version>
+        <spark-35.version>3.5.0</spark-35.version>
 
         <!-- Cross build properties -->
 
@@ -367,7 +370,30 @@
                 <confluent.version>6.2.1</confluent.version>
             </properties>
         </profile>
-
+        <profile>
+            <id>spark-3.3</id>
+            <properties>
+                <spark.version>${spark-33.version}</spark.version>
+                <avro.version>1.11.0</avro.version>
+                <confluent.version>6.2.1</confluent.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-3.4</id>
+            <properties>
+                <spark.version>${spark-34.version}</spark.version>
+                <avro.version>1.11.1</avro.version>
+                <confluent.version>6.2.1</confluent.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-3.5</id>
+            <properties>
+                <spark.version>${spark-35.version}</spark.version>
+                <avro.version>1.11.2</avro.version>
+                <confluent.version>6.2.1</confluent.version>
+            </properties>
+        </profile>
         <profile>
             <id>uber</id>
             <build>
