@@ -72,7 +72,6 @@
         <confluent.version>6.2.1</confluent.version>
 
         <!--Libs-->
-        <avro.version>1.10.2</avro.version>
         <jacoco.version>0.8.10</jacoco.version>
 
         <!--Tests-->
@@ -160,14 +159,6 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-avro_${scala.compat.version}</artifactId>
             <version>${spark.avro.version}</version>
-        </dependency>
-
-        <!-- Avro -->
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>${avro.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Spark Kafka -->
@@ -366,7 +357,6 @@
             <id>spark-3.2</id>
             <properties>
                 <spark.version>${spark-32.version}</spark.version>
-                <avro.version>1.10.2</avro.version>
                 <confluent.version>6.2.1</confluent.version>
             </properties>
         </profile>
@@ -374,7 +364,6 @@
             <id>spark-3.3</id>
             <properties>
                 <spark.version>${spark-33.version}</spark.version>
-                <avro.version>1.11.0</avro.version>
                 <confluent.version>6.2.1</confluent.version>
             </properties>
         </profile>
@@ -382,7 +371,6 @@
             <id>spark-3.4</id>
             <properties>
                 <spark.version>${spark-34.version}</spark.version>
-                <avro.version>1.11.1</avro.version>
                 <confluent.version>6.2.1</confluent.version>
             </properties>
         </profile>
@@ -390,7 +378,6 @@
             <id>spark-3.5</id>
             <properties>
                 <spark.version>${spark-35.version}</spark.version>
-                <avro.version>1.11.2</avro.version>
                 <confluent.version>6.2.1</confluent.version>
             </properties>
         </profile>
