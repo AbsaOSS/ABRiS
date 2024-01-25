@@ -576,11 +576,9 @@
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <version>${jacoco.version}</version>
                         <configuration>
-                            <!-- examples of class excluding -->
-                            <!-- excludes>
-                                <exclude>za/co/absa/enceladus/migrations/continuous/EntityVersionMap.class</exclude>
-                                <exclude>za/co/absa/enceladus/rest_api/exceptions/ValidationException.class</exclude>
-                            </excludes -->
+                            <excludes>
+                                <exclude>za/co/absa/abris/examples/**</exclude>
+                            </excludes>
                         </configuration>
                         <executions>
                             <execution>
