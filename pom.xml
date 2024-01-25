@@ -48,10 +48,9 @@
         <maven.shade.plugin.version>3.2.1</maven.shade.plugin.version>
 
         <!-- Spark -->
-        <spark-32.version>3.2.4</spark-32.version>
-        <spark-33.version>3.3.4</spark-33.version>
-        <spark-34.version>3.4.2</spark-34.version>
-        <spark-35.version>3.5.0</spark-35.version>
+        <spark.default.version>3.2.4</spark.default.version>
+        <avro.default.version>1.10.2</avro.default.version>
+        <jackson.core.default.version>2.12.3</jackson.core.default.version>
 
         <!-- Cross build properties -->
 
@@ -66,7 +65,10 @@
         <scala.compat.version>2.12</scala.compat.version>
 
         <!--Platforms-->
-        <spark.version>${spark-32.version}</spark.version>
+        <spark.version>${spark.default.version}</spark.version>
+        <avro.version>${avro.default.version}</avro.version>
+        <jackson.core.version>${jackson.core.default.version}</jackson.core.version>
+
         <spark.avro.version>${spark.version}</spark.avro.version>
         <kafka.spark.version>0-10</kafka.spark.version>
         <confluent.version>6.2.1</confluent.version>
@@ -121,6 +123,20 @@
         </developer>
     </developers>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro</artifactId>
+                <version>${avro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.core.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <!-- Tests -->
         <dependency>
@@ -356,29 +372,34 @@
         <profile>
             <id>spark-3.2</id>
             <properties>
-                <spark.version>${spark-32.version}</spark.version>
-                <confluent.version>6.2.1</confluent.version>
+                <spark.version>${spark.default.version}</spark.version>
+                <avro.version>${avro.default.version}</avro.version>
+                <jackson.core.version>${jackson.core.default.version}</jackson.core.version>
             </properties>
+
         </profile>
         <profile>
             <id>spark-3.3</id>
             <properties>
-                <spark.version>${spark-33.version}</spark.version>
-                <confluent.version>6.2.1</confluent.version>
+                <spark.version>3.3.4</spark.version>
+                <avro.version>1.11.0</avro.version>
+                <jackson.core.version>2.13.4.2</jackson.core.version>
             </properties>
         </profile>
         <profile>
             <id>spark-3.4</id>
             <properties>
-                <spark.version>${spark-34.version}</spark.version>
-                <confluent.version>6.2.1</confluent.version>
+                <spark.version>3.4.2</spark.version>
+                <avro.version>1.11.1</avro.version>
+                <jackson.core.version>2.14.2</jackson.core.version>
             </properties>
         </profile>
         <profile>
             <id>spark-3.5</id>
             <properties>
-                <spark.version>${spark-35.version}</spark.version>
-                <confluent.version>6.2.1</confluent.version>
+                <spark.version>3.5.0</spark.version>
+                <avro.version>1.11.2</avro.version>
+                <jackson.core.version>2.15.2</jackson.core.version>
             </properties>
         </profile>
         <profile>
