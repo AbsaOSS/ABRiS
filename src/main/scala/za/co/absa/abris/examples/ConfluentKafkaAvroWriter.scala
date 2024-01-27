@@ -16,13 +16,13 @@
 
 package za.co.absa.abris.examples
 
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.functions.{col, struct}
 import org.apache.spark.sql.{DataFrame, Encoder, Row, SparkSession}
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.config.AbrisConfig
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
+import za.co.absa.abris.examples.utils.CompatibleRowEncoder
 
 
 object ConfluentKafkaAvroWriter {
@@ -85,6 +85,6 @@ object ConfluentKafkaAvroWriter {
   private def getEncoder: Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    RowEncoder.apply(sparkSchema)
+    CompatibleRowEncoder.apply(sparkSchema)
   }
 }

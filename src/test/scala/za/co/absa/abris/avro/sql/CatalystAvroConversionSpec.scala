@@ -60,7 +60,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
     SchemaManagerFactory.addSRClientInstance(schemaRegistryConfig, mockedSchemaRegistryClient)
   }
 
-  val bareByteSchema = """{"type": "bytes"}""""
+  val bareByteSchema = """{"type": "bytes"}"""
 
   it should "convert one type with bare schema to avro an back" in {
 

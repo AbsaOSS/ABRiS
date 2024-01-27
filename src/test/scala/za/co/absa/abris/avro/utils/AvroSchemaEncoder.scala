@@ -17,17 +17,17 @@
 package za.co.absa.abris.avro.utils
 
 import org.apache.spark.sql.{Encoder, Row}
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import za.co.absa.abris.avro.format.SparkAvroConversions
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
 import za.co.absa.abris.examples.data.generation.ComplexRecordsGenerator
+import za.co.absa.abris.examples.utils.CompatibleRowEncoder
 
 class AvroSchemaEncoder {
 
   def getEncoder: Encoder[Row] = {
     val avroSchema = AvroSchemaUtils.parse(ComplexRecordsGenerator.usedAvroSchema)
     val sparkSchema = SparkAvroConversions.toSqlType(avroSchema)
-    RowEncoder.apply(sparkSchema)
+    CompatibleRowEncoder.apply(sparkSchema)
   }
 
 }
