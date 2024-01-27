@@ -383,7 +383,7 @@
             <properties>
                 <spark.version>3.3.4</spark.version>
                 <avro.version>1.11.0</avro.version>
-                <jackson.core.version>2.13.4.2</jackson.core.version>
+                <jackson.core.version>2.13.4</jackson.core.version>
             </properties>
         </profile>
         <profile>
