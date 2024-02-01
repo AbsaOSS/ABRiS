@@ -36,7 +36,10 @@ class AbrisAvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
         .newInstance(rootAvroType, rootCatalystType) // Spark 2.4 -
     }.recover { case _: NoSuchMethodException =>
       clazz.getConstructor(classOf[Schema], classOf[DataType], classOf[String])
-        .newInstance(rootAvroType, rootCatalystType, "LEGACY") // Spark 3.0 +
+        .newInstance(rootAvroType, rootCatalystType, "LEGACY") // Spark 3.0 - Spark 3.5.0 (including)
+    }.recover { case _: NoSuchMethodException =>
+      clazz.getConstructor(classOf[Schema], classOf[DataType], classOf[String], classOf[Boolean])
+        .newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean) // Spark 3.5.x +
     }
       .get
       .asInstanceOf[AvroDeserializer]
