@@ -50,7 +50,7 @@ The version of `spark-avro` and `Spark` should be identical.
 Example: submitting a Spark job:
 ```
 ./bin/spark-submit \
-    --packages org.apache.spark:spark-avro_2.12:3.5.0,za.co.absa:abris_2.12:6.2.0 \
+    --packages org.apache.spark:spark-avro_2.12:3.5.0,za.co.absa:abris_2.12:6.4.0 \
     ...rest of submit params...
 ```
 
@@ -73,6 +73,16 @@ Example: using Abris in maven project:
     <version>6.4.0</version>
 </dependency>
 ```
+
+Example: using Abris in SBT project:
+```Scala
+libraryDependencies ++= Seq(
+  "org.apache.spark" %% "spark-core" % "3.5.0" % Provided,
+  "org.apache.spark" %% "spark-avro" % "3.5.0",
+  "za.co.absa" %% "abris" % "6.4.0"
+)
+```
+
 
 ## Usage
 
