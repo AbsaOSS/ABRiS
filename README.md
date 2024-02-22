@@ -23,12 +23,12 @@
 
 ## Supported versions
 
-| Abris   | Spark         | Scala       |
-|:-----:  |:-----:        |:-----:      |
-| 6.2.0 - 6.x.x   | 3.2.1 - 3.2.x | 2.12 / 2.13 |
-| 6.0.0 - 6.1.1   | 3.2.0         | 2.12 / 2.13 |
+| Abris   |     Spark     | Scala       |
+|:-----:  |:-------------:|:-----:      |
+| 6.2.0 - 6.x.x   | 3.2.1 - 3.5.x | 2.12 / 2.13 |
+| 6.0.0 - 6.1.1   |     3.2.0     | 2.12 / 2.13 |
 | 5.0.0 - 5.x.x   | 3.0.x / 3.1.x | 2.12        |
-| 5.0.0 - 5.x.x   | 2.4.x         | 2.11 / 2.12 |
+| 5.0.0 - 5.x.x   |     2.4.x     | 2.11 / 2.12 |
 
 From version 6.0.0, ABRiS only supports Spark 3.2.x.
 
@@ -42,6 +42,47 @@ This is documentation for Abris **version 6**. Documentation for older versions 
 
 ## Confluent Schema Registry Version
 Abris by default uses Confluent client version 6.2.0.
+
+## Installation
+Abris needs `spark-avro` to run, make sure you include the `spark-avro` dependency when using Abris.
+The version of `spark-avro` and `Spark` should be identical.
+
+Example: submitting a Spark job:
+```
+./bin/spark-submit \
+    --packages org.apache.spark:spark-avro_2.12:3.5.0,za.co.absa:abris_2.12:6.4.0 \
+    ...rest of submit params...
+```
+
+Example: using Abris in maven project:
+```xml
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-core_2.12</artifactId>
+    <version>3.5.0</version>
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-avro_2.12</artifactId>
+    <version>3.5.0</version> <!-- version must be the same as Spark -->
+</dependency>
+<dependency>
+    <groupId>za.co.absa</groupId>
+    <artifactId>abris_2.12</artifactId>
+    <version>6.4.0</version>
+</dependency>
+```
+
+Example: using Abris in SBT project:
+```Scala
+libraryDependencies ++= Seq(
+  "org.apache.spark" %% "spark-core" % "3.5.0" % Provided,
+  "org.apache.spark" %% "spark-avro" % "3.5.0",
+  "za.co.absa" %% "abris" % "6.4.0"
+)
+```
+
 
 ## Usage
 
