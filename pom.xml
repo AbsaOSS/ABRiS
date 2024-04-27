@@ -71,7 +71,7 @@
 
         <spark.avro.version>${spark.version}</spark.avro.version>
         <kafka.spark.version>0-10</kafka.spark.version>
-        <confluent.version>6.2.1</confluent.version>
+        <confluent.version>7.6.1</confluent.version>
 
         <!--Libs-->
         <jacoco.version>0.8.10</jacoco.version>
