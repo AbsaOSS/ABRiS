@@ -20,6 +20,7 @@ import org.apache.avro.Schema
 import org.apache.spark.sql.types.DataType
 import za.co.absa.commons.annotation.DeveloperApi
 
+import scala.collection.mutable
 import scala.util.Try
 
 /**
@@ -31,18 +32,37 @@ class AbrisAvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
 
   private val deserializer = {
     val clazz = classOf[AvroDeserializer]
-    Try {
-      clazz.getConstructor(classOf[Schema], classOf[DataType])
-        .newInstance(rootAvroType, rootCatalystType) // Spark 2.4 -
-    }.recover { case _: NoSuchMethodException =>
-      clazz.getConstructor(classOf[Schema], classOf[DataType], classOf[String])
-        .newInstance(rootAvroType, rootCatalystType, "LEGACY") // Spark 3.0 - Spark 3.5.0 (including)
-    }.recover { case _: NoSuchMethodException =>
-      clazz.getConstructor(classOf[Schema], classOf[DataType], classOf[String], classOf[Boolean])
-        .newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean) // Spark 3.5.x +
+    val schemaClz = classOf[Schema]
+    val dataTypeClz = classOf[DataType]
+    val stringClz = classOf[String]
+    val booleanClz = classOf[Boolean]
+
+    clazz.getConstructors.collectFirst {
+      case currCtor if currCtor.getParameterTypes sameElements
+        Array(schemaClz, dataTypeClz) =>
+        // Spark 2.4
+        currCtor.newInstance(rootAvroType, rootCatalystType)
+      case currCtor if currCtor.getParameterTypes sameElements
+        Array(schemaClz, dataTypeClz, stringClz) =>
+        // Spark 3.0 - Spark 3.5.0 (including)
+        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY")
+      case currCtor if currCtor.getParameterTypes sameElements
+        Array(schemaClz, dataTypeClz, stringClz, booleanClz) =>
+        // Spark 3.5.1 - 3.5.2
+        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean)
+      case currCtor if currCtor.getParameterTypes.toSeq sameElements
+        Array(schemaClz, dataTypeClz, stringClz, booleanClz, stringClz) =>
+        // Spark 4.0.0-SNAPSHOT+
+        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean, "")
+    } match {
+      case Some(value: AvroDeserializer) =>
+        value
+      case _ =>
+        throw new NoSuchMethodException(
+          s"""Supported constructors for AvroDeserializer are:
+             |${clazz.getConstructors.toSeq.mkString(System.lineSeparator())}""".stripMargin)
     }
-      .get
-      .asInstanceOf[AvroDeserializer]
+
   }
 
   private val ru = scala.reflect.runtime.universe
