@@ -210,6 +210,13 @@
             <version>1.0.0</version>
         </dependency>
 
+        <!-- Apicurio Registry native client -->
+        <dependency>
+            <groupId>io.apicurio</groupId>
+            <artifactId>apicurio-registry-client</artifactId>
+            <version>2.2.3.Final</version>
+        </dependency>
+
     </dependencies>
 
     <build>
