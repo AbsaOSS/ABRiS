@@ -16,9 +16,10 @@
 
 package za.co.absa.abris.config
 
+import io.confluent.kafka.schemaregistry.client.rest.RestService
 import za.co.absa.abris.avro.errors.DeserializationExceptionHandler
 import za.co.absa.abris.avro.parsing.utils.AvroSchemaUtils
-import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
+import za.co.absa.abris.avro.read.confluent.{SchemaManager, SchemaManagerFactory}
 import za.co.absa.abris.avro.registry._
 
 object AbrisConfig {
@@ -78,15 +79,23 @@ class ToStrategyConfigFragment(version: SchemaVersion, confluent: Boolean) {
 
 class ToSchemaDownloadingConfigFragment(schemaCoordinates: SchemaCoordinate, confluent: Boolean) {
   def usingSchemaRegistry(url: String): ToAvroConfig = usingSchemaRegistry(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> url))
-  def usingSchemaRegistry(config: Map[String, String]): ToAvroConfig = {
-    val schemaManager = SchemaManagerFactory.create(config)
-    val (schemaId, schemaString) = schemaCoordinates match {
+  private def getSchemaIDAndSchemaString(schemaManager: SchemaManager) : (Int, String) = {
+    schemaCoordinates match {
       case ic: IdCoordinate => (ic.schemaId, schemaManager.getSchemaById(ic.schemaId).toString)
       case sc: SubjectCoordinate => {
         val metadata = schemaManager.getSchemaMetadataBySubjectAndVersion(sc.subject, sc.version)
         (metadata.getId, metadata.getSchema)
       }
     }
+  }
+  def usingSchemaRegistry(config: Map[String, String]): ToAvroConfig = {
+    val schemaManager = SchemaManagerFactory.create(config)
+    val (schemaId, schemaString) = getSchemaIDAndSchemaString(schemaManager)
+    new ToAvroConfig(schemaString, if (confluent) Some(schemaId) else None)
+  }
+  def usingSchemaRegistry(restService: RestService, maxSchemaObject: Int): ToAvroConfig = {
+    val schemaManager = SchemaManagerFactory.create(restService, maxSchemaObject)
+    val (schemaId, schemaString) = getSchemaIDAndSchemaString(schemaManager)
     new ToAvroConfig(schemaString, if (confluent) Some(schemaId) else None)
   }
 }
@@ -133,6 +142,12 @@ class ToSchemaRegisteringConfigFragment(
   def usingSchemaRegistry(url: String): ToAvroConfig = usingSchemaRegistry(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> url))
   def usingSchemaRegistry(config: Map[String, String]): ToAvroConfig = {
     val schemaManager = SchemaManagerFactory.create(config)
+    val schema = AvroSchemaUtils.parse(schemaString)
+    val schemaId = schemaManager.getIfExistsOrElseRegisterSchema(schema, subject)
+    new ToAvroConfig(schemaString, if (confluent) Some(schemaId) else None)
+  }
+  def usingSchemaRegistry(restService: RestService, maxSchemaObject: Int): ToAvroConfig = {
+    val schemaManager = SchemaManagerFactory.create(restService, maxSchemaObject)
     val schema = AvroSchemaUtils.parse(schemaString)
     val schemaId = schemaManager.getIfExistsOrElseRegisterSchema(schema, subject)
     new ToAvroConfig(schemaString, if (confluent) Some(schemaId) else None)
@@ -257,6 +272,21 @@ class FromSchemaDownloadingConfigFragment(
       } else {
         throw new UnsupportedOperationException("Unsupported config permutation")
       }
+  }
+
+  def usingSchemaRegistry(restService: RestService, maxSchemaObject: Int): FromAvroConfig = {
+    schemaCoordinatesOrSchemaString match {
+      case Left(coordinate) =>
+        val schemaManager = SchemaManagerFactory.create(restService, maxSchemaObject)
+        val schema = schemaManager.getSchema(coordinate)
+        new FromAvroConfig(schema.toString, if (confluent) Some(Map()) else None)
+      case Right(schemaString) =>
+        if (confluent) {
+          new FromAvroConfig(schemaString, None)
+        } else {
+          throw new UnsupportedOperationException("Unsupported config permutation")
+        }
+    }
   }
 }
 

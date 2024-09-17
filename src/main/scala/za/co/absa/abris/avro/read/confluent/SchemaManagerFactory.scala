@@ -17,6 +17,7 @@
 
 package za.co.absa.abris.avro.read.confluent
 
+import io.confluent.kafka.schemaregistry.client.rest.RestService
 import org.apache.spark.internal.Logging
 import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentMockRegistryClient, ConfluentRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
@@ -34,7 +35,8 @@ import scala.util.control.NonFatal
  */
 object SchemaManagerFactory extends Logging {
 
-  private val clientInstances: concurrent.Map[Map[String,String], AbrisRegistryClient] = concurrent.TrieMap()
+  private val clientInstances: concurrent.Map[Map[String, String], AbrisRegistryClient] = concurrent.TrieMap()
+  private val restClientInstances: concurrent.Map[RestService, AbrisRegistryClient] = concurrent.TrieMap()
 
   @DeveloperApi
   def addSRClientInstance(configs: Map[String, String], client: AbrisRegistryClient): Unit = {
@@ -43,12 +45,17 @@ object SchemaManagerFactory extends Logging {
 
   @DeveloperApi
   def resetSRClientInstance(): Unit = {
-   clientInstances.clear()
+    clientInstances.clear()
   }
 
-  def create(configs: Map[String,String]): SchemaManager = new SchemaManager(getOrCreateRegistryClient(configs))
+  def create(configs: Map[String, String]): SchemaManager = new SchemaManager(getOrCreateRegistryClient(configs))
 
-  private def getOrCreateRegistryClient(configs: Map[String,String]): AbrisRegistryClient = {
+  def create(restService: RestService, maxSchemaObject: Int): SchemaManager = {
+    new SchemaManager(getOrCreateRegistryClient(restService, maxSchemaObject))
+  }
+
+
+  private def getOrCreateRegistryClient(configs: Map[String, String]): AbrisRegistryClient = {
     clientInstances.getOrElseUpdate(configs, {
       if (configs.contains(AbrisConfig.REGISTRY_CLIENT_CLASS)) {
         try {
@@ -72,6 +79,13 @@ object SchemaManagerFactory extends Logging {
         logInfo(msg = s"Configuring new Schema Registry client of type ConfluentRegistryClient")
         new ConfluentRegistryClient(configs)
       }
+    })
+  }
+
+  private def getOrCreateRegistryClient(restService: RestService, maxSchemaObject: Int): AbrisRegistryClient = {
+    restClientInstances.getOrElseUpdate(restService, {
+      logInfo(msg = s"Configuring new Schema Registry client of type ConfluentRegistryClient")
+      new ConfluentRegistryClient(restService, maxSchemaObject)
     })
   }
 }

@@ -15,6 +15,7 @@
  */
 
 package za.co.absa.abris.avro.registry
+import io.confluent.kafka.schemaregistry.client.rest.RestService
 import io.confluent.kafka.schemaregistry.client.{CachedSchemaRegistryClient, SchemaRegistryClient}
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 
@@ -23,6 +24,10 @@ import scala.collection.JavaConverters._
 class ConfluentRegistryClient(client: SchemaRegistryClient) extends AbstractConfluentRegistryClient(client) {
 
   def this(configs: Map[String,String]) = this(ConfluentRegistryClient.createClient(configs))
+
+  def this(restService: RestService, maxSchemaObject: Int) = {
+    this(ConfluentRegistryClient.createClient(restService, maxSchemaObject))
+  }
 }
 
 object ConfluentRegistryClient {
@@ -33,6 +38,10 @@ object ConfluentRegistryClient {
     val maxSchemaObject = settings.getMaxSchemasPerSubject
 
     new CachedSchemaRegistryClient(urls, maxSchemaObject, configs.asJava)
+  }
+
+  private def createClient(restService: RestService, maxSchemaObject: Int) = {
+    new CachedSchemaRegistryClient(restService, maxSchemaObject)
   }
 
 }

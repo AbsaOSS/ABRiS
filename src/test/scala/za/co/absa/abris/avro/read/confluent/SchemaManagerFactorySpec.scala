@@ -16,11 +16,14 @@
 
 package za.co.absa.abris.avro.read.confluent
 
+import io.confluent.kafka.schemaregistry.client.rest.RestService
+import io.confluent.kafka.schemaregistry.client.security.basicauth.UserInfoCredentialProvider
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import za.co.absa.abris.avro.registry.{AbrisRegistryClient, ConfluentMockRegistryClient, ConfluentRegistryClient, TestRegistryClient}
 import za.co.absa.abris.config.AbrisConfig
 
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.reflect.runtime.{universe => ru}
 
 class SchemaManagerFactorySpec extends AnyFlatSpec with BeforeAndAfterEach {
@@ -33,6 +36,11 @@ class SchemaManagerFactorySpec extends AnyFlatSpec with BeforeAndAfterEach {
     AbrisConfig.SCHEMA_REGISTRY_URL -> "http://dummy_sr_2",
     AbrisConfig.REGISTRY_CLIENT_CLASS -> "za.co.absa.abris.avro.registry.TestRegistryClient"
   )
+
+  private val restService = new RestService("http://dummy_sr_2")
+  val provider = new UserInfoCredentialProvider()
+  provider.configure(schemaRegistryConfig2.asJava)
+  restService.setBasicAuthCredentialProvider(provider)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
