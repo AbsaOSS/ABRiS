@@ -24,7 +24,7 @@ import org.apache.spark.sql.avro.AbrisAvroDeserializer
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType}
-import za.co.absa.abris.avro.errors.DeserializationExceptionHandler
+import za.co.absa.abris.avro.errors.{DeserializationExceptionHandler, DeserializationExceptionHandlerWithPayload}
 import za.co.absa.abris.avro.read.confluent.{ConfluentConstants, SchemaManagerFactory}
 import za.co.absa.abris.config.InternalFromAvroConfig
 
@@ -84,7 +84,12 @@ private[abris] case class AvroDataToCatalyst(
       // There could be multiple possible exceptions here, e.g. java.io.IOException,
       // AvroRuntimeException, ArrayIndexOutOfBoundsException, etc.
       // To make it simple, catch all the exceptions here.
-      case NonFatal(e) => deserializationHandler.handle(e, deserializer, readerSchema)
+      case NonFatal(e) => deserializationHandler match {
+        case h: DeserializationExceptionHandlerWithPayload =>
+          h.handleWithPayload(e, deserializer, readerSchema, binary)
+        case h =>
+          h.handle(e, deserializer, readerSchema)
+      }
     }
   }
 
