@@ -22,7 +22,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.avro.SchemaConverters
-import org.apache.spark.sql.functions.struct
+import org.apache.spark.sql.types.StructType
 
 import java.nio.charset.Charset
 import scala.collection.JavaConverters._
@@ -80,10 +80,8 @@ object AvroSchemaUtils {
     recordName: String,
     nameSpace: String
   ): Schema = {
-    val allColumns = struct(columnNames.map(dataFrame.col): _*)
-    val expression = allColumns.expr
-
-    SchemaConverters.toAvroType(expression.dataType, expression.nullable, recordName, nameSpace)
+    val structType = StructType(columnNames.map(dataFrame.schema(_)))
+    SchemaConverters.toAvroType(structType, nullable = false, recordName, nameSpace)
   }
 
   def toAvroSchema(
