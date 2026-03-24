@@ -32,6 +32,7 @@ import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.avro.utils.AvroSchemaEncoder
 import za.co.absa.abris.config.{AbrisConfig, FromAvroConfig}
 import za.co.absa.abris.examples.data.generation.TestSchemas
+import za.co.absa.abris.utils.SparkColumnCompat.col2expr
 
 import java.util.Collections
 import java.nio.ByteBuffer
@@ -66,7 +67,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       ))
 
     val column = from_avro(col("avroBytes"), fromAvroConfig)
-    column.expr.toString() should not include sensitiveData
+    col2expr(column).toString() should not include sensitiveData
   }
 
   it should "use the default schema converter by default" in {
@@ -84,7 +85,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       ))
 
     val column = from_avro(col("avroBytes"), fromAvroConfig)
-    column.expr.dataType shouldBe expectedDataType
+    col2expr(column).dataType shouldBe expectedDataType
   }
 
   it should "use a custom schema converter identified by the short name" in {
@@ -99,7 +100,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       .withSchemaConverter(DummySchemaConverter.name)
 
     val column = from_avro(col("avroBytes"), fromAvroConfig)
-    column.expr.dataType shouldBe DummySchemaConverter.dataType
+    col2expr(column).dataType shouldBe DummySchemaConverter.dataType
   }
 
   it should "use a custom schema converter identified by the fully qualified name" in {
@@ -114,7 +115,7 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       .withSchemaConverter("za.co.absa.abris.avro.sql.DummySchemaConverter")
 
     val column = from_avro(col("avroBytes"), fromAvroConfig)
-    column.expr.dataType shouldBe DummySchemaConverter.dataType
+    col2expr(column).dataType shouldBe DummySchemaConverter.dataType
   }
 
   it should "throw an error if the specified custom schema converter does not exist" in {
@@ -128,14 +129,14 @@ class AvroDataToCatalystSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       ))
       .withSchemaConverter("nonexistent")
 
-    val ex = intercept[ClassNotFoundException](from_avro(col("avroBytes"), fromAvroConfig).expr.dataType)
+    val ex = intercept[ClassNotFoundException](col2expr(from_avro(col("avroBytes"), fromAvroConfig)).dataType)
     ex.getMessage should include ("nonexistent")
   }
 
   it should "be serializable" in {
     val schemaString = TestSchemas.NATIVE_SIMPLE_NESTED_SCHEMA
     val config = FromAvroConfig().withReaderSchema(schemaString)
-    val avroDataToCatalyst = from_avro(col("col"), config).expr
+    val avroDataToCatalyst = col2expr(from_avro(col("col"), config))
 
     val javaSerializer = new JavaSerializer(new SparkConf())
     javaSerializer.newInstance().serialize(avroDataToCatalyst)
