@@ -33,7 +33,9 @@ class SchemaEvolutionSpec extends AnyFlatSpec with Matchers with BeforeAndAfterE
     .builder()
     .appName("unitTest")
     .master("local[2]")
-    .config("spark.driver.bindAddress", "localhost")
+    .config("spark.driver.host", "127.0.0.1")
+.config("spark.driver.bindAddress", "localhost")
+
     .config("spark.ui.enabled", "false")
     .getOrCreate()
 
