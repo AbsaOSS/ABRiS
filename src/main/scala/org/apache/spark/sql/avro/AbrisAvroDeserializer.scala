@@ -24,58 +24,14 @@ import scala.collection.mutable
 import scala.util.Try
 
 /**
- * Compatibility layer handling different versions of AvroDeserializer
- * the package also allows to access package private class
+ * Simple wrapper to access spark package private class
  */
 @DeveloperApi
 class AbrisAvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
+  private val deserializer: AvroDeserializer = new AvroDeserializer(rootAvroType, rootCatalystType,
+    "LEGACY", false: java.lang.Boolean, "", -1)
 
-  private val deserializer = {
-    val clazz = classOf[AvroDeserializer]
-    val schemaClz = classOf[Schema]
-    val dataTypeClz = classOf[DataType]
-    val stringClz = classOf[String]
-    val booleanClz = classOf[Boolean]
-
-    clazz.getConstructors.collectFirst {
-      case currCtor if currCtor.getParameterTypes sameElements
-        Array(schemaClz, dataTypeClz) =>
-        // Spark 2.4
-        currCtor.newInstance(rootAvroType, rootCatalystType)
-      case currCtor if currCtor.getParameterTypes sameElements
-        Array(schemaClz, dataTypeClz, stringClz) =>
-        // Spark 3.0 - Spark 3.5.0 (including)
-        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY")
-      case currCtor if currCtor.getParameterTypes sameElements
-        Array(schemaClz, dataTypeClz, stringClz, booleanClz) =>
-        // Spark 3.5.1 - 3.5.6
-        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean)
-      case currCtor if currCtor.getParameterTypes.toSeq sameElements
-        Array(schemaClz, dataTypeClz, stringClz, booleanClz, stringClz) =>
-        // Spark 4.0.0
-        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean, "") // ,-1
-    } match {
-      case Some(value: AvroDeserializer) =>
-        value
-      case _ =>
-        throw new NoSuchMethodException(
-          s"""Supported constructors for AvroDeserializer are:
-             |${clazz.getConstructors.toSeq.mkString(System.lineSeparator())}""".stripMargin)
-    }
-
+  def deserialize(catalystData: Any): Any = {
+    deserializer.deserialize(catalystData)
   }
-
-  private val ru = scala.reflect.runtime.universe
-  private val rm = ru.runtimeMirror(getClass.getClassLoader)
-  private val classSymbol = rm.classSymbol(deserializer.getClass)
-  private val deserializeMethodSymbol = classSymbol.info.decl(ru.TermName("deserialize")).asMethod
-  private val deserializeMethod = rm.reflect(deserializer).reflectMethod(deserializeMethodSymbol)
-
-  def deserialize(data: Any): Any = {
-    deserializeMethod(data) match {
-      case Some(x) => x // Spark 3.1 +
-      case x => x // Spark 3.0 -
-    }
-  }
-
 }

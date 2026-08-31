@@ -39,8 +39,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!--Maven-->
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <maven.sources.version>3.0.1</maven.sources.version>
         <gpg.plugin.version>1.6</gpg.plugin.version>
         <surefire.version>3.0.0-M1</surefire.version>
@@ -53,7 +53,7 @@
         <jackson.core.default.version>2.21.2</jackson.core.default.version>
 
         <!-- Scala -->
-        <scala.version>2.13.18</scala.version>
+        <scala.version>2.13.17</scala.version>
         <scala.compat.version>2.13</scala.compat.version>
 
         <!--Platforms-->
@@ -69,11 +69,11 @@
         <jacoco.version>0.8.10</jacoco.version>
 
         <!--Tests-->
-        <scalatestplus.mockito.version>3.1.2.0</scalatestplus.mockito.version>
-        <scalatest.version>3.2.14</scalatest.version>
+        <scalatestplus.mockito.version>3.2.19.0</scalatestplus.mockito.version>
+        <scalatest.version>3.2.20</scalatest.version>
         <scalatest.maven.plugin.version>2.2.0</scalatest.maven.plugin.version>
 
-        <scala.maven.plugin.version>3.3.2</scala.maven.plugin.version>
+        <scala.maven.plugin.version>4.9.10</scala.maven.plugin.version>
 
         <scm.url><!-- defined outside the pom --></scm.url>
         <scm.connection><!-- defined outside the pom --></scm.connection>
@@ -127,6 +127,17 @@
                 <artifactId>jackson-core</artifactId>
                 <version>${jackson.core.version}</version>
             </dependency>
+            <!-- force resolution to match Spark, overriding older versions pulled in transitively (e.g. by scalatest) -->
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-reflect</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -139,7 +150,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatestplus</groupId>
-            <artifactId>mockito-3-2_${scala.compat.version}</artifactId>
+            <artifactId>mockito-5-12_${scala.compat.version}</artifactId>
             <version>${scalatestplus.mockito.version}</version>
             <scope>test</scope>
         </dependency>
@@ -263,6 +274,12 @@
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
                     <filereports>TestSuite.txt</filereports>
+                    <argLine>
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                        --add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                    </argLine>
                 </configuration>
                 <executions>
                     <execution>

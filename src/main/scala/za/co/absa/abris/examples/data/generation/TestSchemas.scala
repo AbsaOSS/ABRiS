@@ -35,7 +35,7 @@ object TestSchemas {
   val NATIVE_SIMPLE_OUTER_SCHEMA = NativeSimpleOuter.SCHEMA$.toString()
 
   val NATIVE_SIMPLE_NESTED_SCHEMA = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type":"record",
       "name":"nested",
       "fields":
@@ -48,7 +48,7 @@ object TestSchemas {
   val NATIVE_COMPLETE_SCHEMA = NativeComplete.SCHEMA$.toString()
 
   val NATIVE_COMPLETE_SCHEMA_WITHOUT_FIXED = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "native_complete",
      "fields":[
@@ -65,7 +65,7 @@ object TestSchemas {
   }"""
 
   val NATIVE_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "native",
      "fields":[
@@ -79,7 +79,7 @@ object TestSchemas {
   }"""
 
   val ARRAY_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "array",
      "fields":[
@@ -88,7 +88,7 @@ object TestSchemas {
   }"""
 
   val MAP_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "map",
      "fields":[
@@ -97,7 +97,7 @@ object TestSchemas {
   }"""
 
   val BYTES_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "bytes",
      "fields":[
@@ -106,7 +106,7 @@ object TestSchemas {
   }"""
 
   val FIXED_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "fixed_name",
      "fields":[
@@ -115,7 +115,7 @@ object TestSchemas {
   }"""
 
   val DECIMAL_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "decimal",
      "fields":[
@@ -124,7 +124,7 @@ object TestSchemas {
   }"""
 
   val DATE_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "date",
      "fields":[
@@ -133,7 +133,7 @@ object TestSchemas {
   }"""
 
   val MILLISECOND_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "millisecond",
      "fields":[
@@ -142,7 +142,7 @@ object TestSchemas {
   }"""
 
   val MICROSECOND_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "microsecond",
      "fields":[
@@ -151,7 +151,7 @@ object TestSchemas {
   }"""
 
   val TIMESTAMP_MILLIS_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "timestamp_millis",
      "fields":[
@@ -160,7 +160,7 @@ object TestSchemas {
   }"""
 
   val TIMESTAMP_MICROS_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "timestamp_micros",
      "fields":[
@@ -169,7 +169,7 @@ object TestSchemas {
   }"""
 
   val DURATION_MICROS_SCHEMA_SPEC = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "duration_micros",
      "fields":[
@@ -180,7 +180,7 @@ object TestSchemas {
   val COMPLEX_SCHEMA_SPEC = """{
   "type":"record",
   "name":"complex",
-  "namespace":"all-types.test",
+  "namespace":"alltypes.test",
   "fields":
   [
     {"name":"name","type":"string"},

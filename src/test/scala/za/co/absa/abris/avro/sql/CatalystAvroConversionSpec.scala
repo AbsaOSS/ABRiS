@@ -97,7 +97,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
   }
 
   val recordByteSchema = """{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "bytes",
      "fields":[
@@ -352,7 +352,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       inputFrame,
       "input",
       "native_complete",
-      "all-types.test"
+      "alltypes.test"
     ).toString
 
     val toAvroConfig = AbrisConfig
@@ -369,7 +369,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
     val fromAvroConfig = AbrisConfig
       .fromSimpleAvro
       .downloadSchemaByLatestVersion
-      .andRecordNameStrategy("native_complete", "all-types.test")
+      .andRecordNameStrategy("native_complete", "alltypes.test")
       .usingSchemaRegistry(dummyUrl)
 
     val result = avroBytes
@@ -389,7 +389,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
       inputFrame,
       "input",
       "native_complete",
-      "all-types.test"
+      "alltypes.test"
     ).toString
 
     val toConfig = AbrisConfig
@@ -406,7 +406,7 @@ class CatalystAvroConversionSpec extends AnyFlatSpec with Matchers with BeforeAn
     val fromConfig = AbrisConfig
       .fromConfluentAvro
       .downloadReaderSchemaByLatestVersion
-      .andTopicRecordNameStrategy("topicName", "native_complete", "all-types.test")
+      .andTopicRecordNameStrategy("topicName", "native_complete", "alltypes.test")
       .usingSchemaRegistry(dummyUrl)
 
 
