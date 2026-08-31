@@ -3,6 +3,7 @@ name: Binary Compatibility
 on:
   pull_request:
     branches: [ master, branch-6, branch-5 ]
+    types: [ opened, edited, synchronize, reopened ]
 
 jobs:
   build:
