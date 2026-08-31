@@ -32,8 +32,7 @@
 | 5.0.0 - 5.x.x |     2.4.x     | 2.11 / 2.12 |
 
 - From version 7.0.0, ABRiS only supports Spark 4.0.0+.
-- ABRiS 6.0.x is still supported for older versions of Spark (see [branch-6](https://github.com/AbsaOSS/ABRiS/tree/branch-6))
-- ABRiS 5.0.x is still supported for older versions of Spark (see [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5))
+- ABRiS 6.4.x is still supported for Spark 3.5.x (see [branch-6](https://github.com/AbsaOSS/ABRiS/tree/branch-6))
 
 ## Older Versions
 This is documentation for Abris **version 7**. Documentation for older versions is located in corresponding branches:
@@ -41,7 +40,7 @@ This is documentation for Abris **version 7**. Documentation for older versions 
 [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5),
 
 ## Confluent Schema Registry Version
-Abris by default uses Confluent client version 7.9.9.
+Abris by default uses Confluent client version 8.3.1.
 
 ## Installation
 Abris needs `spark-avro` to run, make sure you include the `spark-avro` dependency when using Abris.
