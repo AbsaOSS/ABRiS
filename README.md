@@ -23,25 +23,25 @@
 
 ## Supported versions
 
-| Abris   |     Spark     | Scala       |
-|:-----:  |:-------------:|:-----:      |
-| 6.2.0 - 6.x.x   | 3.2.1 - 3.5.x | 2.12 / 2.13 |
-| 6.0.0 - 6.1.1   |     3.2.0     | 2.12 / 2.13 |
-| 5.0.0 - 5.x.x   | 3.0.x / 3.1.x | 2.12        |
-| 5.0.0 - 5.x.x   |     2.4.x     | 2.11 / 2.12 |
+|     Abris     |     Spark     |    Scala    |
+|:-------------:|:-------------:|:-----------:|
+| 7.0.0 - 7.x.x | 4.0.0 - 4.2.x |   2.13      |
+| 6.2.0 - 6.x.x | 3.2.1 - 3.5.x | 2.12 / 2.13 |
+| 6.0.0 - 6.1.1 |     3.2.0     | 2.12 / 2.13 |
+| 5.0.0 - 5.x.x | 3.0.x / 3.1.x |    2.12     |
+| 5.0.0 - 5.x.x |     2.4.x     | 2.11 / 2.12 |
 
-From version 6.0.0, ABRiS only supports Spark 3.2.x.
-
-ABRiS 5.0.x is still supported for older versions of Spark (see [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5))
+- From version 7.0.0, ABRiS only supports Spark 4.0.0+.
+- ABRiS 6.0.x is still supported for older versions of Spark (see [branch-6](https://github.com/AbsaOSS/ABRiS/tree/branch-6))
+- ABRiS 5.0.x is still supported for older versions of Spark (see [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5))
 
 ## Older Versions
-This is documentation for Abris **version 6**. Documentation for older versions is located in corresponding branches:
+This is documentation for Abris **version 7**. Documentation for older versions is located in corresponding branches:
+[branch-6](https://github.com/AbsaOSS/ABRiS/tree/branch-6),
 [branch-5](https://github.com/AbsaOSS/ABRiS/tree/branch-5),
-[branch-4](https://github.com/AbsaOSS/ABRiS/tree/branch-4),
-[branch-3.2](https://github.com/AbsaOSS/ABRiS/tree/branch-3.2).
 
 ## Confluent Schema Registry Version
-Abris by default uses Confluent client version 6.2.0.
+Abris by default uses Confluent client version 7.9.9.
 
 ## Installation
 Abris needs `spark-avro` to run, make sure you include the `spark-avro` dependency when using Abris.
@@ -50,7 +50,7 @@ The version of `spark-avro` and `Spark` should be identical.
 Example: submitting a Spark job:
 ```
 ./bin/spark-submit \
-    --packages org.apache.spark:spark-avro_2.12:3.5.0,za.co.absa:abris_2.12:6.4.0 \
+    --packages org.apache.spark:spark-avro_2.13:4.2.0,za.co.absa:abris_2.13:7.0.0 \
     ...rest of submit params...
 ```
 
@@ -58,28 +58,28 @@ Example: using Abris in maven project:
 ```xml
 <dependency>
     <groupId>org.apache.spark</groupId>
-    <artifactId>spark-core_2.12</artifactId>
-    <version>3.5.0</version>
+    <artifactId>spark-core_2.13</artifactId>
+    <version>4.2.0</version>
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>org.apache.spark</groupId>
-    <artifactId>spark-avro_2.12</artifactId>
-    <version>3.5.0</version> <!-- version must be the same as Spark -->
+    <artifactId>spark-avro_2.13</artifactId>
+    <version>4.2.0</version> <!-- version must be the same as Spark -->
 </dependency>
 <dependency>
     <groupId>za.co.absa</groupId>
-    <artifactId>abris_2.12</artifactId>
-    <version>6.4.0</version>
+    <artifactId>abris_2.13</artifactId>
+    <version>7.0.0</version>
 </dependency>
 ```
 
 Example: using Abris in SBT project:
 ```Scala
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % "3.5.0" % Provided,
-  "org.apache.spark" %% "spark-avro" % "3.5.0",
-  "za.co.absa" %% "abris" % "6.4.0"
+  "org.apache.spark" %% "spark-core" % "4.2.0" % Provided,
+  "org.apache.spark" %% "spark-avro" % "4.2.0",
+  "za.co.absa" %% "abris" % "7.0.0"
 )
 ```
 
