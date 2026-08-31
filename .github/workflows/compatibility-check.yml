@@ -1,10 +1,8 @@
 name: Binary Compatibility
 
 on:
-  push:
-    branches: [ master, branch-3.2 ]
   pull_request:
-    branches: [ master, branch-3.2 ]
+    branches: [ master, branch-6, branch-5 ]
 
 jobs:
   build:
@@ -13,25 +11,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        spark: [ 3.2 ]
-        scala: [ 2.12, 2.13 ]
-    name: Spark ${{ matrix.spark }}, Scala ${{ matrix.scala }}
+        scala: [ 2.13 ]
+    name: Scala ${{ matrix.scala }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Set up JDK 1.8
+      - name: Set up JDK 21
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: 8
+          java-version: 21
       - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-${{ matrix.scala }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-
-      - name: Switch scala version
-        run: mvn scala-cross-build:change-version -Pscala-${{ matrix.scala }}
       - name: Check binary compatibility
-        run: mvn clean test -DskipTests -Pcompatibility-check,scala-${{ matrix.scala }}
+        run: mvn clean test -DskipTests -Pcompatibility-check
