@@ -2,7 +2,7 @@ name: Binary Compatibility
 
 on:
   pull_request:
-    branches: [ master, branch-6, branch-5 ]
+    branches: [ master ]
     types: [ opened, edited, synchronize, reopened ]
 
 jobs:
@@ -19,9 +19,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: 17
       - uses: actions/cache@v4
         with:
@@ -30,4 +30,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.scala }}-
       - name: Check binary compatibility
-        run: mvn clean test -DskipTests -Pcompatibility-check
+        run: mvn clean test -DskipTests -Pcompatibility-check --no-transfer-progress
