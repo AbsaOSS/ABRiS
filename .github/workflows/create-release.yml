@@ -107,7 +107,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ github.event.inputs.tag-name }}
+          name: ABRiS ${{ env.VERSION}}
           body: ${{ steps.generate_release_notes.outputs.release-notes }}
           tag_name: ${{ github.event.inputs.tag-name }}
           draft: true
