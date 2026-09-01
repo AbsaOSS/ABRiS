@@ -17,65 +17,26 @@
 package org.apache.spark.sql.avro
 
 import org.apache.avro.Schema
+import org.slf4j.LoggerFactory
 import org.apache.spark.sql.types.DataType
 import za.co.absa.commons.annotation.DeveloperApi
 
-import scala.collection.mutable
-import scala.util.Try
-
 /**
- * Compatibility layer handling different versions of AvroDeserializer
- * the package also allows to access package private class
+ * Simple wrapper to access spark package private class
  */
 @DeveloperApi
 class AbrisAvroDeserializer(rootAvroType: Schema, rootCatalystType: DataType) {
+  private val logger = LoggerFactory.getLogger(this.getClass)
+  private val deserializer: AvroDeserializer = new AvroDeserializer(rootAvroType, rootCatalystType,
+    "LEGACY", false: java.lang.Boolean, "", -1)
 
-  private val deserializer = {
-    val clazz = classOf[AvroDeserializer]
-    val schemaClz = classOf[Schema]
-    val dataTypeClz = classOf[DataType]
-    val stringClz = classOf[String]
-    val booleanClz = classOf[Boolean]
-
-    clazz.getConstructors.collectFirst {
-      case currCtor if currCtor.getParameterTypes sameElements
-        Array(schemaClz, dataTypeClz) =>
-        // Spark 2.4
-        currCtor.newInstance(rootAvroType, rootCatalystType)
-      case currCtor if currCtor.getParameterTypes sameElements
-        Array(schemaClz, dataTypeClz, stringClz) =>
-        // Spark 3.0 - Spark 3.5.0 (including)
-        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY")
-      case currCtor if currCtor.getParameterTypes sameElements
-        Array(schemaClz, dataTypeClz, stringClz, booleanClz) =>
-        // Spark 3.5.1 - 3.5.2
-        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean)
-      case currCtor if currCtor.getParameterTypes.toSeq sameElements
-        Array(schemaClz, dataTypeClz, stringClz, booleanClz, stringClz) =>
-        // Spark 4.0.0-SNAPSHOT+
-        currCtor.newInstance(rootAvroType, rootCatalystType, "LEGACY", false: java.lang.Boolean, "")
-    } match {
-      case Some(value: AvroDeserializer) =>
-        value
-      case _ =>
-        throw new NoSuchMethodException(
-          s"""Supported constructors for AvroDeserializer are:
-             |${clazz.getConstructors.toSeq.mkString(System.lineSeparator())}""".stripMargin)
-    }
-
-  }
-
-  private val ru = scala.reflect.runtime.universe
-  private val rm = ru.runtimeMirror(getClass.getClassLoader)
-  private val classSymbol = rm.classSymbol(deserializer.getClass)
-  private val deserializeMethodSymbol = classSymbol.info.decl(ru.TermName("deserialize")).asMethod
-  private val deserializeMethod = rm.reflect(deserializer).reflectMethod(deserializeMethodSymbol)
-
-  def deserialize(data: Any): Any = {
-    deserializeMethod(data) match {
-      case Some(x) => x // Spark 3.1 +
-      case x => x // Spark 3.0 -
+  def deserialize(catalystData: Any): Any = {
+    deserializer.deserialize(catalystData) match {
+      case Some(value) => value
+      case None =>
+        logger.warn("Deserialization returned None. This may indicate a problem with the input data. Input data: "
+          + catalystData)
+        None
     }
   }
-
 }

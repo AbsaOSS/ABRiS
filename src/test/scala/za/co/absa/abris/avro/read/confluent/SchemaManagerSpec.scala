@@ -29,7 +29,7 @@ class schemaManagerSpec extends AnyFlatSpec with BeforeAndAfter {
 
 
   val recordByteSchema = AvroSchemaUtils.parse("""{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "record_name",
      "fields":[
@@ -38,7 +38,7 @@ class schemaManagerSpec extends AnyFlatSpec with BeforeAndAfter {
   }""")
 
   val recordEvolvedByteSchema1 = AvroSchemaUtils.parse("""{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "record_name",
      "fields":[
@@ -48,7 +48,7 @@ class schemaManagerSpec extends AnyFlatSpec with BeforeAndAfter {
   }""")
 
   val recordEvolvedByteSchema2 = AvroSchemaUtils.parse("""{
-     "namespace": "all-types.test",
+     "namespace": "alltypes.test",
      "type": "record",
      "name": "record_name",
      "fields":[

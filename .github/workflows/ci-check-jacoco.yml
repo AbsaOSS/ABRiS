@@ -10,16 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Setup Scala
-        uses: olafurpg/setup-scala@v10
+        uses: actions/checkout@v4
         with:
-          java-version: "adopt@1.8"
+          persist-credentials: false
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: 17
       - name: Build and run tests
-        run: mvn clean verify -Pcode-coverage
+        run: mvn clean verify -Pcode-coverage --no-transfer-progress
       - name: Add coverage to PR
         id: jacoco
-        uses: madrapps/jacoco-report@v1.4
+        uses: madrapps/jacoco-report@v1.8.0
         with:
           paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}

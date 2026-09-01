@@ -25,6 +25,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.abris.avro.functions._
 import za.co.absa.abris.config.ToAvroConfig
+import za.co.absa.abris.utils.SparkColumnCompat.col2expr
 
 class CatalystDataToAvroSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
   it should "be serializable" in {
@@ -36,7 +37,7 @@ class CatalystDataToAvroSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       .endRecord()
       .toString
     val config = ToAvroConfig().withSchema(schema)
-    val catalystDataToAvro = to_avro(col("col"), config).expr
+    val catalystDataToAvro = col2expr(to_avro(col("col"), config))
 
     val javaSerializer = new JavaSerializer(new SparkConf())
     javaSerializer.newInstance().serialize(catalystDataToAvro)
