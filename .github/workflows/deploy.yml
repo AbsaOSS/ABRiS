@@ -16,9 +16,6 @@
 name: Deploy
 
 on:
-  pull_request:
-    branches: [ master ]
-
   workflow_dispatch:
     inputs:
       dry-run:
@@ -35,44 +32,43 @@ jobs:
         with:
           fetch-depth: 0 # Fetch all history for all tags and branches
 
-#      - name: Check format of received tag
-#        id: check-version-tag
-#        uses: AbsaOSS/version-tag-check@4145e48bf3f77a5afff2ec9afdd8afb6b53bce34 # v1.0.0
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          github-repository: ${{ github.repository }}
-#          version-tag: ${{ github.ref_name }}
-#          should-exist: 'true'
-#
-#      - name: Set up JDK
-#        uses: actions/setup-java@v6
-#        with:
-#          distribution: 'temurin'
-#          java-version: 17
-#
-#      - name: Import GPG keys
-#        run: |
-#          echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import --keyserver https://keyserver.ubuntu.com/
-#          echo "${{ secrets.MAVEN_GPG_PASSPHRASE }}" | gpg --passphrase-fd 0 --batch --pinentry-mode loopback --import-ownertrust <<< .
-#
-#
-#      - name: Create settings.xml
-#        run: |
-#          echo "<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd\">
-#            <servers>
-#              <server>
-#                <id>ossrh</id>
-#                <username>${{ secrets.OSSRH_USERNAME }}</username>
-#                <password>${{ secrets.OSSRH_TOKEN }}</password>
-#              </server>
-#            </servers>
-#          </settings>" > $HOME/.m2/settings.xml
-#
-#      - name: Build and deploy artifact
-#        if: ${{ !inputs.dry-run }}
-#        env:
-#          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-#          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
-#        run: mvn -B -e -DskipTests -Pdeploy -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
-#
+      - name: Check format of received tag
+        id: check-version-tag
+        uses: AbsaOSS/version-tag-check@4145e48bf3f77a5afff2ec9afdd8afb6b53bce34 # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github-repository: ${{ github.repository }}
+          version-tag: ${{ github.ref_name }}
+          should-exist: 'true'
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Import GPG keys
+        run: |
+          echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import --keyserver https://keyserver.ubuntu.com/
+          echo "${{ secrets.MAVEN_GPG_PASSPHRASE }}" | gpg --passphrase-fd 0 --batch --pinentry-mode loopback --import-ownertrust <<< .
+
+
+      - name: Create settings.xml
+        run: |
+          echo "<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd\">
+            <servers>
+              <server>
+                <id>ossrh</id>
+                <username>${{ secrets.OSSRH_USERNAME }}</username>
+                <password>${{ secrets.OSSRH_TOKEN }}</password>
+              </server>
+            </servers>
+          </settings>" > $HOME/.m2/settings.xml
+
+      - name: Build and deploy artifact
+        if: ${{ !inputs.dry-run }}
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+        run: mvn -B -e -DskipTests -Pdeploy -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
