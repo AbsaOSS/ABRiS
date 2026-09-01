@@ -17,11 +17,6 @@ name: Deploy
 
 on:
   workflow_dispatch:
-    inputs:
-      dry-run:
-        description: 'If set, skips actual deployment and only performs checks.'
-        required: true
-        type: boolean
 
 jobs:
   deploy:
@@ -60,15 +55,14 @@ jobs:
             <servers>
               <server>
                 <id>ossrh</id>
-                <username>${{ secrets.OSSRH_USERNAME }}</username>
-                <password>${{ secrets.OSSRH_TOKEN }}</password>
+                <username>${{ secrets.SONATYPE_USERNAME }}</username>
+                <password>${{ secrets.SONATYPE_PASSWORD }}</password>
               </server>
             </servers>
           </settings>" > $HOME/.m2/settings.xml
 
       - name: Build and deploy artifact
-        if: ${{ !inputs.dry-run }}
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
-        run: mvn -B -e -DskipTests -Pdeploy -Dossrh clean deploy -Dossrh.username=${{ secrets.OSSRH_USERNAME }} -Dossrh.password=${{ secrets.OSSRH_TOKEN }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        run: mvn -B -e -DskipTests -Pdeploy -Dossrh clean deploy -Dossrh.username=${{ secrets.SONATYPE_USERNAME }} -Dossrh.password=${{ secrets.SONATYPE_PASSWORD }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
