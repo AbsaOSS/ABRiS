@@ -12,6 +12,10 @@ on:
 
 jobs:
   create-release:
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
