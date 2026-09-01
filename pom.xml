@@ -44,7 +44,7 @@
         <maven.sources.version>3.4.0</maven.sources.version>
         <gpg.plugin.version>3.2.8</gpg.plugin.version>
         <surefire.version>3.5.6</surefire.version>
-        <nexus.staging.plugin.version>1.7.0</nexus.staging.plugin.version>
+        <central.publishing.maven.plugin.version>0.11.0</central.publishing.maven.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
 
         <!-- Spark -->
@@ -74,17 +74,12 @@
         <scalatest.maven.plugin.version>2.2.0</scalatest.maven.plugin.version>
 
         <scala.maven.plugin.version>4.9.10</scala.maven.plugin.version>
-
-        <scm.url><!-- defined outside the pom --></scm.url>
-        <scm.connection><!-- defined outside the pom --></scm.connection>
-        <scm.developerConnection><!-- defined outside the pom --></scm.developerConnection>
     </properties>
 
     <scm>
-        <url>${scm.url}</url>
-        <connection>${scm.connection}</connection>
-        <developerConnection>${scm.developerConnection}</developerConnection>
-        <tag>HEAD</tag>
+        <connection>scm:git:git://github.com/absaoss/abris.git</connection>
+        <developerConnection>scm:git:ssh://github.com:absaoss/abris.git</developerConnection>
+        <url>https://github.com/AbsaOSS/ABRiS</url>
     </scm>
 
     <licenses>
@@ -422,6 +417,7 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>
                             <!-- Prevent `gpg` from using pinentry programs -->
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
@@ -430,15 +426,15 @@
                         </configuration>
                     </plugin>
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>${nexus.staging.plugin.version}</version>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central.publishing.maven.plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                            <autoDropAfterRelease>true</autoDropAfterRelease>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <deploymentName>${pom.groupId}:${pom.artifactId}:${project.version}</deploymentName>
                         </configuration>
                     </plugin>
                 </plugins>

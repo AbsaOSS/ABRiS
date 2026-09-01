@@ -54,7 +54,7 @@ jobs:
           echo "<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd\">
             <servers>
               <server>
-                <id>ossrh</id>
+                <id>central</id>
                 <username>${{ secrets.SONATYPE_USERNAME }}</username>
                 <password>${{ secrets.SONATYPE_PASSWORD }}</password>
               </server>
@@ -63,6 +63,5 @@ jobs:
 
       - name: Build and deploy artifact
         env:
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        run: mvn -B -e -DskipTests -Pdeploy -Dossrh clean deploy -Dossrh.username=${{ secrets.SONATYPE_USERNAME }} -Dossrh.password=${{ secrets.SONATYPE_PASSWORD }} -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: mvn -B -e -DskipTests -Pdeploy clean deploy
