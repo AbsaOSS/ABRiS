@@ -77,7 +77,7 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git://github.com/absaoss/abris.git</connection>
+        <connection>scm:git:https://github.com/absaoss/abris.git</connection>
         <developerConnection>scm:git:ssh://github.com:absaoss/abris.git</developerConnection>
         <url>https://github.com/AbsaOSS/ABRiS</url>
     </scm>

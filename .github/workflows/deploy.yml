@@ -20,11 +20,16 @@ on:
 
 jobs:
   deploy:
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          persist-credentials: false
           fetch-depth: 0 # Fetch all history for all tags and branches
 
       - name: Check format of received tag
