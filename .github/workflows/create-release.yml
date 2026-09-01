@@ -1,0 +1,117 @@
+name: Create a new release
+
+on:
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+    inputs:
+      tag-name:
+        description: 'New tag for release. Example: v0.5.2'
+        required: true
+      from-tag-name:
+        description: 'Previous tag to compare for release notes generation. Example: v0.5.1 Default value: latest tag.'
+        required: false
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # Fetch all history for all tags and branches
+#
+#      - uses: actions/setup-python@v6
+#        with:
+#          python-version: '3.14'
+#
+#      - name: Check format of received tag
+#        id: check-version-tag
+#        uses: AbsaOSS/version-tag-check@4145e48bf3f77a5afff2ec9afdd8afb6b53bce34 # v1.0.0
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          github-repository: ${{ github.repository }}
+#          version-tag: ${{ github.event.inputs.tag-name }}
+#
+#      - name: Check format of received from tag
+#        if: ${{ github.event.inputs.from-tag-name }}
+#        id: check-version-from-tag
+#        uses: AbsaOSS/version-tag-check@4145e48bf3f77a5afff2ec9afdd8afb6b53bce34 # v1.0.0
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          github-repository: ${{ github.repository }}
+#          version-tag: ${{ github.event.inputs.from-tag-name }}
+#          should-exist: true
+#
+#      - name: Define semantic version number
+#        id: semantic_version
+#        run: |
+#          TAG_NAME="${{ github.event.inputs.tag-name }}"
+#          VERSION=${TAG_NAME#v}
+#          echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
+#
+#      - name: Configure Git
+#        run: |
+#          git config --global user.name "${{ github.actor }}"
+#          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+#          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+#
+#      - name: Set up JDK
+#        uses: actions/setup-java@v6
+#        with:
+#          distribution: 'temurin'
+#          java-version: 17
+#
+#      - name: Set Maven project version, create tag
+#        run: |
+#          mvn versions:set -DnewVersion=${VERSION} --no-transfer-progress
+#          mvn versions:commit
+#          git commit -am "Set project version to ${VERSION}"
+#          git push
+#
+#      - name: Create tag
+#        run: |
+#          git tag ${{ github.event.inputs.tag-name }}
+#          git push origin ${{ github.event.inputs.tag-name }}
+#
+#      - name: Set next development version
+#        run: |
+#          # Assumes semantic versioning and increments the minor version. Adjust the awk command as needed for different versioning schemes.
+#          NEXT_VERSION=$(echo ${VERSION} | awk -F. '{print $1"."$2+1".0-SNAPSHOT"}')
+#          mvn versions:set -DnewVersion=$NEXT_VERSION --no-transfer-progress
+#          mvn versions:commit
+#          git commit -am "Set project version to $NEXT_VERSION"
+#          git push
+#
+#      - name: Generate Release Notes
+#        id: generate_release_notes
+#        uses: AbsaOSS/generate-release-notes@b4d6e3fafcff2dedc32ec751975fa3d0b3efad67 # v1.3.1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          tag-name: ${{ github.event.inputs.tag-name }}
+#          from-tag-name: ${{ github.event.inputs.from-tag-name }}
+#          hierarchy: true
+#          chapters: |
+#            - { title: Breaking Changes 💥, labels: breaking-change }
+#            - { title: New Features 🎉, labels: enhancement }
+#            - { title: Bugfixes 🛠, labels: [bug, bugfix] }
+#            - { title: Other Changes, labels: [improvement, internal, chore] }
+#            - { title: Silent Live 🤫, catch-open-hierarchy: true}
+#          warnings: true
+#          print-empty-chapters: false
+#
+#      - name: Create Draft Release
+#        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          name: ${{ github.event.inputs.tag-name }}
+#          body: ${{ steps.generate_release_notes.outputs.release-notes }}
+#          tag_name: ${{ github.event.inputs.tag-name }}
+#          draft: true
+#          prerelease: false
