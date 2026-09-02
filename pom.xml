@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>za.co.absa</groupId>
     <artifactId>abris_2.13</artifactId>
-    <version>7.0.0-SNAPSHOT</version>
+    <version>7.0.0-RC1</version>
     <name>abris</name>
     <description>Provides seamless integration between Avro and Spark Structured APIs.</description>
     <url>https://github.com/AbsaOSS/ABRiS</url>
