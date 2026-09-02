@@ -72,6 +72,7 @@ jobs:
           </settings>" > $HOME/.m2/settings.xml
 
       - name: Build and deploy artifact
+        if: false
         env:
           GPG_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: mvn -B -e -DskipTests -Pdeploy clean deploy
