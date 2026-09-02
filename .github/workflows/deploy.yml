@@ -25,7 +25,7 @@ jobs:
       pull-requests: read
       issues: read
     runs-on: ubuntu-latest
-    environment: release
+    environment: publish
     steps:
       - name: Validate ref is a tag
         if: github.ref_type != 'tag'
@@ -72,7 +72,6 @@ jobs:
           </settings>" > $HOME/.m2/settings.xml
 
       - name: Build and deploy artifact
-        if: false
         env:
           GPG_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: mvn -B -e -DskipTests -Pdeploy clean deploy
