@@ -73,5 +73,5 @@ jobs:
 
       - name: Build and deploy artifact
         env:
-          GPG_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: mvn -B -e -DskipTests -Pdeploy clean deploy

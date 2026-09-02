@@ -417,7 +417,6 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>
                             <!-- Prevent `gpg` from using pinentry programs -->
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
