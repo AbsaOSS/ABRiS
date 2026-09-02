@@ -25,7 +25,14 @@ jobs:
       pull-requests: read
       issues: read
     runs-on: ubuntu-latest
+    environment: release
     steps:
+      - name: Validate ref is a tag
+        if: github.ref_type != 'tag'
+        run: |
+          echo "This workflow must run from a tag."
+          exit 1
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -50,9 +57,7 @@ jobs:
 
       - name: Import GPG keys
         run: |
-          echo "${{ secrets.PGP_SECRET }}" | base64 --decode | gpg --batch --import --keyserver https://keyserver.ubuntu.com/
-          echo "${{ secrets.PGP_PASSPHRASE }}" | gpg --passphrase-fd 0 --batch --pinentry-mode loopback --import-ownertrust <<< .
-
+          echo "${{ secrets.PGP_SECRET }}" | base64 --decode | gpg --batch --import
 
       - name: Create settings.xml
         run: |

@@ -17,6 +17,7 @@ jobs:
       pull-requests: read
       issues: read
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
